@@ -3,6 +3,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ParserTest {
+    // TODO need higher level thing to extract top-level forms.  Each of these would be passed in to the existing splitEx....
+
     @Test
     void testParseSimpleExpression() {
         String program = """

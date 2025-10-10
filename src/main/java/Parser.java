@@ -54,4 +54,76 @@ public class Parser {
         }
         return expressions.toArray(new String[0]);
     }
+
+    public static String[] extractTopLevelForms(String s) {
+        // we need to split around whitespace except expressions enclosed in brackets
+        StringBuilder sb = new StringBuilder();
+        List<String> forms = new ArrayList<>();
+
+        int depth = 0;  // depth within parentheses
+        State state = State.START;
+        for(int i=0; i<s.length();i++) {
+            char c = s.charAt(i);
+
+            // first manage depth of parentheses
+            if(c == '(') {
+                depth++;
+            }
+            else if(c == ')') {
+                depth--;
+            }
+
+            if((state == State.AFTER_ATOM || state == State.AFTER_EXPRESSION) && c == ' ') {
+                continue;
+            }
+
+            // first determine state
+            if(state == State.START || state == State.AFTER_ATOM || state == State.AFTER_EXPRESSION) {
+                if(c == '(') {
+                    state = State.ON_EXPRESSION;
+                }
+                else {
+                    state = State.ON_ATOM;
+                }
+            }
+            else if(state == State.ON_ATOM) {
+                if(c == ' ') {
+                    state = State.AFTER_ATOM;
+                }
+            }
+            else if (state == State.ON_EXPRESSION) {
+                if(c == ')' && depth == 0) {
+                    state = State.AFTER_EXPRESSION;
+                }
+            }
+
+            if(state == State.ON_ATOM || state == State.ON_EXPRESSION) {
+                sb.append(c);
+            }
+            else if(state == State.AFTER_ATOM) {
+                forms.add(sb.toString());
+                sb.delete(0, sb.length());
+            }
+            else if(state == State.AFTER_EXPRESSION) {
+                sb.append(c);
+                forms.add(sb.toString());
+                sb.delete(0, sb.length());
+            }
+        }
+
+        if(state == State.ON_ATOM) {
+            forms.add(sb.toString());
+            sb.delete(0, sb.length());
+        }
+        else if(state == State.ON_EXPRESSION) {
+            forms.add(sb.toString());
+            sb.delete(0, sb.length());
+        }
+
+        return forms.toArray(new String[] {});
+    }
+
+    enum State {
+        START, ON_ATOM, ON_EXPRESSION, AFTER_ATOM, AFTER_EXPRESSION
+    }
 }
