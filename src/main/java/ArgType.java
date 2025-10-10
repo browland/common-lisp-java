@@ -1,5 +1,5 @@
 public enum ArgType {
-    NUMERIC, EXPRESSION, STRING, BOOLEAN;
+    NUMERIC, EXPRESSION, STRING, BOOLEAN, BINDING;
 
     static ArgType ofArg(String argument) {
         if(argument.startsWith("(")) {
@@ -17,7 +17,9 @@ public enum ArgType {
             return ArgType.NUMERIC;
         }
         catch(NumberFormatException e) {
-            throw new IllegalArgumentException("Can't infer type of argument " + argument);
         }
+
+        // todo assume for now it's a binding
+        return ArgType.BINDING;
     }
 }

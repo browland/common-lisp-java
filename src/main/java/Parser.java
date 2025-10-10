@@ -3,7 +3,7 @@ import java.util.List;
 
 public class Parser {
 
-    static String[] extractExpressionsAtThisLevel(String program) {
+    static String[] splitExpressionsAtThisLevel(String program) {
         int depth = 0;
         List<String> expressions = new ArrayList<>();
         StringBuilder expressionBuilder = new StringBuilder();

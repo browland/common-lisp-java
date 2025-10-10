@@ -3,7 +3,7 @@ import spock.lang.Specification
 class InterpreterSpec extends Specification {
     def "addition works ok"() {
         when:
-        def result = Interpreter.eval(program)
+        def result = Interpreter.eval(program, Map.of())
 
         then:
         result == expectedResult
@@ -17,7 +17,7 @@ class InterpreterSpec extends Specification {
 
     def "eq works ok"() {
         when:
-        def result = Interpreter.eval(program)
+        def result = Interpreter.eval(program, Map.of())
 
         then:
         result == expectedResult
@@ -31,7 +31,7 @@ class InterpreterSpec extends Specification {
 
     def "if works ok"() {
         when:
-        def result = Interpreter.eval(program)
+        def result = Interpreter.eval(program, Map.of())
 
         then:
         result == expectedResult
@@ -42,5 +42,18 @@ class InterpreterSpec extends Specification {
         "(if false 1 2)"    || "2"
         "(if (eq 1 1) 1 2)" || "1"
         "(if (eq 1 2) 1 2)" || "2"
+    }
+
+    def "let works ok"() {
+        when:
+        def result = Interpreter.eval(program, Map.of())
+
+        then:
+        result == expectedResult
+
+        where:
+        program                          || expectedResult
+        "(let ((x 1)) x)"                || "1"
+        "(let ((x 1) (y 2)) (add x y))"  || "3"
     }
 }
