@@ -26,8 +26,9 @@ public class Interpreter {
         return switch(function) {
             case "add" -> addFunction(arguments, bindings);
             case "eq" -> eqFunction(arguments);
-            case "if" -> ifFunction(arguments);
-            case "let" -> letFunction(arguments);
+            case "if" -> ifFunction(arguments, bindings);
+            case "let" -> letFunction(arguments, bindings);
+            case "less" -> lessFunction(arguments, bindings);
             default -> throw new IllegalArgumentException("Unknown function " + function);
         };
     }
@@ -63,12 +64,34 @@ public class Interpreter {
         throw new IllegalArgumentException("args must be numeric for now, for eq");
     }
 
-    private static String ifFunction(String[] arguments) {
+    private static String lessFunction(String[] arguments, Map<String,String> bindings) {
+        if(arguments.length != 2) {
+            throw new IllegalArgumentException("must be 2 args for less");
+        }
+
+        String[] evaldArgs = evalArgs(arguments, bindings);
+
+        if(ArgType.ofArg(evaldArgs[0]) != ArgType.ofArg(evaldArgs[1])) {
+            throw new IllegalArgumentException("args must be same types for less");
+        }
+
+        ArgType type = ArgType.ofArg(evaldArgs[0]);
+        if(Objects.requireNonNull(type) == ArgType.NUMERIC) {
+            int arg1Value = Integer.parseInt(evaldArgs[0]);
+            int arg2Value = Integer.parseInt(evaldArgs[1]);
+            return (arg1Value < arg2Value) ? "true" : "false";
+        }
+
+        throw new IllegalArgumentException("args must be numeric for now, for less");
+
+    }
+
+    private static String ifFunction(String[] arguments, Map<String,String> bindings) {
         if(arguments.length != 3) {
             throw new IllegalArgumentException("must be 3 args for if");
         }
 
-        String[] evaldArgs = evalArgs(arguments, Map.of());
+        String[] evaldArgs = evalArgs(arguments, bindings);
 
         if(ArgType.ofArg(evaldArgs[0]) != ArgType.BOOLEAN) {
             throw new IllegalArgumentException("first arg must be boolean for if");
@@ -77,23 +100,34 @@ public class Interpreter {
         return Boolean.parseBoolean(evaldArgs[0]) ? evaldArgs[1] : evaldArgs[2];
     }
 
-    private static String letFunction(String[] arguments) {
-        if(arguments.length != 2) {
-            throw new IllegalArgumentException("must be 2 args for let");
+    private static String letFunction(String[] arguments, Map<String,String> enclosingBindings) {
+        if(arguments.length < 2) {
+            throw new IllegalArgumentException("must be at least 2 args for let");
         }
 
-        // maintain bindings
-        String[] bindingsSeparated = Parser.splitExpressionsAtThisLevel(arguments[0]);
-        Map<String,String> bindingsMap = new HashMap<>();
+        // extract bindings at this level; add in to enclosingBindings
+        String bindingsList = arguments[0];
+        String[] bindingsSeparated = Parser.splitExpressionsAtThisLevel(bindingsList);
+        Map<String,String> bindingsAtThisLevelPlusEnclosingBindings = new HashMap(Map.copyOf(enclosingBindings));
 
         for(String binding : bindingsSeparated) {
             String[] variableAndValue = Parser.splitExpressionsAtThisLevel(binding);
-            bindingsMap.put(variableAndValue[0], variableAndValue[1]);
+            // Value may be itself an expression!
+            String value = variableAndValue[1];
+            String valueEvaluated = eval(value, bindingsAtThisLevelPlusEnclosingBindings);
+            bindingsAtThisLevelPlusEnclosingBindings.put(variableAndValue[0], valueEvaluated);
         }
 
-        // evaluate form
-        return eval(arguments[1], bindingsMap);
+        // evaluate each form and return the last one
+        // evaluating forms prior to the last one seems pointless but makes sense where there are side-effects
+        String[] forms = Arrays.copyOfRange(arguments, 1, arguments.length);
+        String result = null;
+        for(String form : forms) {
+            result = eval(form, bindingsAtThisLevelPlusEnclosingBindings);
+        }
+        return result;
     }
+
 
     private static String[] evalArgs(String[] arguments,
                                      Map<String,String> bindings) {
@@ -101,10 +135,14 @@ public class Interpreter {
                 .map(arg -> {
                     ArgType argType = ArgType.ofArg(arg);
                     if(ArgType.EXPRESSION == argType){
-                        return eval(arg, Map.of());
+                        return eval(arg, bindings);
                     }
                     else if(ArgType.BINDING == argType) {
-                        return bindings.get(arg);
+                        String evaluated = bindings.get(arg);
+                        if(evaluated == null) {
+                            throw new UndefinedVariableException("Undefined variable " + arg);
+                        }
+                        return evaluated;
                     }
                     else {
                         return arg;
