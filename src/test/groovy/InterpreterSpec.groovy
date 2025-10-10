@@ -4,7 +4,7 @@ class InterpreterSpec extends Specification {
 
     def "overall program forms work ok"() {
         when:
-        def result = Interpreter.eval(program, Map.of())
+        def result = Interpreter.eval(program)
 
         then:
         result == expectedResult
@@ -17,7 +17,7 @@ class InterpreterSpec extends Specification {
 
     def "add works ok"() {
         when:
-        def result = Interpreter.eval(program, Map.of())
+        def result = Interpreter.eval(program)
 
         then:
         result == expectedResult
@@ -31,7 +31,7 @@ class InterpreterSpec extends Specification {
 
     def "add failure cases"() {
         when:
-        Interpreter.eval(program, Map.of())
+        Interpreter.eval(program)
 
         then:
         def e = thrown(UndefinedVariableException)
@@ -44,7 +44,7 @@ class InterpreterSpec extends Specification {
 
     def "eq works ok"() {
         when:
-        def result = Interpreter.eval(program, Map.of())
+        def result = Interpreter.eval(program)
 
         then:
         result == expectedResult
@@ -58,7 +58,7 @@ class InterpreterSpec extends Specification {
 
     def "if works ok"() {
         when:
-        def result = Interpreter.eval(program, Map.of())
+        def result = Interpreter.eval(program)
 
         then:
         result == expectedResult
@@ -73,7 +73,7 @@ class InterpreterSpec extends Specification {
 
     def "less works ok"() {
         when:
-        def result = Interpreter.eval(program, Map.of())
+        def result = Interpreter.eval(program)
 
         then:
         result == expectedResult
@@ -86,7 +86,7 @@ class InterpreterSpec extends Specification {
 
     def "let works ok"() {
         when:
-        def result = Interpreter.eval(program, Map.of())
+        def result = Interpreter.eval(program)
 
         then:
         result == expectedResult
@@ -105,7 +105,7 @@ class InterpreterSpec extends Specification {
 
     def "let failure cases"() {
         when:
-        Interpreter.eval(program, Map.of())
+        Interpreter.eval(program)
 
         then:
         def e = thrown(UndefinedVariableException)

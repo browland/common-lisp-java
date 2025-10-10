@@ -11,6 +11,18 @@ public class Interpreter {
         System.out.println("result: " + eval(program, Map.of()));
     }
 
+    /**
+     * Entrypoint - expects the top-level program, no bindings
+     */
+    static String eval(String program) {
+        String[] topLevelForms = Parser.extractTopLevelForms(program);
+        String result = null;
+        for(String form : topLevelForms) {
+            result = eval(form, Map.of());
+        }
+        return result;
+    }
+
     static String eval(String program, Map<String,String> bindings) {
         System.out.println("eval: " + program);
         String[] expressions = Parser.splitExpressionsAtThisLevel(program);
