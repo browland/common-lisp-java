@@ -35,8 +35,12 @@ public class Interpreter {
         String function = expressions[0];
         String[] arguments = Arrays.copyOfRange(expressions, 1, expressions.length);
 
+        if(Parser.isLambda(function)) {
+            return lambdaFunction(function, arguments, bindings);
+        }
+
         return switch(function) {
-            case "add" -> addFunction(arguments, bindings);
+            case "add", "+" -> addFunction(arguments, bindings);
             case "eq" -> eqFunction(arguments);
             case "if" -> ifFunction(arguments, bindings);
             case "let" -> letFunction(arguments, bindings);
@@ -44,6 +48,7 @@ public class Interpreter {
             default -> throw new IllegalArgumentException("Unknown function " + function);
         };
     }
+
 
     private static String addFunction(String[] arguments, Map<String,String> bindings) {
         String[] evaldArgs = evalArgs(arguments, bindings);
@@ -140,6 +145,29 @@ public class Interpreter {
         return result;
     }
 
+    private static String lambdaFunction(String definition, String[] arguments, Map<String,String> enclosingBindings) {
+        // todo there could be more arguments to the lambda, not just one
+
+        String[] partsOfDefinition = Parser.splitExpressionsAtThisLevel(definition);
+        // we can discard the first part as this is just 'lambda'
+        String argsList = partsOfDefinition[1];
+        String expressionToEvaluate = partsOfDefinition[2];
+
+        // we expect args to be the bindings for argsList
+        String[] argNames = Parser.splitExpressionsAtThisLevel(argsList);
+
+        Map<String,String> bindings = new HashMap<>();
+
+        for(int i = 0; i<argNames.length; i++) {
+            bindings.put(argNames[i], arguments[i]);
+        }
+
+        // add bindings at this level into enclosingBindings
+        Map<String,String> bindingsAtThisLevelPlusEnclosingBindings = new HashMap(Map.copyOf(enclosingBindings));
+        bindingsAtThisLevelPlusEnclosingBindings.putAll(bindings);
+
+        return eval(expressionToEvaluate, bindingsAtThisLevelPlusEnclosingBindings);
+    }
 
     private static String[] evalArgs(String[] arguments,
                                      Map<String,String> bindings) {

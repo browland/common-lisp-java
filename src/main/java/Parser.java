@@ -123,6 +123,21 @@ public class Parser {
         return forms.toArray(new String[] {});
     }
 
+    static boolean isLambda(String expression) {
+        if(!expression.contains("lambda")) {
+            return false;
+        }
+
+        // we iteratively split expressions at top level for the first expression, until there are no more parens at the start
+        // if the resulting string starts with 'lambda' then this is a lambda expression
+        String resultingFirstExpression = expression;
+        while(resultingFirstExpression.startsWith("(")) {
+            resultingFirstExpression = Parser.splitExpressionsAtThisLevel(resultingFirstExpression)[0];
+        }
+
+        return resultingFirstExpression.startsWith("lambda");
+    }
+
     enum State {
         START, ON_ATOM, ON_EXPRESSION, AFTER_ATOM, AFTER_EXPRESSION
     }

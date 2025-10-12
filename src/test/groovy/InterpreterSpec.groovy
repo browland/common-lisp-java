@@ -25,6 +25,7 @@ class InterpreterSpec extends Specification {
         where:
         program              || expectedResult
         "(add 1 2)"          || "3"
+        "(+ 1 2)"            || "3"
         "(add 1 (add 1 2))"  || "4"
         "(add 1 -1)"         || "0"
     }
@@ -114,5 +115,20 @@ class InterpreterSpec extends Specification {
         where:
         program                   || errorMessage
         "(let ((x (add x 1))) x)" || "Undefined variable x"
+    }
+
+    def "lambda works ok"() {
+        when:
+        def result = Interpreter.eval(program)
+
+        then:
+        result == expectedResult
+
+        where:
+        program                                         || expectedResult
+//        "((lambda (x) (+ x 1)) 4)"                      || "5"
+//        "((lambda (x y) (+ x y)) 3 7)"                  || "10"
+//        "((lambda (x) ((lambda (y) (+ x y)) 5)) 3)"     || "8"
+        "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"   || "15"
     }
 }

@@ -56,4 +56,17 @@ public class ParserTest {
         assertThat(binding1Separated[0]).isEqualTo("x");
         assertThat(binding1Separated[1]).isEqualTo("1");
     }
+
+    @Test
+    void testParseLambdaExpression() {
+        String program = """
+                ((lambda (x) (+ x 1)) 4)
+                """;
+
+        String[] expressions = Parser.splitExpressionsAtThisLevel(program);
+
+        assertThat(expressions.length).isEqualTo(2);
+        assertThat(expressions[0]).isEqualTo("(lambda (x) (+ x 1))");
+        assertThat(expressions[1]).isEqualTo("4");
+    }
 }
