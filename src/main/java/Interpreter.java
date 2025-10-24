@@ -125,7 +125,7 @@ public class Interpreter {
         // extract bindings at this level; add in to enclosingBindings
         String bindingsList = arguments[0];
         String[] bindingsSeparated = Parser.splitExpressionsAtThisLevel(bindingsList);
-        Map<String,String> bindingsAtThisLevelPlusEnclosingBindings = new HashMap(Map.copyOf(enclosingBindings));
+        Map<String,String> bindingsAtThisLevelPlusEnclosingBindings = new HashMap<>(Map.copyOf(enclosingBindings));
 
         for(String binding : bindingsSeparated) {
             String[] variableAndValue = Parser.splitExpressionsAtThisLevel(binding);
@@ -147,6 +147,7 @@ public class Interpreter {
 
     private static String lambdaFunction(String definition, String[] arguments, Map<String,String> enclosingBindings) {
         // todo there could be more arguments to the lambda, not just one
+        // we'll start assuming it's a single-level lambda.  Soon we'll need to detect another level of nesting and recursively call in with the deeper expression
 
         String[] partsOfDefinition = Parser.splitExpressionsAtThisLevel(definition);
         // we can discard the first part as this is just 'lambda'
@@ -158,14 +159,21 @@ public class Interpreter {
 
         Map<String,String> bindings = new HashMap<>();
 
+        // todo bear in mind there may be arguments not bound to a value yet!  We need to store them but represent we don't have a binding yet.
         for(int i = 0; i<argNames.length; i++) {
             bindings.put(argNames[i], arguments[i]);
         }
 
         // add bindings at this level into enclosingBindings
-        Map<String,String> bindingsAtThisLevelPlusEnclosingBindings = new HashMap(Map.copyOf(enclosingBindings));
+        Map<String,String> bindingsAtThisLevelPlusEnclosingBindings = new HashMap<>(Map.copyOf(enclosingBindings));
         bindingsAtThisLevelPlusEnclosingBindings.putAll(bindings);
 
+        // todo bear in mind the result returned here could be a new function, e.g. a lambda with some bindings but not all
+        //      this happens if we're evaluating an 'inner' lambda - and the outer one will bind a remaining argument to this one.
+
+        // todo is it worth changing the return type to be something else so I can pass functions around?  Clearly there's no avoiding that now
+        //      (beta reduction is not enough)
+        //      This would mean first changing tests to e.g. expect an int result type from an add operation for example
         return eval(expressionToEvaluate, bindingsAtThisLevelPlusEnclosingBindings);
     }
 

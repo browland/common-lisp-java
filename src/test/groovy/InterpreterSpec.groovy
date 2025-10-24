@@ -126,9 +126,9 @@ class InterpreterSpec extends Specification {
 
         where:
         program                                         || expectedResult
-//        "((lambda (x) (+ x 1)) 4)"                      || "5"
-//        "((lambda (x y) (+ x y)) 3 7)"                  || "10"
-//        "((lambda (x) ((lambda (y) (+ x y)) 5)) 3)"     || "8"
-        "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"   || "15"
+        "((lambda (x) (+ x 1)) 4)"                      || "5"
+        "((lambda (x y) (+ x y)) 3 7)"                  || "10"
+        "((lambda (x) ((lambda (y) (+ x y)) 5)) 3)"     || "8"
+//        "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"   || "15"
     }
 }
