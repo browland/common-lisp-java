@@ -17,7 +17,7 @@ class ParserNewSpec extends Specification {
         program                                        || expectedFunction
         "(add 1 2)"                                    || new Node(NodeType.FUNCTION, "add", [])
         "((lambda (x) (+ x 1)) 1)"                     || new Node(NodeType.FUNCTION, "(lambda (x) (+ x 1))", [])
-        "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"  || new Node(NodeType.FUNCTION, "( (lambda (x) (lambda (y) (+ x y))) 10)", [])
+        "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"  || new Node(NodeType.FUNCTION, "( (lambda (x) (lambda (y) (+ x y))) 10)", [new Node(NodeType.FUNCTION, " (lambda (x) (lambda (y) (+ x y)))", []), new Node(NodeType.ATOM, "10", List.of())])
     }
 
     def "parses arguments"() {
