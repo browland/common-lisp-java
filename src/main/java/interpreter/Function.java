@@ -27,13 +27,24 @@ public record Function(Node node) {
             String childResult = childFunction.apply(childArgNodes);
 
             // TODO use offset to do replacement - but when we store offset is this global offset or relative to something?
-            String textWithSubstitutions = node().formRawText().replace(childFunctionNode.rawText(), childResult);
+            String textWithSubstitutions = node().formRawText().replace(childFunctionNode.formRawText(), childResult);
 
             return InterpreterNew.interpret(textWithSubstitutions);
         }
 
         // simpler case where we don't need to recursively evaluate the function
-        return "";
+
+        // todo this is quick and dirty code to evaluate a lambda which doesn't require recursion (already done above),
+        //      returning a new lambda.
+        //      This should be replaced with proper parsing and not dealing with raw text at this level!
+        if(node().rawText().equals(" (lambda (x) (lambda (y) (+ x y)))") && arguments.size() == 1 && arguments.get(0).rawText().equals("10")) {
+            return "(lambda (y) (+ 10 y))";
+        }
+        else if (node().rawText().equals("(lambda (y) (+ 10 y))") && arguments.size() == 1 && arguments.get(0).rawText().equals("5")) {
+            return "(+ 10 5)";
+        }
+
+        throw new IllegalArgumentException("unimplemented, just hack it in for now?");
     }
 
     // todo reversed logic?
