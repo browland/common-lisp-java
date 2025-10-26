@@ -148,9 +148,12 @@ public class Interpreter {
     private static String lambdaFunction(String definition, String[] arguments, Map<String,String> enclosingBindings) {
         // todo there could be more arguments to the lambda, not just one
         // we'll start assuming it's a single-level lambda.  Soon we'll need to detect another level of nesting and recursively call in with the deeper expression
-
         String[] partsOfDefinition = Parser.splitExpressionsAtThisLevel(definition);
-        // we can discard the first part as this is just 'lambda'
+        // if this is a nested lambda then the first part will be more complex than just 'lambda', we need to evaluate it further
+        if(!"lambda".equals(partsOfDefinition[0])) {
+            return lambdaFunction(partsOfDefinition[0], arguments, enclosingBindings);
+
+        }
         String argsList = partsOfDefinition[1];
         String expressionToEvaluate = partsOfDefinition[2];
 

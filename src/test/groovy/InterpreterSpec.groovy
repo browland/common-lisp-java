@@ -126,9 +126,36 @@ class InterpreterSpec extends Specification {
 
         where:
         program                                         || expectedResult
-        "((lambda (x) (+ x 1)) 4)"                      || "5"
-        "((lambda (x y) (+ x y)) 3 7)"                  || "10"
-        "((lambda (x) ((lambda (y) (+ x y)) 5)) 3)"     || "8"
-//        "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"   || "15"
+//        "((lambda (x) (+ x 1)) 4)"                      || "5"
+//        "((lambda (x y) (+ x y)) 3 7)"                  || "10"
+//        "((lambda (x) ((lambda (y) (+ x y)) 5)) 3)"     || "8"
+        "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"   || "15"
     }
+
+    // in this form:
+    // (( (lambda (x) (lambda (y) (+ x y))) 10) 5)
+    // the top level form means "apply this function to argument 5"
+    // so, apply (stuff_expressed_as_a_list) to 5
+    // what is that stuff?  It's:
+    // ( (lambda (x) (lambda (y) (+ x y))) 10)
+    // what's this saying?  It's another case of: express this function to 10, e.g:
+    // ((stuff_in_list) 10)
+    // what's the stuff?
+    // (lambda (x) (lambda (y) (+ x y)))
+    // this is saying, it's just a function - (x) is the arg list, then there's a body, then there's no binding!
+    // so because it's an 'incomplete' lambda, it needs keeping as a function and can only be eval'd in terms of the
+    // outer function
+    //
+    // what we need ... ?
+    // the function (on the left) can be 'derived' through levels of composition, e.g. collecting vars and passing them
+    // down to the eventual thing which can be evaluated
+    // so we need to handle our 'function part' (first expression at top level) being arbitrarily deep, and that these
+    // 'intermediate functions' need to be passed back as first-class things in their own right.
+    // function composition
+    // one function has to be able to transform another? So we end up with just one simpler function?
+    // as, ultimately we need to evaluate something simpler in the end
+    // ( (lambda (x) (lambda (y) (+ x y))) 10) with a binding of can be composed into:
+    // (lambda (x, y) (+ x y)
+    // with a binding of x=10
 }
+
