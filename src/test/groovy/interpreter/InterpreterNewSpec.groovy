@@ -15,8 +15,8 @@ class InterpreterNewSpec extends Specification {
 
         where:
         program                                        || expectedResult
-//        "(add 1 2)"                                    || "3"
-//        "((lambda (x) (+ x 1)) 1)"                     || "2"
+        "(add 1 2)"                                    || "3"
+        "((lambda (x) (+ x 1)) 1)"                     || "2"
         "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"  || "15"
     }
 }

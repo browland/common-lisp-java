@@ -2,14 +2,14 @@ package interpreter;
 
 import parser.Node;
 import parser.ParseResult;
-import parser.ParserNew;
+import parser.FormTreeBuilder;
 
 import java.util.List;
 
 public class InterpreterNew {
 
     static String interpret(String program) {
-        ParseResult parseResult = ParserNew.parse(program);
+        ParseResult parseResult = FormTreeBuilder.parse(program);
 
         List<Node> nodes = parseResult.form().nodes();
         Node functionNode = nodes.get(0);

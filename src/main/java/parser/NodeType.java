@@ -1,5 +1,5 @@
 package parser;
 
 public enum NodeType {
-    FUNCTION, ATOM
+    OPERATOR, OPERAND
 }
