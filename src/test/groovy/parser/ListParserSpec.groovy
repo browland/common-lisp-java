@@ -13,7 +13,8 @@ class ListParserSpec extends Specification {
         def parsedList = parser.parse(program)
 
         then:
-        !parsedList.isQuoted()
+        parsedList.getQuoteType() == QuoteType.NONE
+
         def nodes = parsedList.getNodes()
         nodes.size() == 3
         nodes[0] == new ListNode("add")
@@ -29,7 +30,7 @@ class ListParserSpec extends Specification {
         def parsedList = parser.parse(program)
 
         then:
-        !parsedList.isQuoted()
+        parsedList.getQuoteType() == QuoteType.NONE
         def nodes = parsedList.getNodes()
         nodes.size() == 3
         nodes[0] == new ListNode("add")
@@ -37,7 +38,7 @@ class ListParserSpec extends Specification {
 
         def innerListNode = nodes[2]
         def innerParsedList = innerListNode.getParsedList()
-        !innerParsedList.isQuoted()
+        innerParsedList.getQuoteType() == QuoteType.NONE
 
         def innerNodes = innerParsedList.getNodes()
 
@@ -63,13 +64,13 @@ class ListParserSpec extends Specification {
         outerListNodes[1] == new ListNode("even")
 
         def argNodesParsedList = outerListNodes[2].getParsedList()
-        !argNodesParsedList.isQuoted()
+        argNodesParsedList.getQuoteType() == QuoteType.NONE
         def argNodes = argNodesParsedList.getNodes()
         argNodes.size() == 1
         argNodes[0] == new ListNode("num")
 
         def definitionParsedList = outerListNodes[3].getParsedList()
-        !definitionParsedList.isQuoted()
+        definitionParsedList.getQuoteType() == QuoteType.NONE
         def definitionNodes = definitionParsedList.getNodes()
         definitionNodes.size() == 3
         definitionNodes[0] == new ListNode("=")
@@ -97,11 +98,11 @@ class ListParserSpec extends Specification {
         outerListNodes[0] == new ListNode("filter")
 
         def quotedListParsedList = outerListNodes[1].getParsedList()
-        quotedListParsedList.isQuoted()
+        quotedListParsedList.getQuoteType() == QuoteType.LIST
         println(outerListNodes)
 
         def quotedFunction = outerListNodes[2]
-        quotedFunction.isQuoted()
+        quotedFunction.getQuoteType() == QuoteType.FUNCTION
         quotedFunction.getValue() == "even"
     }
 
@@ -114,7 +115,7 @@ class ListParserSpec extends Specification {
 
         then:
         // just enough assertions to check AOK so far
-        parsedList.getNodes()[1].getParsedList().isQuoted()
+        parsedList.getNodes()[1].getParsedList().getQuoteType() == QuoteType.LIST
         parsedList.getNodes()[1].getParsedList().getNodes()[0].getValue() == "a"
         parsedList.getNodes()[1].getParsedList().getNodes()[1].getValue() == "nil"
         parsedList.getNodes()[1].getParsedList().getNodes()[2].getParsedList().getNodes()[0].getValue() == "b"
@@ -130,7 +131,7 @@ class ListParserSpec extends Specification {
         then:
         // just enough assertions to check AOK so far
         parsedList.getNodes()[0].getValue() == "funcall"
-        parsedList.getNodes()[1].getParsedList().isQuoted()
+        parsedList.getNodes()[1].getParsedList().getQuoteType() == QuoteType.FUNCTION
         parsedList.getNodes()[1].getParsedList().getNodes()[0].getValue() == "lambda"
         parsedList.getNodes()[1].getParsedList().getNodes()[1].getParsedList().getNodes()[0].getValue() == "x"
         parsedList.getNodes()[1].getParsedList().getNodes()[2].getParsedList().getNodes()[0].getValue() == "+"
@@ -139,7 +140,7 @@ class ListParserSpec extends Specification {
         parsedList.getNodes()[2].getValue() == "1"
     }
 
-    def "string example"() {
+    def "quoted string example"() {
         given:
         def program = '(setf my-variable (read-from-string "(1 2 3)"))'
 
@@ -149,7 +150,7 @@ class ListParserSpec extends Specification {
         then:
         // just enough assertions to check AOK so far
         parsedList.getNodes()[2].getParsedList().getNodes()[1].getValue() == "(1 2 3)"
-
+        parsedList.getNodes()[2].getParsedList().getNodes()[1].getQuoteType() == QuoteType.STRING
     }
 
     def "type specifier example"() {
@@ -161,7 +162,7 @@ class ListParserSpec extends Specification {
 
         then:
         // just enough assertions to check AOK so far
-        parsedList.getNodes()[1].isQuoted()
+        parsedList.getNodes()[1].getQuoteType() == QuoteType.OTHER
         parsedList.getNodes()[1].getValue() == "string"
 
     }

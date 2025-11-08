@@ -11,16 +11,18 @@ public class ListParser {
     public ParsedList parse(String program) throws IOException {
         // PushbackReader so we can 'reset' characters back into the stream e.g. when we read 'too far' by encountering
         // an opening bracket which 'belongs' to a recursive parsing call.
-        return parse(new PushbackReader(new StringReader(program)), false);
+        return parse(new PushbackReader(new StringReader(program)), QuoteType.NONE);
     }
 
-    public ParsedList parse(PushbackReader reader, boolean quoted) throws IOException {
+    public ParsedList parse(PushbackReader reader, QuoteType quoteType) throws IOException {
         boolean inList = false;           // indicates we've seen the opening bracket for the current list.
                                           // Once true, any other opening bracket means a sub-list so we should recurse.
-        boolean quotedList = false;       // indicates that we've detected a quoted list - the next loop iteration
+        boolean detectedQuotedList = false;       // indicates that we've detected a quoted list - the next loop iteration
                                           // needs this to pass to the recursive parse() call.
-        boolean quotedFunction = false;   // indicates that we've detected a quoted function - the next loop iteration
+        boolean detectedQuotedFunction = false;   // indicates that we've detected a quoted function - the next loop iteration
                                           // needs this to pass to the recursive parse() call.
+        boolean detectedOtherQuoteType = false;
+
         List<ListNode> nodes = new ArrayList<>();
 
         StringBuilder sb = new StringBuilder();
@@ -36,14 +38,17 @@ public class ListParser {
             // space or close list means this node is completely read
             else if((c == ' ' || c == ')')) {
                 if(!sb.isEmpty()) {
-                    nodes.add(new ListNode(sb.toString(), quotedFunction));
-                    if(quotedFunction) {
-                        quotedFunction = false;
-//                        seenQuote = false;
+                    // determine quote type
+                    // todo bailing out to 'other'
+                    QuoteType listNodeQuoteType = detectedQuotedFunction ? QuoteType.FUNCTION : (detectedOtherQuoteType ? QuoteType.OTHER : QuoteType.NONE);
+
+                    nodes.add(new ListNode(sb.toString(), listNodeQuoteType));
+                    if(detectedQuotedFunction) {
+                        detectedQuotedFunction = false;
                     }
                 }
                 if(c == ')') {
-                    return new ParsedList(nodes, quoted);
+                    return new ParsedList(nodes, quoteType);
                 }
                 // otherwise get ready for the next part of this list
                 sb = new StringBuilder();
@@ -54,21 +59,24 @@ public class ListParser {
                 // we need to 'un-read' the opening bracket so the recursive parse sees it
                 reader.unread(c);
 
-                ParsedList subListForThisNode = parse(reader, quotedList || quotedFunction);
-                quotedList = false;
-                quotedFunction = false;
+                // we need to recurse; resolve the quotation type if any
+                QuoteType childListQuotationType = detectedQuotedList ? QuoteType.LIST : (detectedQuotedFunction ? QuoteType.FUNCTION : QuoteType.NONE);
+                ParsedList subListForThisNode = parse(reader, childListQuotationType);
+                detectedQuotedList = false;
+                detectedQuotedFunction = false;
                 nodes.add(new ListNode(subListForThisNode));
             }
 
             else if(c == '\'') {
                 // check whether this is a quoted list coming up otherwise crash
                 char nextChar = (char)reader.read();
-                if(nextChar != '(') {
-                    throw new IllegalStateException("quote with unsupported next character");
+                if(nextChar == '(') {
+                    detectedQuotedList = true;
                 }
-
-                reader.unread('(');
-                quotedList = true;
+                else {
+                    detectedOtherQuoteType = true;
+                }
+                reader.unread(nextChar);
             }
 
             else if(c == '#') {
@@ -77,7 +85,7 @@ public class ListParser {
                 if(nextChar != '\'') {
                     throw new IllegalStateException("hash with unsupported next character");
                 }
-                quotedFunction = true;
+                detectedQuotedFunction = true;
             }
 
             else if(c == '"') {
@@ -94,7 +102,7 @@ public class ListParser {
                     reader.unread(nextChar);
                 }
 
-                nodes.add(new ListNode(sb.toString(), true));
+                nodes.add(new ListNode(sb.toString(), QuoteType.STRING));
             }
 
             else {
@@ -104,6 +112,7 @@ public class ListParser {
 
             i = reader.read();
         }
-        return new ParsedList(nodes, false);
+
+        return new ParsedList(nodes, QuoteType.NONE);
     }
 }

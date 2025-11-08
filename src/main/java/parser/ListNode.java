@@ -3,16 +3,16 @@ package parser;
 public class ListNode {
     private String value;          // either it's an atom ...
     private ParsedList parsedList; // or a parsed list of nodes
-    private boolean quoted;        // supporting the case where value is a quoted function e.g. #'even.  Makes no sense for a parsedList.
+    private QuoteType quoteType;        // supporting the case where value is a quoted function e.g. #'even.  Makes no sense for a parsedList.
 
     public ListNode(String value) {
         this.value = value;
-        this.quoted = false;
+        this.quoteType = QuoteType.NONE;
     }
 
-    public ListNode(String value, boolean quoted) {
+    public ListNode(String value, QuoteType quoteType) {
         this.value = value;
-        this.quoted = quoted;
+        this.quoteType = quoteType;
     }
 
     public ListNode(ParsedList parsedList) {
@@ -52,7 +52,7 @@ public class ListNode {
         return parsedList;
     }
 
-    public boolean isQuoted() {
-        return quoted;
+    public QuoteType getQuoteType() {
+        return quoteType;
     }
 }

@@ -4,19 +4,19 @@ import java.util.List;
 
 public class ParsedList {
     private List<ListNode> nodes;
-    private boolean quoted;
+    private QuoteType quoteType;
 
-    public ParsedList(List<ListNode> nodes, boolean quoted) {
+    public ParsedList(List<ListNode> nodes, QuoteType quoteType) {
         this.nodes = nodes;
-        this.quoted = quoted;
+        this.quoteType = quoteType;
     }
 
     public List<ListNode> getNodes() {
         return nodes;
     }
 
-    public boolean isQuoted() {
-        return quoted;
+    public QuoteType getQuoteType() {
+        return quoteType;
     }
 
     public String toString() {
