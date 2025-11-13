@@ -1,9 +1,9 @@
 package interpreter.functionimpl;
 
-import parser.Node;
+import parser.Form;
 
 import java.util.List;
 
 public interface FunctionImpl {
-    public String apply(List<Node> arguments);
+    String apply(List<Form> arguments);
 }

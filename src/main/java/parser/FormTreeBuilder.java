@@ -23,14 +23,14 @@ import java.util.List;
  */
 public class FormTreeBuilder {
 
-    public static ParseResult parse(String form) {
+    public static List<Node> parse(String form) {
         Collected collected = parseOperator(form);
         Node operatorNode = new Node(NodeType.OPERATOR, collected.text(), form, collected.childNodes());
 
         // if this list contains only a function and nothing more, then exit early.  For now we treat this as OK, but
         // may end up being invalid.  I thought I needed it for a test case but may end up redundant.
         if(collected.pos() > form.length()-1) {
-            return new ParseResult(new Form(List.of(operatorNode)));
+            return List.of(operatorNode);
         }
 
         // throw away any spaces between the consumed operator and any operands which come next
@@ -53,7 +53,7 @@ public class FormTreeBuilder {
         nodes.add(operatorNode);
         nodes.addAll(operandNodes);
 
-        return new ParseResult(new Form(nodes));
+        return nodes;
     }
 
     /**
@@ -78,7 +78,7 @@ public class FormTreeBuilder {
                     depth--;
                     if(depth == 0) {
                         String parsedOperatorText = sb.toString();
-                        List<Node> childNodes = containsEmbeddedForm(parsedOperatorText) ? parseChildNodes(parsedOperatorText) : List.of();
+                        List<Node> childNodes = containsEmbeddedForm(parsedOperatorText) ? parse(parsedOperatorText) : List.of();
                         return new Collected(parsedOperatorText, i+1, childNodes);  // we add 1 to pos so the next step doesn't have to deal with it
                     }
                 }
@@ -88,11 +88,6 @@ public class FormTreeBuilder {
             return parseNextAtom(form, 1);  // ignore first char (outer paren for this form)
         }
         throw new IllegalStateException("unhandled function");
-    }
-
-    private static List<Node> parseChildNodes(String functionText) {
-        ParseResult result = parse(functionText);
-        return result.form().nodes();
     }
 
     public static boolean isAForm(String text) {

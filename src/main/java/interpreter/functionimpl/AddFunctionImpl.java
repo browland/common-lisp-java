@@ -1,16 +1,24 @@
 package interpreter.functionimpl;
 
+import parser.Form;
 import parser.Node;
 
 import java.util.List;
 
 public class AddFunctionImpl implements FunctionImpl {
-    @Override
-    public String apply(List<Node> arguments) {
-        // assume two args
-        int argOne = Integer.parseInt(arguments.get(0).rawText());
-        int argTwo = Integer.parseInt(arguments.get(1).rawText());
+    private List<Node> operands;
 
-        return Integer.toString(argOne + argTwo);
+    public AddFunctionImpl(List<Node> operands) {
+        this.operands = operands;
+    }
+    @Override
+    public String apply(List<Form> arguments) {
+        // todo not ready
+//        // assume two args
+//        int argOne = Integer.parseInt(arguments.get(0).rawText());
+//        int argTwo = Integer.parseInt(arguments.get(1).rawText());
+//
+//        return Integer.toString(argOne + argTwo);
+        return null;
     }
 }

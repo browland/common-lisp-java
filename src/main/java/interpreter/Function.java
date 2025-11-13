@@ -18,7 +18,7 @@ public record Function(Node node) {
         return new Function(functionNode);
     }
 
-    String apply(List<Node> arguments) {
+    public String apply(List<Node> arguments) {
         // for each child, apply it and replace its text at this level with its result of evaluation
         List<Node> children = node.children();
         if(!children.isEmpty()) {
@@ -34,10 +34,11 @@ public record Function(Node node) {
         }
 
         // simpler case where we don't need to recursively evaluate the function
-        Optional<FunctionImpl> impl = resolveImpl(node().rawText());
-        if(impl.isPresent()) {
-            return impl.get().apply(arguments);
-        }
+        // todo not ready
+//        Optional<FunctionImpl> impl = resolveImpl(node().rawText());
+//        if(impl.isPresent()) {
+//            return impl.get().apply(arguments);
+//        }
 
         // todo this is quick and dirty code to evaluate a lambda which doesn't require recursion (already done above),
         //      returning a new lambda.
@@ -52,10 +53,11 @@ public record Function(Node node) {
         throw new IllegalArgumentException("unimplemented, just hack it in for now?");
     }
 
-    private Optional<FunctionImpl> resolveImpl(String rawText) {
-        return switch(rawText) {
-            case "+" -> Optional.of(new AddFunctionImpl());
-            default -> Optional.empty();
-        };
-    }
+    // todo not ready
+//    private Optional<FunctionImpl> resolveImpl(String rawText) {
+//        return switch(rawText) {
+//            case "+" -> Optional.of(new AddFunctionImpl());
+//            default -> Optional.empty();
+//        };
+//    }
 }
