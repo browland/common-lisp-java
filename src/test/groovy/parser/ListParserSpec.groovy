@@ -154,6 +154,11 @@ class ListParserSpec extends Specification {
     }
 
     def "type specifier example"() {
+
+        // (concatenate 'string "Hello, " "world" ". Today is good.")
+        // The first operand is the type to return - in this case the type specifier 'string.
+        // The remaining operands are the elements of the sequence to concatenante.
+
         given:
         def program = '(concatenate \'string "Hello, " "world" ". Today is good.")'
 
@@ -164,6 +169,5 @@ class ListParserSpec extends Specification {
         // just enough assertions to check AOK so far
         parsedList.getNodes()[1].getQuoteType() == QuoteType.OTHER
         parsedList.getNodes()[1].getValue() == "string"
-
     }
 }

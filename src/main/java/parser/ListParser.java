@@ -39,7 +39,7 @@ public class ListParser {
             else if((c == ' ' || c == ')')) {
                 if(!sb.isEmpty()) {
                     // determine quote type
-                    // todo bailing out to 'other'
+                    // todo bailing out to 'other' - need to deal with other quote types
                     QuoteType listNodeQuoteType = detectedQuotedFunction ? QuoteType.FUNCTION : (detectedOtherQuoteType ? QuoteType.OTHER : QuoteType.NONE);
 
                     nodes.add(new ListNode(sb.toString(), listNodeQuoteType));
