@@ -25,10 +25,11 @@ record RList(int depth,
     }
 
     static final class Builder implements NodeBuilder {
+        private final List<NodeBuilder> nodeBuilders = new ArrayList<>();
+
         private RList.Builder parentListBuilder;
         private int depth;
         private String prefix;
-        private List<NodeBuilder> nodeBuilders = new ArrayList<>();
 
         Builder parentListBuilder(RList.Builder parentListBuilder) {
             this.parentListBuilder = parentListBuilder;
@@ -45,9 +46,8 @@ record RList(int depth,
             return this;
         }
 
-        Builder addNodeBuilder(NodeBuilder nodeBuilder) {
+        void addNodeBuilder(NodeBuilder nodeBuilder) {
             this.nodeBuilders.add(nodeBuilder);
-            return this;
         }
 
         public RList build() {
