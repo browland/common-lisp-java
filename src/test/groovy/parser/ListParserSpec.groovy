@@ -10,7 +10,7 @@ class ListParserSpec extends Specification {
         def program = "(add 1 2)"
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         parsedList.getQuoteType() == QuoteType.NONE
@@ -27,7 +27,7 @@ class ListParserSpec extends Specification {
         def program = "(add 1 (add 1 2))"
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         parsedList.getQuoteType() == QuoteType.NONE
@@ -55,7 +55,7 @@ class ListParserSpec extends Specification {
         def program = "(defun even (num) (= (mod num 2) 0))"
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         def outerListNodes = parsedList.getNodes()
@@ -90,7 +90,7 @@ class ListParserSpec extends Specification {
         def program = "(filter '(6 4 3 5 2) #'even)"
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         def outerListNodes = parsedList.getNodes()
@@ -111,7 +111,7 @@ class ListParserSpec extends Specification {
         def program = "(non-nil '(a nil (b) (nil) 2))"
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         // just enough assertions to check AOK so far
@@ -126,7 +126,7 @@ class ListParserSpec extends Specification {
         def program = "(funcall #'(lambda (x) (+ x 1)) 1)"
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         // just enough assertions to check AOK so far
@@ -145,7 +145,7 @@ class ListParserSpec extends Specification {
         def program = '(setf my-variable (read-from-string "(1 2 3)"))'
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         // just enough assertions to check AOK so far
@@ -163,7 +163,7 @@ class ListParserSpec extends Specification {
         def program = '(concatenate \'string "Hello, " "world" ". Today is good.")'
 
         when:
-        def parsedList = parser.parse(program)
+        def parsedList = parser.parseList(program)
 
         then:
         // just enough assertions to check AOK so far

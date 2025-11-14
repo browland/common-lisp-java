@@ -8,13 +8,13 @@ import java.util.List;
 
 public class ListParser {
 
-    public ParsedList parse(String program) throws IOException {
+    public ParsedList parseList(String program) throws IOException {
         // PushbackReader so we can 'reset' characters back into the stream e.g. when we read 'too far' by encountering
         // an opening bracket which 'belongs' to a recursive parsing call.
-        return parse(new PushbackReader(new StringReader(program)), QuoteType.NONE);
+        return parseList(new PushbackReader(new StringReader(program)), QuoteType.NONE);
     }
 
-    public ParsedList parse(PushbackReader reader, QuoteType quoteType) throws IOException {
+    public ParsedList parseList(PushbackReader reader, QuoteType quoteType) throws IOException {
         boolean inList = false;           // indicates we've seen the opening bracket for the current list.
                                           // Once true, any other opening bracket means a sub-list so we should recurse.
         boolean detectedQuotedList = false;       // indicates that we've detected a quoted list - the next loop iteration
@@ -61,14 +61,14 @@ public class ListParser {
 
                 // we need to recurse; resolve the quotation type if any
                 QuoteType childListQuotationType = detectedQuotedList ? QuoteType.LIST : (detectedQuotedFunction ? QuoteType.FUNCTION : QuoteType.NONE);
-                ParsedList subListForThisNode = parse(reader, childListQuotationType);
+                ParsedList subListForThisNode = parseList(reader, childListQuotationType);
                 detectedQuotedList = false;
                 detectedQuotedFunction = false;
                 nodes.add(new ListNode(subListForThisNode));
             }
 
             else if(c == '\'') {
-                // check whether this is a quoted list coming up otherwise crash
+                // check whether this is a quoted list coming up otherwise just treat it as 'other' for now
                 char nextChar = (char)reader.read();
                 if(nextChar == '(') {
                     detectedQuotedList = true;
@@ -114,5 +114,10 @@ public class ListParser {
         }
 
         return new ParsedList(nodes, QuoteType.NONE);
+    }
+
+    enum State {
+        STARTING, STARTED, QUOTE
+
     }
 }
