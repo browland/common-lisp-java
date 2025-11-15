@@ -1,0 +1,43 @@
+package reader;
+
+import java.util.Set;
+
+public class CharacterReader {
+    private final static Set<Character> PREFIX_CHARS = Set.of(
+            // todo more ...
+            '\'', '#', '`'
+    );
+
+    private final Reader reader;
+
+    public CharacterReader(Reader reader) {
+        this.reader = reader;
+    }
+
+    public void read(String program) {
+        int depth = 0;
+
+        for (char c : program.toCharArray()) {
+            if (PREFIX_CHARS.contains(c)) {
+                CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_PREFIX, depth);
+                reader.inPrefix(event);
+            } else if (c == '(') {
+                depth++;
+                CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.OPEN_LIST, depth);
+                reader.startList(event);
+            } else if (c == ')') {
+                depth--;
+                CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.CLOSE_LIST, depth);
+                reader.endList(event);
+            } else if (c == ' ') {
+                CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.END_NODE, depth);
+                reader.endNode(event);
+            } else if (c == '\n') {
+                // no-op for newline
+            } else {
+                CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_ATOM, depth);
+                reader.inAtom(event);
+            }
+        }
+    }
+}
