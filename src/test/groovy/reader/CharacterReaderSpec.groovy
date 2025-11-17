@@ -65,4 +65,51 @@ class CharacterReaderSpec extends Specification {
         atom.value() == "even"
         atom.prefix() == "#'"
     }
+
+    def "reads complex lambda"() {
+        given:
+        def reader = new Reader()
+        def characterReader = new CharacterReader(reader)
+        def program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
+
+        when:
+        characterReader.read(program)
+        def outerLambdaApplicationList = reader.getResult()
+        print(outerLambdaApplicationList)
+
+        then:
+        1 == 1
+        outerLambdaApplicationList.depth() == 0
+
+        // (( (lambda (x) (lambda (y) (+ x y))) 10) 5)
+        def outerLambdaApplicationNodes = outerLambdaApplicationList.nodes()
+        outerLambdaApplicationNodes.size() == 2
+        outerLambdaApplicationNodes.get(0) instanceof RList
+        outerLambdaApplicationNodes.get(1) instanceof Atom
+        ((Atom)outerLambdaApplicationNodes.get(1)).value() == "5"
+
+        // ( (lambda (x) (lambda (y) (+ x y))) 10)
+        def innerLambdaApplicationList = (RList)outerLambdaApplicationNodes.get(0)
+        innerLambdaApplicationList.depth() == 1
+
+        def innerLambdaApplicationNodes = innerLambdaApplicationList.nodes()
+        innerLambdaApplicationNodes.size() == 2
+        innerLambdaApplicationNodes[0] instanceof RList
+        innerLambdaApplicationNodes[1] instanceof Atom
+
+        // (lambda (x) (lambda (y) (+ x y)))
+        def outerLambdaDefinitionList = (RList)innerLambdaApplicationNodes[0]
+        def outerLambdaDefinitionNodes = outerLambdaDefinitionList.nodes()
+        outerLambdaDefinitionNodes.size() == 3
+        ((Atom)outerLambdaDefinitionNodes.get(0)).value() == "lambda"
+        ((Atom)((RList)outerLambdaDefinitionNodes.get(1)).nodes()[0]).value() == "x"
+
+        // (lambda (y) (+ x y))
+        def innerLambdaDefinitionList = (RList)(outerLambdaDefinitionList.nodes()[2])
+        def innerLambdaDefinitionNodes = innerLambdaDefinitionList.nodes()
+        innerLambdaDefinitionNodes.size() == 3
+        ((Atom)innerLambdaDefinitionNodes.get(0)).value() == "lambda"
+        ((Atom)((RList)innerLambdaDefinitionNodes.get(1)).nodes()[0]).value() == "y"
+
+    }
 }
