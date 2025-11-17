@@ -17,23 +17,18 @@ class CharacterReaderSpec extends Specification {
         then:
         outerList.depth() == 0
 
-        def nodes = outerList.nodes()
-        nodes.size() == 3
-        nodes.get(0) instanceof Atom
-        ((Atom)nodes.get(0)).value() == "add"
-        ((Atom)nodes.get(2)).value() == "2"
+        outerList.size() == 3
+        outerList.get(0) instanceof Atom
+        ((Atom)outerList.get(0)).value() == "add"
+        ((Atom)outerList.get(2)).value() == "2"
 
-        def innerResult = nodes.get(1)
-        innerResult instanceof RList
-
-        def innerList = (RList)innerResult
+        def innerList = (RList)outerList.get(1)
         innerList.depth() == 1
 
-        def innerNodes = innerList.nodes()
-        innerNodes.size() == 3
-        ((Atom)innerNodes.get(0)).value() == "add"
-        ((Atom)innerNodes.get(1)).value() == "1"
-        ((Atom)innerNodes.get(2)).value() == "2"
+        innerList.size() == 3
+        ((Atom)innerList.get(0)).value() == "add"
+        ((Atom)innerList.get(1)).value() == "1"
+        ((Atom)innerList.get(2)).value() == "2"
     }
 
     def "reads program with quoted list and quoted function"() {
@@ -46,22 +41,18 @@ class CharacterReaderSpec extends Specification {
         def outerList = reader.getResult()
 
         then:
-        def outerNodes = outerList.nodes()
-        ((Atom)outerNodes.get(0)).value() == "filter"
+        ((Atom)outerList.get(0)).value() == "filter"
 
-        def innerResult = outerNodes.get(1)
-        innerResult instanceof RList
-        def innerList = (RList)innerResult
+        def innerList = (RList)outerList.get(1)
         innerList.prefix() == "'"
 
-        def innerNodes = innerList.nodes()
-        ((Atom)innerNodes[0]).value() == "6"
-        ((Atom)innerNodes[1]).value() == "4"
-        ((Atom)innerNodes[2]).value() == "3"
-        ((Atom)innerNodes[3]).value() == "5"
-        ((Atom)innerNodes[4]).value() == "2"
+        ((Atom)innerList.get(0)).value() == "6"
+        ((Atom)innerList.get(1)).value() == "4"
+        ((Atom)innerList.get(2)).value() == "3"
+        ((Atom)innerList.get(3)).value() == "5"
+        ((Atom)innerList.get(4)).value() == "2"
 
-        def atom = (Atom) outerNodes.get(2)
+        def atom = (Atom) outerList.get(2)
         atom.value() == "even"
         atom.prefix() == "#'"
     }
@@ -75,41 +66,34 @@ class CharacterReaderSpec extends Specification {
         when:
         characterReader.read(program)
         def outerLambdaApplicationList = reader.getResult()
-        print(outerLambdaApplicationList)
 
         then:
-        1 == 1
         outerLambdaApplicationList.depth() == 0
 
         // (( (lambda (x) (lambda (y) (+ x y))) 10) 5)
-        def outerLambdaApplicationNodes = outerLambdaApplicationList.nodes()
-        outerLambdaApplicationNodes.size() == 2
-        outerLambdaApplicationNodes.get(0) instanceof RList
-        outerLambdaApplicationNodes.get(1) instanceof Atom
-        ((Atom)outerLambdaApplicationNodes.get(1)).value() == "5"
+        outerLambdaApplicationList.size() == 2
+        outerLambdaApplicationList.get(0) instanceof RList
+        outerLambdaApplicationList.get(1) instanceof Atom
+        ((Atom)outerLambdaApplicationList.get(1)).value() == "5"
 
         // ( (lambda (x) (lambda (y) (+ x y))) 10)
-        def innerLambdaApplicationList = (RList)outerLambdaApplicationNodes.get(0)
+        def innerLambdaApplicationList = (RList)outerLambdaApplicationList.get(0)
         innerLambdaApplicationList.depth() == 1
 
-        def innerLambdaApplicationNodes = innerLambdaApplicationList.nodes()
-        innerLambdaApplicationNodes.size() == 2
-        innerLambdaApplicationNodes[0] instanceof RList
-        innerLambdaApplicationNodes[1] instanceof Atom
+        innerLambdaApplicationList.size() == 2
+        innerLambdaApplicationList.get(0) instanceof RList
+        innerLambdaApplicationList.get(1) instanceof Atom
 
         // (lambda (x) (lambda (y) (+ x y)))
-        def outerLambdaDefinitionList = (RList)innerLambdaApplicationNodes[0]
-        def outerLambdaDefinitionNodes = outerLambdaDefinitionList.nodes()
-        outerLambdaDefinitionNodes.size() == 3
-        ((Atom)outerLambdaDefinitionNodes.get(0)).value() == "lambda"
-        ((Atom)((RList)outerLambdaDefinitionNodes.get(1)).nodes()[0]).value() == "x"
+        def outerLambdaDefinitionList = (RList)innerLambdaApplicationList.get(0)
+        outerLambdaDefinitionList.size() == 3
+        ((Atom)outerLambdaDefinitionList.get(0)).value() == "lambda"
+        ((Atom)((RList)outerLambdaDefinitionList.get(1)).nodes()[0]).value() == "x"
 
         // (lambda (y) (+ x y))
         def innerLambdaDefinitionList = (RList)(outerLambdaDefinitionList.nodes()[2])
-        def innerLambdaDefinitionNodes = innerLambdaDefinitionList.nodes()
-        innerLambdaDefinitionNodes.size() == 3
-        ((Atom)innerLambdaDefinitionNodes.get(0)).value() == "lambda"
-        ((Atom)((RList)innerLambdaDefinitionNodes.get(1)).nodes()[0]).value() == "y"
-
+        innerLambdaDefinitionList.size() == 3
+        ((Atom)innerLambdaDefinitionList.get(0)).value() == "lambda"
+        ((Atom)((RList)innerLambdaDefinitionList.get(1)).nodes()[0]).value() == "y"
     }
 }

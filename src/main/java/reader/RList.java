@@ -24,6 +24,14 @@ record RList(int depth,
         return sb.toString();
     }
 
+    public Node get(int i) {
+        return nodes.get(i);
+    }
+
+    public int size() {
+        return nodes.size();
+    }
+
     static final class Builder implements NodeBuilder {
         private final List<NodeBuilder> nodeBuilders = new ArrayList<>();
 
