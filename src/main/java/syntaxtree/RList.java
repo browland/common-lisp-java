@@ -1,4 +1,4 @@
-package reader;
+package syntaxtree;
 
 import java.util.ArrayList;
 import java.util.List;

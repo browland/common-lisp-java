@@ -1,5 +1,7 @@
 package reader;
 
+import syntaxtree.SyntaxTreeBuilder;
+
 import java.util.Set;
 
 public class CharacterReader {
@@ -8,10 +10,10 @@ public class CharacterReader {
             '\'', '#', '`'
     );
 
-    private final Reader reader;
+    private final SyntaxTreeBuilder syntaxTreeBuilder;
 
-    public CharacterReader(Reader reader) {
-        this.reader = reader;
+    public CharacterReader(SyntaxTreeBuilder syntaxTreeBuilder) {
+        this.syntaxTreeBuilder = syntaxTreeBuilder;
     }
 
     public void read(String program) {
@@ -20,23 +22,23 @@ public class CharacterReader {
         for (char c : program.toCharArray()) {
             if (PREFIX_CHARS.contains(c)) {
                 CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_PREFIX, depth);
-                reader.inPrefix(event);
+                syntaxTreeBuilder.inPrefix(event);
             } else if (c == '(') {
                 depth++;
                 CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.OPEN_LIST, depth);
-                reader.startList(event);
+                syntaxTreeBuilder.startList(event);
             } else if (c == ')') {
                 depth--;
                 CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.CLOSE_LIST, depth);
-                reader.endList(event);
+                syntaxTreeBuilder.endList(event);
             } else if (c == ' ') {
                 CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.END_NODE, depth);
-                reader.endNode(event);
+                syntaxTreeBuilder.endNode(event);
             } else if (c == '\n') {
                 // no-op for newline
             } else {
                 CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_ATOM, depth);
-                reader.inAtom(event);
+                syntaxTreeBuilder.inAtom(event);
             }
         }
     }

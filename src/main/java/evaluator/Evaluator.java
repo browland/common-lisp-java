@@ -4,7 +4,12 @@ import function.Closure;
 import function.Function;
 import function.FunctionRegistry;
 import reader.*;
+import syntaxtree.Atom;
+import syntaxtree.Node;
+import syntaxtree.RList;
+import syntaxtree.SyntaxTreeBuilder;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,16 +22,16 @@ public class Evaluator {
     public static void main(String[] args) {
         String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
         Evaluator e = new Evaluator();
-        System.out.println(e.evaluate(program));
+        System.out.println(e.evaluate(program, new HashMap<>()));
     }
 
-    public Value<?> evaluate(String program) {
-        Reader reader = new Reader();
-        CharacterReader characterReader = new CharacterReader(reader);
+    public Value<?> evaluate(String program, Map<String,String> environment) {
+        SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
+        CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
         characterReader.read(program);
 
-        RList list = reader.getResult();
-        return evaluate(list, Map.of());
+        RList list = syntaxTreeBuilder.getResult();
+        return evaluate(list, environment);
     }
 
     public Value<?> evaluate(RList list, Map<String,String> environment) {
@@ -65,7 +70,6 @@ public class Evaluator {
     }
 
     private Closure evaluateLambda(RList list, Map<String,String> capturedEnvironment) {
-        // if first part is "lambda" then we can create a closure at this level.  Otherwise, recurse until we find one.
         Node operator = list.get(0);
         if(operator instanceof RList) {
             throw new IllegalStateException("should not get here - need some better handling?");

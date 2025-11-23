@@ -1,12 +1,15 @@
 package reader
 
 import spock.lang.Specification
+import syntaxtree.Atom
+import syntaxtree.RList
+import syntaxtree.SyntaxTreeBuilder
 
 class CharacterReaderSpec extends Specification {
 
     def "reads simple program"() {
         given:
-        def reader = new Reader()
+        def reader = new SyntaxTreeBuilder()
         def characterReader = new CharacterReader(reader)
         def program = "(add (add 1 2) 2)"
 
@@ -32,7 +35,7 @@ class CharacterReaderSpec extends Specification {
     }
 
     def "reads program with quoted list and quoted function"() {
-        def reader = new Reader()
+        def reader = new SyntaxTreeBuilder()
         def characterReader = new CharacterReader(reader)
         def program = "(filter '(6 4 3 5 2) #'even)"
 
@@ -59,7 +62,7 @@ class CharacterReaderSpec extends Specification {
 
     def "reads complex lambda"() {
         given:
-        def reader = new Reader()
+        def reader = new SyntaxTreeBuilder()
         def characterReader = new CharacterReader(reader)
         def program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
 

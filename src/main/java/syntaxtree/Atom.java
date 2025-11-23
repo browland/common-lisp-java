@@ -1,4 +1,4 @@
-package reader;
+package syntaxtree;
 
 public record Atom(String value, String prefix) implements Node {
 
