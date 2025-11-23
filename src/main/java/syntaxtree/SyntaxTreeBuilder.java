@@ -4,33 +4,53 @@ import reader.CharacterReaderEvent;
 
 public class SyntaxTreeBuilder {
     private final StringBuilder prefixBuilder = new StringBuilder();
+    private final StringBuilder suffixBuilder = new StringBuilder();
     private final StringBuilder atomStringBuilder = new StringBuilder();
 
     private RList.Builder listBuilder;
     private String prefix;
+    private String suffix;
 
     public void inAtom(CharacterReaderEvent event) {
+        if(!suffixBuilder.isEmpty()) {
+            throw new IllegalArgumentException("Seeing atom characters after suffix quote");
+        }
         atomStringBuilder.append(event.character());
     }
 
-    public void inPrefix(CharacterReaderEvent event) {
-        prefixBuilder.append(event.character());
-        prefix = prefixBuilder.toString();
+    public void onQuoteChar(CharacterReaderEvent event) {
+        if(atomStringBuilder.isEmpty()) {
+            prefixBuilder.append(event.character());
+            prefix = prefixBuilder.toString();
+        }
+        else if(!atomStringBuilder.isEmpty()) {
+            suffixBuilder.append(event.character());
+            suffix = suffixBuilder.toString();
+        }
     }
 
-    public void endNode(CharacterReaderEvent event) {
-        // if we don't have any characters from an atom then we may have just completed parsing a list
-        if(atomStringBuilder.isEmpty()) {
+    public void onSpace(CharacterReaderEvent event) {
+        // if we don't have any characters from an atom (including prefix) then we may have just completed parsing a list
+        if(atomStringBuilder.isEmpty() && prefixBuilder.isEmpty()) {
             return;
         }
 
+        // if we're in a string literal then treat space as just another character for the current atom
+        if(!prefixBuilder.isEmpty() && "\"".equals(prefix)) {
+            atomStringBuilder.append(event.character());
+            return;
+        }
+
+        // otherwise this space signifies the end of the atom we've been building
         String atom = atomStringBuilder.toString();
         Atom.Builder atomBuilder = new Atom.Builder()
                 .value(atom)
-                .prefix(prefix);
+                .prefix(prefix)
+                .suffix(suffix);
         atomStringBuilder.delete(0, atomStringBuilder.length());
 
-        prefixBuilder.delete(0, atomStringBuilder.length());
+        prefixBuilder.delete(0, prefixBuilder.length());
+        suffixBuilder.delete(0, suffixBuilder.length());
 
         listBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
     }
@@ -39,7 +59,8 @@ public class SyntaxTreeBuilder {
         if(!atomStringBuilder.isEmpty()) {
             Atom.Builder atomBuilder = new Atom.Builder()
                     .value(atomStringBuilder.toString())
-                    .prefix(prefix);
+                    .prefix(prefix)
+                    .suffix(suffix);
             listBuilder.addNodeBuilder(atomBuilder);
             atomStringBuilder.delete(0, atomStringBuilder.length());
         }

@@ -4,10 +4,7 @@ import function.Closure;
 import function.Function;
 import function.FunctionRegistry;
 import reader.*;
-import syntaxtree.Atom;
-import syntaxtree.Node;
-import syntaxtree.RList;
-import syntaxtree.SyntaxTreeBuilder;
+import syntaxtree.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -87,7 +84,7 @@ public class Evaluator {
         if(BUILTIN_CONSTANTS.contains(atomStringValue)) {
             return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
         }
-        else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
+        else if(QuoteType.STRING == atom.quoteType()) {
             return new Value<>(atomStringValue, ValueType.STRING_LITERAL);
         }
         else {

@@ -1,13 +1,19 @@
 package syntaxtree;
 
-public record Atom(String value, String prefix) implements Node {
+public record Atom(String value, String prefix, String suffix) implements Node {
 
     final static class Builder implements NodeBuilder {
         private String prefix;
+        private String suffix;
         private String value;
 
         public Builder prefix(String prefix) {
             this.prefix = prefix;
+            return this;
+        }
+
+        public Builder suffix(String suffix) {
+            this.suffix = suffix;
             return this;
         }
 
@@ -17,8 +23,16 @@ public record Atom(String value, String prefix) implements Node {
         }
 
         public Atom build() {
-            return new Atom(this.value, this.prefix);
+            return new Atom(this.value, this.prefix, this.suffix);
         }
     }
 
+    public QuoteType quoteType() {
+        if("\"".equals(prefix) && "\"".equals(suffix)) {
+            return QuoteType.STRING;
+        }
+        else {
+            return null;
+        }
+    }
 }

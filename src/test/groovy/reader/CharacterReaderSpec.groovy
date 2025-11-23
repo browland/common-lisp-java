@@ -60,6 +60,21 @@ class CharacterReaderSpec extends Specification {
         atom.prefix() == "#'"
     }
 
+    def "reads string with space within"() {
+        def reader = new SyntaxTreeBuilder()
+        def characterReader = new CharacterReader(reader)
+        def program = "(format t \"hello world\")"
+
+        when:
+        characterReader.read(program)
+        def outerList = reader.getResult()
+
+        then:
+        ((Atom)outerList.get(2)).value() == "hello world"
+        ((Atom)outerList.get(2)).prefix() == "\""
+        ((Atom)outerList.get(2)).suffix() == "\""
+    }
+
     def "reads complex lambda"() {
         given:
         def reader = new SyntaxTreeBuilder()
