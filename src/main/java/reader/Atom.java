@@ -1,6 +1,6 @@
 package reader;
 
-record Atom(String value, String prefix) implements Node {
+public record Atom(String value, String prefix) implements Node {
 
     final static class Builder implements NodeBuilder {
         private String prefix;

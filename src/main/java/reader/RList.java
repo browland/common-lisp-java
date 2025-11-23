@@ -3,7 +3,7 @@ package reader;
 import java.util.ArrayList;
 import java.util.List;
 
-record RList(int depth,
+public record RList(int depth,
              String prefix,
              List<Node> nodes) implements Node {
 

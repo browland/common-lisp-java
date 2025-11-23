@@ -1,5 +1,5 @@
 package reader;
 
-sealed interface Node permits Atom, RList {
+public sealed interface Node permits Atom, RList {
 
 }
