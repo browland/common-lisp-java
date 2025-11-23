@@ -16,6 +16,7 @@ import java.util.Set;
 
 public class Evaluator {
     private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda");
+    private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
 
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
 
@@ -71,17 +72,27 @@ public class Evaluator {
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
         if(node instanceof Atom atom) {
-            // todo temp code to work out the type directly from the parse tree - needs moving somewhere central
-            String atomStringValue = atom.value();
-            ValueType valueType = atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"") ? ValueType.STRING_LITERAL : ValueType.INTEGER_LITERAL;
-            Value<?> value = ValueType.INTEGER_LITERAL == valueType ? new Value<Integer>(Integer.parseInt(atomStringValue), valueType) : new Value<String>(atomStringValue, valueType);
-            return value;
+            return atomToValue(atom);
         }
         else if (node instanceof RList rlist) {
             return evaluate(rlist, environment);
         }
         else {
             throw new UnsupportedOperationException("Unhandled node type");
+        }
+    }
+
+    private Value<?> atomToValue(Atom atom) {
+        String atomStringValue = atom.value();
+        if(BUILTIN_CONSTANTS.contains(atomStringValue)) {
+            return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
+        }
+        else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
+            return new Value<>(atomStringValue, ValueType.STRING_LITERAL);
+        }
+        else {
+            int intValue = Integer.parseInt(atomStringValue);
+            return new Value<>(intValue, ValueType.INTEGER_LITERAL);
         }
     }
 
