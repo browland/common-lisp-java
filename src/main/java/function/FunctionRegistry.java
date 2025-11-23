@@ -9,6 +9,7 @@ public class FunctionRegistry {
     public FunctionRegistry() {
         registry.put("add", new Add());
         registry.put("+", new Add());
+        registry.put("format", new Format());
     }
 
     public Function findByName(String functionName) {

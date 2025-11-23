@@ -1,5 +1,5 @@
 package evaluator;
 
 public enum ValueType {
-    OPERATOR, LITERAL
+    OPERATOR, LITERAL, NIL
 }
