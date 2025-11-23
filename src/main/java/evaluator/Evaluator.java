@@ -72,7 +72,7 @@ public class Evaluator {
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
         if(node instanceof Atom atom) {
-            return atomToValue(atom);
+            return atomToValue(atom, environment);
         }
         else if (node instanceof RList rlist) {
             return evaluate(rlist, environment);
@@ -82,7 +82,7 @@ public class Evaluator {
         }
     }
 
-    private Value<?> atomToValue(Atom atom) {
+    private Value<?> atomToValue(Atom atom, Map<String,Value<?>> environment) {
         String atomStringValue = atom.value();
         if(BUILTIN_CONSTANTS.contains(atomStringValue)) {
             return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
@@ -91,6 +91,11 @@ public class Evaluator {
             return new Value<>(atomStringValue, ValueType.STRING_LITERAL);
         }
         else {
+            // could be in the environment; otherwise fall back to int
+            if(environment.containsKey(atomStringValue)) {
+                return environment.get(atomStringValue);
+            }
+
             int intValue = Integer.parseInt(atomStringValue);
             return new Value<>(intValue, ValueType.INTEGER_LITERAL);
         }
