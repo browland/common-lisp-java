@@ -7,5 +7,5 @@ import java.util.Map;
 
 public interface Function {
 
-    Value<?> apply(List<String> operands, Map<String,String> environment);
+    Value<?> apply(List<Value<?>> operands, Map<String,Value<?>> environment);
 }

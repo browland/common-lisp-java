@@ -9,10 +9,10 @@ import java.util.Map;
 public class Format implements Function {
 
     @Override
-    public Value<?> apply(List<String> operands, Map<String, String> environment) {
+    public Value<?> apply(List<Value<?>> operands, Map<String, Value<?>> environment) {
         // The first operand is the output stream to send the string, which is the second operand.
-        String stream = operands.get(0);
-        String value = operands.get(1);
+        String stream = (String)operands.get(0).value();
+        String value = (String)operands.get(1).value();
 
         // t is a built-in symbol for constant logical true.  Correct CL behaviour is to treat t as meaning stdout.
         if("t".equals(stream)) {
@@ -21,7 +21,7 @@ public class Format implements Function {
             return new Value<>(null, ValueType.NIL);
         }
         else if("nil".equals(stream)) {
-            return new Value<>(value, ValueType.LITERAL);
+            return operands.get(1);
         }
         else {
             throw new UnsupportedOperationException("Unsupported stream " + stream);

@@ -25,7 +25,7 @@ public class Evaluator {
         System.out.println(e.evaluate(program, new HashMap<>()));
     }
 
-    public Value<?> evaluate(String program, Map<String,String> environment) {
+    public Value<?> evaluate(String program, Map<String,Value<?>> environment) {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
         CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
         characterReader.read(program);
@@ -34,7 +34,7 @@ public class Evaluator {
         return evaluate(list, environment);
     }
 
-    public Value<?> evaluate(RList list, Map<String,String> environment) {
+    public Value<?> evaluate(RList list, Map<String,Value<?>> environment) {
         Function operator;
         Node operatorNode = list.get(0);
 
@@ -60,16 +60,32 @@ public class Evaluator {
         }
     }
 
-    private Value<?> applyForm(Function operator, RList fullList, Map<String,String> environment) {
-        List<String> operands = fullList.nodes().subList(1, fullList.size()).stream()
-                .map(node -> {
-                    Atom atom = (Atom) node;
-                    return atom.value();
-                }).toList();
-        return operator.apply(operands, environment);
+    private Value<?> applyForm(Function operator, RList fullList, Map<String,Value<?>> environment) {
+        List<? extends Value<?>> operands = fullList.nodes().subList(1, fullList.size()).stream()
+                .map(node -> evaluateOperand(node, environment)).toList();
+        return operator.apply((List<Value<?>>) operands, environment);
     }
 
-    private Closure evaluateLambda(RList list, Map<String,String> capturedEnvironment) {
+    private Value<?> evaluateOperand(Node node, Map<String,Value<?>> environment) {
+        // either an atom or a list
+        // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
+        // if a list, then pass it back through evaluate() with the environment
+        if(node instanceof Atom atom) {
+            // todo temp code to work out the type directly from the parse tree - needs moving somewhere central
+            String atomStringValue = atom.value();
+            ValueType valueType = atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"") ? ValueType.STRING_LITERAL : ValueType.INTEGER_LITERAL;
+            Value<?> value = ValueType.INTEGER_LITERAL == valueType ? new Value<Integer>(Integer.parseInt(atomStringValue), valueType) : new Value<String>(atomStringValue, valueType);
+            return value;
+        }
+        else if (node instanceof RList rlist) {
+            return evaluate(rlist, environment);
+        }
+        else {
+            throw new UnsupportedOperationException("Unhandled node type");
+        }
+    }
+
+    private Closure evaluateLambda(RList list, Map<String,Value<?>> capturedEnvironment) {
         Node operator = list.get(0);
         if(operator instanceof RList) {
             throw new IllegalStateException("should not get here - need some better handling?");

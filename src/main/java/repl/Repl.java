@@ -20,7 +20,7 @@ public class Repl {
         CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
 
         // runtime evaluation
-        Map<String,String> environment = new HashMap<>();
+        Map<String,Value<?>> environment = new HashMap<>();
         Evaluator evaluator = new Evaluator();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -42,7 +42,7 @@ public class Repl {
     }
 
     private static void endExpression(SyntaxTreeBuilder syntaxTreeBuilder,
-                                      Map<String, String> environment,
+                                      Map<String, Value<?>> environment,
                                       Evaluator evaluator) {
         RList topLevelList = syntaxTreeBuilder.getResult();
         syntaxTreeBuilder.reset();
