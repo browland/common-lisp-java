@@ -11,6 +11,8 @@ public class FunctionRegistry {
         registry.put("+", new Add());
         registry.put("format", new Format());
         registry.put("load", new Load());
+        registry.put("list", new ListFunction());
+        registry.put("getf", new GetF());
     }
 
     public Function findByName(String functionName) {

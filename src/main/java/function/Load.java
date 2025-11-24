@@ -1,6 +1,6 @@
 package function;
 
-import evaluator.Value;
+import value.Value;
 import repl.BatchEvaluator;
 
 import java.io.FileInputStream;

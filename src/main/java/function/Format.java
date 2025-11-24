@@ -1,7 +1,7 @@
 package function;
 
-import evaluator.Value;
-import evaluator.ValueType;
+import value.Value;
+import value.ValueType;
 
 import java.util.List;
 import java.util.Map;

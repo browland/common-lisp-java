@@ -30,7 +30,7 @@ public class SyntaxTreeBuilder {
         }
     }
 
-    public void onSpace(CharacterReaderEvent event) {
+    public void onWhitespace(CharacterReaderEvent event) {
         // if we don't have any characters from an atom (including prefix) then we may have just completed parsing a list
         if(atomStringBuilder.isEmpty() && prefixBuilder.isEmpty()) {
             return;
@@ -52,6 +52,8 @@ public class SyntaxTreeBuilder {
 
         prefixBuilder.delete(0, prefixBuilder.length());
         suffixBuilder.delete(0, suffixBuilder.length());
+        prefix = null;
+        suffix = null;
 
         currentListBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
     }

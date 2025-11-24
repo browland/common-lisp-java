@@ -31,6 +31,9 @@ public record Atom(String value, String prefix, String suffix) implements Node {
         if("\"".equals(prefix) && "\"".equals(suffix)) {
             return QuoteType.STRING;
         }
+        else if(":".equals(prefix)) {
+            return QuoteType.KEYWORD;
+        }
         else {
             return null;
         }

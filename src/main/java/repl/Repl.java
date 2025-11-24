@@ -1,7 +1,7 @@
 package repl;
 
 import evaluator.Evaluator;
-import evaluator.Value;
+import value.Value;
 import reader.CharacterReader;
 import syntaxtree.SyntaxTreeBuilder;
 

@@ -3,8 +3,9 @@ package evaluator;
 import function.*;
 import reader.CharacterReader;
 import syntaxtree.*;
+import value.Value;
+import value.ValueType;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,6 +104,9 @@ public class Evaluator {
         }
         else if(QuoteType.STRING == atom.quoteType()) {
             return new Value<>(atomStringValue, ValueType.STRING_LITERAL);
+        }
+        else if(QuoteType.KEYWORD == atom.quoteType()) {
+            return new Value<>(atomStringValue, ValueType.KEYWORD);
         }
         else {
             // could be in the environment; otherwise fall back to int
