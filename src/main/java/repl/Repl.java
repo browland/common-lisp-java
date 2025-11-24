@@ -6,9 +6,7 @@ import reader.CharacterReader;
 import syntaxtree.RList;
 import syntaxtree.SyntaxTreeBuilder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,18 +21,32 @@ public class Repl {
         Map<String,Value<?>> environment = new HashMap<>();
         Evaluator evaluator = new Evaluator();
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        while(true) {
-            try {
-                System.out.print("> ");
-                String line = br.readLine();
-                characterReader.read(line);
-                if(syntaxTreeBuilder.isFinished()) {
+        try {
+            System.out.print("> ");
+            InputStreamReader isr = new InputStreamReader(System.in);
+            boolean finishedForm = false;
+
+            // for each character in the form
+            while (true) {
+                char c = (char) isr.read();
+                characterReader.consume(c);
+
+                if (syntaxTreeBuilder.isFinished()) {
+                    finishedForm = true;
                     endExpression(syntaxTreeBuilder, environment, evaluator);
+                    System.out.print("> ");
+                } else {
+                    // we're in the middle of a form
+                    if(c != '\n') {
+                        finishedForm = false;  // reset flag; only needs doing once per form really
+                    }
+                    if (!finishedForm && c == '\n') {
+                        System.out.print("... ");
+                    }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

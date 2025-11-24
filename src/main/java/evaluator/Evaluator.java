@@ -18,11 +18,11 @@ public class Evaluator {
 
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
 
-    public static void main(String[] args) {
-        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
-        Evaluator e = new Evaluator();
-        System.out.println(e.evaluate(program, new HashMap<>()));
-    }
+//    public static void main(String[] args) {
+//        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
+//        Evaluator e = new Evaluator();
+//        System.out.println(e.evaluate(program, new HashMap<>()));
+//    }
 
     public Value<?> evaluate(String program, Map<String,Value<?>> environment) {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
