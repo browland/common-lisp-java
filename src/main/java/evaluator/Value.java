@@ -7,4 +7,8 @@ public record Value<T>(T value,
     public static Value<?> nil() {
         return new Value<>("nil", ValueType.BUILTIN_CONSTANT);
     }
+
+    public static Value<?> t() {
+        return new Value<>("T", ValueType.BUILTIN_CONSTANT);
+    }
 }

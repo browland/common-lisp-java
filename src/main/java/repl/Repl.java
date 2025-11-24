@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Repl implements ReplOutput {
-    private BatchEvaluator batchEvaluator;
+    private final BatchEvaluator batchEvaluator;
 
     public static void main(String[] args) {
         Repl repl = new Repl();

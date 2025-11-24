@@ -17,6 +17,9 @@ public class BatchEvaluator {
 
     private boolean finishedForm;
 
+    // For now it's convenient to ensure we've got a singleton instance and easily acquired, e.g. by load() function.
+    public static BatchEvaluator INSTANCE;
+
     public BatchEvaluator(SyntaxTreeBuilder syntaxTreeBuilder,
                           CharacterReader characterReader,
                           Evaluator evaluator,
@@ -27,6 +30,8 @@ public class BatchEvaluator {
         this.evaluator = evaluator;
         this.environment = environment;
         this.replOutput = replOutput;
+
+        INSTANCE = this;
     }
 
     public void consume(char c) {

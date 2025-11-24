@@ -1,9 +1,6 @@
 package evaluator;
 
-import function.Closure;
-import function.Defun;
-import function.Function;
-import function.FunctionRegistry;
+import function.*;
 import reader.CharacterReader;
 import syntaxtree.*;
 
