@@ -4,7 +4,7 @@ import function.Closure;
 import function.Defun;
 import function.Function;
 import function.FunctionRegistry;
-import reader.*;
+import reader.CharacterReader;
 import syntaxtree.*;
 
 import java.util.HashMap;
@@ -52,8 +52,9 @@ public class Evaluator {
                     return new Value<>(operator, ValueType.OPERATOR);
                 }
                 else if("defun".equals(operatorAtom.value())) {
-                    operator = evaluateDefun(list);
-                    return new Value<>(operator, ValueType.OPERATOR);
+                    Defun defun = evaluateDefun(list);
+                    environment.put(defun.name(), new Value<>(defun, ValueType.OPERATOR));
+                    return new Value<>(defun, ValueType.OPERATOR);
                 }
                 else {
                     throw new UnsupportedOperationException("unsupported special form " + operatorAtom.value());
@@ -62,6 +63,16 @@ public class Evaluator {
             else {
                 // it's a regular form - operator and operands - we know enough to handle it here
                 operator = functionRegistry.findByName(operatorAtom.value());
+                if(operator == null) {
+                    Value<?> possibleStoredOperator = environment.get(operatorAtom.value());
+                    if(ValueType.OPERATOR == possibleStoredOperator.type()) {
+                        operator = (Function)possibleStoredOperator.value();
+
+                    }
+                }
+                if(operator == null) {
+                    throw new IllegalArgumentException("Could not find operator " + operatorAtom);
+                }
                 return applyForm(operator, list, environment);
             }
         }

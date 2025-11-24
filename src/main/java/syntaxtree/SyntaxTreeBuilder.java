@@ -88,6 +88,7 @@ public class SyntaxTreeBuilder {
 
     public void reset() {
         prefixBuilder.delete(0, prefixBuilder.length());
+        suffixBuilder.delete(0, suffixBuilder.length());
         atomStringBuilder.delete(0, atomStringBuilder.length());
         listBuilder = null;
         prefix = null;

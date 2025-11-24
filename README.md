@@ -1,5 +1,9 @@
 # Design
 
+## Issues
+
+* repl needs a new line between each statement, otherwise state doesn't get reset on the SyntaxTreeBuilder
+
 ## List parsing (ListParser)
 
 The first layer (ListParser) turns the program into a tree of nodes.  Each node is an element in the list.  We don't know
