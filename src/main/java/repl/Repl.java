@@ -28,13 +28,10 @@ public class Repl {
             try {
                 System.out.print("> ");
                 String line = br.readLine();
-                if(line.isBlank()) {
+                characterReader.read(line);
+                if(syntaxTreeBuilder.isFinished()) {
                     endExpression(syntaxTreeBuilder, environment, evaluator);
                 }
-                else {
-                    characterReader.read(line);
-                }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }

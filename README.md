@@ -2,7 +2,16 @@
 
 ## Issues
 
-* repl needs a new line between each statement, otherwise state doesn't get reset on the SyntaxTreeBuilder
+* Any whitespace (including newline) can be used to separate list elements.  This is causing a bug when doing this:
+
+```
+(add
+1
+2
+)
+```
+
+which should be valid.
 
 ## List parsing (ListParser)
 

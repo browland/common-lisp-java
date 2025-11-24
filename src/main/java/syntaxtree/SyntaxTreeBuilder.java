@@ -7,9 +7,10 @@ public class SyntaxTreeBuilder {
     private final StringBuilder suffixBuilder = new StringBuilder();
     private final StringBuilder atomStringBuilder = new StringBuilder();
 
-    private RList.Builder listBuilder;
+    private RList.Builder currentListBuilder;  // This is updated to point to the list we're currently building
     private String prefix;
     private String suffix;
+    private boolean finished;
 
     public void inAtom(CharacterReaderEvent event) {
         if(!suffixBuilder.isEmpty()) {
@@ -52,7 +53,7 @@ public class SyntaxTreeBuilder {
         prefixBuilder.delete(0, prefixBuilder.length());
         suffixBuilder.delete(0, suffixBuilder.length());
 
-        listBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
+        currentListBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
     }
 
     public void endList(CharacterReaderEvent event) {
@@ -61,36 +62,46 @@ public class SyntaxTreeBuilder {
                     .value(atomStringBuilder.toString())
                     .prefix(prefix)
                     .suffix(suffix);
-            listBuilder.addNodeBuilder(atomBuilder);
+            currentListBuilder.addNodeBuilder(atomBuilder);
             atomStringBuilder.delete(0, atomStringBuilder.length());
         }
 
-        listBuilder = listBuilder.getParentListBuilder() != null ? listBuilder.getParentListBuilder() : listBuilder;
+        // check whether the list which has just finished is the top-level list
+        if(currentListBuilder.getDepth() == 0) {
+            finished = true;
+        }
+
+        currentListBuilder = currentListBuilder.getParentListBuilder() != null ? currentListBuilder.getParentListBuilder() : currentListBuilder;
     }
 
     public void startList(CharacterReaderEvent event) {
         RList.Builder tempListBuilder = new RList.Builder()
-                .parentListBuilder(listBuilder)
+                .parentListBuilder(currentListBuilder)
                 .depth(event.depth()-1)
                 .prefix(prefix);
 
         prefixBuilder.delete(0, prefixBuilder.length());  // whenever we consume 'prefix' we need to reset the flag to say prefix has been read
 
-        if(listBuilder != null) {
-            listBuilder.addNodeBuilder(tempListBuilder);
+        if(currentListBuilder != null) {
+            currentListBuilder.addNodeBuilder(tempListBuilder);
         }
-        listBuilder = tempListBuilder;
+        currentListBuilder = tempListBuilder;
     }
 
     public RList getResult() {
-        return listBuilder.build();
+        return currentListBuilder.build();
     }
 
     public void reset() {
         prefixBuilder.delete(0, prefixBuilder.length());
         suffixBuilder.delete(0, suffixBuilder.length());
         atomStringBuilder.delete(0, atomStringBuilder.length());
-        listBuilder = null;
+        currentListBuilder = null;
         prefix = null;
+        finished = false;
+    }
+
+    public boolean isFinished() {
+        return finished;
     }
 }

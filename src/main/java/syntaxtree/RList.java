@@ -66,5 +66,9 @@ public record RList(int depth,
         public Builder getParentListBuilder() {
             return parentListBuilder;
         }
+
+        public int getDepth() {
+            return depth;
+        }
     }
 }
