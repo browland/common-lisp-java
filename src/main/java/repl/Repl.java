@@ -3,59 +3,58 @@ package repl;
 import evaluator.Evaluator;
 import evaluator.Value;
 import reader.CharacterReader;
-import syntaxtree.RList;
 import syntaxtree.SyntaxTreeBuilder;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Repl {
+public class Repl implements ReplOutput {
+    private BatchEvaluator batchEvaluator;
 
     public static void main(String[] args) {
-        // parsing and syntax tree build
+        Repl repl = new Repl();
+        repl.run();
+    }
+
+    public Repl() {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
         CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
 
-        // runtime evaluation
         Map<String,Value<?>> environment = new HashMap<>();
         Evaluator evaluator = new Evaluator();
 
-        try {
-            System.out.print("> ");
-            InputStreamReader isr = new InputStreamReader(System.in);
-            boolean finishedForm = false;
+        batchEvaluator = new BatchEvaluator(syntaxTreeBuilder, characterReader, evaluator, environment, this);
+    }
 
-            // for each character in the form
+    public void run() {
+        promptForNewForm();
+        InputStreamReader isr = new InputStreamReader(System.in);
+
+        try {
             while (true) {
                 char c = (char) isr.read();
-                characterReader.consume(c);
-
-                if (syntaxTreeBuilder.isFinished()) {
-                    finishedForm = true;
-                    endExpression(syntaxTreeBuilder, environment, evaluator);
-                    System.out.print("> ");
-                } else {
-                    // we're in the middle of a form
-                    if(c != '\n') {
-                        finishedForm = false;  // reset flag; only needs doing once per form really
-                    }
-                    if (!finishedForm && c == '\n') {
-                        System.out.print("... ");
-                    }
-                }
+                batchEvaluator.consume(c);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void endExpression(SyntaxTreeBuilder syntaxTreeBuilder,
-                                      Map<String, Value<?>> environment,
-                                      Evaluator evaluator) {
-        RList topLevelList = syntaxTreeBuilder.getResult();
-        syntaxTreeBuilder.reset();
-        Value<?> value = evaluator.evaluate(topLevelList, environment);
+    @Override
+    public void promptForNewForm() {
+        System.out.print("> ");
+
+    }
+
+    @Override
+    public void promptForMidForm() {
+        System.out.print("... ");
+    }
+
+    @Override
+    public void emitOutput(String value) {
         System.out.println(value);
     }
 }
