@@ -1,6 +1,7 @@
 package evaluator;
 
 import function.Closure;
+import function.Defun;
 import function.Function;
 import function.FunctionRegistry;
 import reader.*;
@@ -12,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Evaluator {
-    private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda");
+    private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda", "defun");
     private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
 
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
@@ -45,10 +46,18 @@ public class Evaluator {
             return applyForm(operator, list, environment);
         } else {
             Atom operatorAtom = (Atom) operatorNode;
-            // only lambda special form handled so far
             if(SPECIAL_FORM_OPERATORS.contains(operatorAtom.value())) {
-                operator = evaluateLambda(list, environment);
-                return new Value<>(operator, ValueType.OPERATOR);
+                if("lambda".equals(operatorAtom.value())) {
+                    operator = evaluateLambda(list, environment);
+                    return new Value<>(operator, ValueType.OPERATOR);
+                }
+                else if("defun".equals(operatorAtom.value())) {
+                    operator = evaluateDefun(list);
+                    return new Value<>(operator, ValueType.OPERATOR);
+                }
+                else {
+                    throw new UnsupportedOperationException("unsupported special form " + operatorAtom.value());
+                }
             }
             else {
                 // it's a regular form - operator and operands - we know enough to handle it here
@@ -110,6 +119,20 @@ public class Evaluator {
             return atom.value();
         }).toList();
 
-        return new Closure(this, capturedEnvironment, bindings, (RList)list.get(2));
+        RList body = (RList) list.get(2);
+        return new Closure(this, capturedEnvironment, bindings, body);
+    }
+
+    private Defun evaluateDefun(RList list) {
+        String name = ((Atom)list.get(1)).value();
+
+        RList bindingsList = (RList)list.get(2);
+        List<String> bindings = bindingsList.nodes().stream().map(node -> {
+            Atom atom = (Atom)node;
+            return atom.value();
+        }).toList();
+
+        RList body = (RList) list.get(3);
+        return new Defun(this, name, bindings, body);
     }
 }
