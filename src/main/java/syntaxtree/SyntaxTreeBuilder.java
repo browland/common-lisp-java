@@ -36,8 +36,8 @@ public class SyntaxTreeBuilder {
             return;
         }
 
-        // if we're in a string literal then treat space as just another character for the current atom
-        if(!prefixBuilder.isEmpty() && "\"".equals(prefix)) {
+        // if we're within a string literal (seen open-quote but not close-quote) then treat space as just another character for the current atom
+        if(!prefixBuilder.isEmpty() && "\"".equals(prefix) && suffixBuilder.isEmpty()) {
             atomStringBuilder.append(event.character());
             return;
         }

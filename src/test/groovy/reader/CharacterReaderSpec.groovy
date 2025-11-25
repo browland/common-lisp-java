@@ -2,6 +2,7 @@ package reader
 
 import spock.lang.Specification
 import syntaxtree.Atom
+import syntaxtree.QuoteType
 import syntaxtree.RList
 import syntaxtree.SyntaxTreeBuilder
 
@@ -73,6 +74,36 @@ class CharacterReaderSpec extends Specification {
         ((Atom)outerList.get(2)).value() == "hello world"
         ((Atom)outerList.get(2)).prefix() == "\""
         ((Atom)outerList.get(2)).suffix() == "\""
+        ((Atom)outerList.get(2)).quoteType() == QuoteType.STRING
+    }
+
+    def "reads keyword symbol"() {
+        def reader = new SyntaxTreeBuilder()
+        def characterReader = new CharacterReader(reader)
+        def program = "(list :a 1 :b 2)"
+
+        when:
+        characterReader.read(program)
+        def outerList = reader.getResult()
+
+        then:
+        ((Atom)outerList.get(1)).value() == "a"
+        ((Atom)outerList.get(1)).prefix() == ":"
+        ((Atom)outerList.get(1)).quoteType() == QuoteType.KEYWORD
+    }
+
+    def "reads string issue"() {
+        def reader = new SyntaxTreeBuilder()
+        def characterReader = new CharacterReader(reader)
+        def program = "(make-cd \"Roses\" \"Kathy Mattea\")"
+
+        when:
+        characterReader.read(program)
+        def outerList = reader.getResult()
+
+        then:
+        ((Atom)outerList.get(1)).value() == "Roses"
+        ((Atom)outerList.get(1)).quoteType() == QuoteType.STRING
     }
 
     def "reads complex lambda"() {
