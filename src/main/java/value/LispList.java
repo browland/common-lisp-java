@@ -5,25 +5,29 @@ import java.util.List;
 import java.util.Map;
 
 public class LispList {
-    private final List<Value<?>> list;
-    private final Map<Value<?>, Value<?>> propertyList;
+    private final ConsCell headConsCell;
 
     public LispList(List<Value<?>> list) {
-        this.list = list;
+        // iterate over the list in reverse order, creating cons cells
+        Value<?> cdr = Value.nil();
+        int i = list.size()-1;
+        Value<?> car = list.get(i);
 
-        propertyList = new HashMap<>();
-        for(int i=0; i<list.size(); i+=2) {
-            Value<?> property = list.get(i);
-            Value<?> propertyValue = list.size() > i+1 ? list.get(i+1) : null;
-            propertyList.put(property, propertyValue);
+        while(--i >= 0) {
+            ConsCell consCell = new ConsCell(car, cdr);
+
+            car = list.get(i);
+            cdr = new Value<>(consCell, ValueType.CONS_CELL);
         }
+
+        headConsCell = new ConsCell(car, cdr);
     }
 
-    public List<Value<?>> getList() {
-        return list;
+    public ConsCell getHeadConsCell() {
+        return headConsCell;
     }
 
     public Map<Value<?>, Value<?>> getPropertyList() {
-        return propertyList;
+        return null;
     }
 }
