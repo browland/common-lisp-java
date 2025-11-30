@@ -1,5 +1,6 @@
 package function;
 
+import value.ConsCell;
 import value.LispList;
 import value.Value;
 import value.ValueType;
@@ -13,18 +14,29 @@ public class GetF implements Function {
         Value<?> listOperand = operands.get(0);
         Value<?> symbol = operands.get(1);
 
-        if(listOperand.type() != ValueType.LIST) {
+        if (listOperand.type() != ValueType.LIST) {
             throw new IllegalArgumentException("first operand to getf must be a list");
         }
 
-        LispList lispList = (LispList)listOperand.value();
+        LispList lispList = (LispList) listOperand.value();
+        ConsCell consCell = lispList.getHeadConsCell();
 
-        Map<?, Value<?>> plist = lispList.getPropertyList();
-        if(plist.containsKey(symbol)) {
-            return plist.get(symbol);
+        Value<?> cdr;
+        Value<?> car = consCell.car();
+        cdr = consCell.cdr();
+        do {
+            ConsCell nextConsCellValue = (ConsCell) cdr.value();
+            if (symbol.equals(car)) {
+                return nextConsCellValue.car();
+            }
+
+            // todo only single steps for now, even though we know we must skip one each time
+            car = nextConsCellValue.car();
+            cdr = nextConsCellValue.cdr();
         }
-        else {
-            return Value.nil();
-        }
+        while (!cdr.equals(Value.nil()));
+
+        // No match found
+        return Value.nil();
     }
 }
