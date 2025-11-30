@@ -13,6 +13,7 @@ public class FunctionRegistry {
         registry.put("load", new Load());
         registry.put("list", new ListFunction());
         registry.put("getf", new GetF());
+        registry.put("cons", new Cons());
     }
 
     public Function findByName(String functionName) {
