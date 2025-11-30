@@ -1,8 +1,6 @@
 package value;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class LispList {
     private final ConsCell headConsCell;
@@ -25,9 +23,5 @@ public class LispList {
 
     public ConsCell getHeadConsCell() {
         return headConsCell;
-    }
-
-    public Map<Value<?>, Value<?>> getPropertyList() {
-        return null;
     }
 }
