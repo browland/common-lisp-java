@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Evaluator {
-    private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda", "defun");
+    private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda", "defun", "defvar");
     private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
 
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
@@ -53,6 +53,9 @@ public class Evaluator {
                     Defun defun = evaluateDefun(list);
                     environment.put(defun.name(), new Value<>(defun, ValueType.OPERATOR));
                     return new Value<>(defun, ValueType.OPERATOR);
+                }
+                else if("defvar".equals(operatorAtom.value())) {
+                    return evaluateDefvar(list, environment);
                 }
                 else {
                     throw new UnsupportedOperationException("unsupported special form " + operatorAtom.value());
@@ -146,5 +149,20 @@ public class Evaluator {
 
         RList body = (RList) list.get(3);
         return new Defun(this, name, bindings, body);
+    }
+
+    private Value<?> evaluateDefvar(RList list, Map<String, Value<?>> environment) {
+        Defvar defvar = new Defvar();
+
+        Atom nameAtom = (Atom) list.get(1);
+        if(nameAtom.prefix() != null || nameAtom.suffix() != null) {
+            throw new IllegalArgumentException("name for defvar must be a symbol: [" + nameAtom + "]");
+        }
+
+        String name = nameAtom.value();
+        Node valueNode = list.get(2);
+        Value<?> valueValue = evaluateOperand(valueNode, environment);
+
+        return defvar.apply(List.of(Value.of(name), valueValue), environment);
     }
 }

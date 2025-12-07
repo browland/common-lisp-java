@@ -11,4 +11,12 @@ public record Value<T>(T value,
     public static Value<?> t() {
         return new Value<>("T", ValueType.BUILTIN_CONSTANT);
     }
+
+    public static Value<String> of(String value) {
+        return new Value<String>(value, ValueType.STRING_LITERAL);
+    }
+
+    public static <T> Value<T> of(T value, ValueType valueType) {
+        return new Value<T>(value, valueType);
+    }
 }
