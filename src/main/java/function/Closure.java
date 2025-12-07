@@ -11,7 +11,8 @@ import java.util.Map;
 public record Closure(Evaluator evaluator,
                       Map<String,Value<?>> capturedEnvironment,
                       List<String> bindings,
-                      RList body) implements Function {
+                      RList body,
+                      String optionalName) implements Function {
 
     @Override
     public Value<?> apply(List<Value<?>> operands, Map<String,Value<?>> noApplicationEnvironment) {
@@ -30,6 +31,20 @@ public record Closure(Evaluator evaluator,
 
         capturedEnvironmentPlusBindings.putAll(bindingsMap);
 
-        return evaluator.evaluate(body, capturedEnvironmentPlusBindings);
+        Value<?> evaluate = evaluator.evaluate(body, capturedEnvironmentPlusBindings);
+
+        // todo need to deal with a linked list (stack) of environments, rather than doing this
+        // todo 2 need to handle globals with prefix/suffix and properly
+        for(String symbol : capturedEnvironmentPlusBindings.keySet()) {
+           if(symbol.startsWith("*") && symbol.endsWith("*")) {
+               capturedEnvironment.put(symbol, capturedEnvironmentPlusBindings.get(symbol));
+           }
+        }
+
+        return evaluate;
+    }
+
+    public String toString() {
+        return "closure";
     }
 }

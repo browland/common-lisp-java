@@ -2,4 +2,7 @@
   (list :title title :artist artist :rating rating :ripped ripped))
 
 (getf (make-cd "Roses" "Kathy Mattea" 7 t) :rating)
-(defvar test (make-cd "Roses" "Kathy Mattea" 7 t))
+
+(defvar *db* nil)
+(defun add-record (cd) (setf *db* (cons cd *db*)))
+(add-record (make-cd "Roses" "Kathy Mattea" 7 t))

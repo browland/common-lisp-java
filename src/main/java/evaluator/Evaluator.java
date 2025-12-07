@@ -3,6 +3,7 @@ package evaluator;
 import function.*;
 import reader.CharacterReader;
 import syntaxtree.*;
+import value.LispList;
 import value.Value;
 import value.ValueType;
 
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Evaluator {
-    private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda", "defun", "defvar");
+    private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda", "defun", "defvar", "setf");
     private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
 
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
@@ -50,12 +51,15 @@ public class Evaluator {
                     return new Value<>(operator, ValueType.OPERATOR);
                 }
                 else if("defun".equals(operatorAtom.value())) {
-                    Defun defun = evaluateDefun(list);
-                    environment.put(defun.name(), new Value<>(defun, ValueType.OPERATOR));
-                    return new Value<>(defun, ValueType.OPERATOR);
+                    Closure closure = evaluateDefun(list, environment);
+                    environment.put(closure.optionalName(), new Value<>(closure, ValueType.OPERATOR));
+                    return new Value<>(closure, ValueType.OPERATOR);
                 }
                 else if("defvar".equals(operatorAtom.value())) {
                     return evaluateDefvar(list, environment);
+                }
+                else if("setf".equals(operatorAtom.value())) {
+                    return evaluateSetf(list, environment);
                 }
                 else {
                     throw new UnsupportedOperationException("unsupported special form " + operatorAtom.value());
@@ -135,10 +139,10 @@ public class Evaluator {
         }).toList();
 
         RList body = (RList) list.get(2);
-        return new Closure(this, capturedEnvironment, bindings, body);
+        return new Closure(this, capturedEnvironment, bindings, body, null);
     }
 
-    private Defun evaluateDefun(RList list) {
+    private Closure evaluateDefun(RList list, Map<String,Value<?>> capturedEnvironment) {
         String name = ((Atom)list.get(1)).value();
 
         RList bindingsList = (RList)list.get(2);
@@ -148,7 +152,8 @@ public class Evaluator {
         }).toList();
 
         RList body = (RList) list.get(3);
-        return new Defun(this, name, bindings, body);
+//        return new Defun(this, name, bindings, body);
+        return new Closure(this, capturedEnvironment, bindings, body, name);
     }
 
     private Value<?> evaluateDefvar(RList list, Map<String, Value<?>> environment) {
@@ -160,9 +165,40 @@ public class Evaluator {
         }
 
         String name = nameAtom.value();
+        Value<?> nameValue = new Value<>(name, ValueType.SYMBOL);
         Node valueNode = list.get(2);
         Value<?> valueValue = evaluateOperand(valueNode, environment);
 
-        return defvar.apply(List.of(Value.of(name), valueValue), environment);
+        return defvar.apply(List.of(nameValue, valueValue), environment);
+    }
+
+    private Value<?> evaluateSetf(RList list, Map<String, Value<?>> environment) {
+        Atom symbolAtom = (Atom) list.get(1);
+        if(symbolAtom.prefix() != null || symbolAtom.suffix() != null) {
+            throw new IllegalArgumentException("name for defvar must be a symbol: [" + symbolAtom + "]");
+        }
+
+        String name = symbolAtom.value();
+
+        // for now we only implement setf for lists.  The list must already exist at the given symbol.
+        if(!environment.containsKey(name)) {
+            throw new UnsupportedOperationException("Cannot setf a list which isn't bound: " + name);
+        }
+
+        Value<?> boundConsOrNil = environment.get(name);
+        if(!(boundConsOrNil.type() == ValueType.CONS_CELL || boundConsOrNil.equals(Value.nil()))) {
+            throw new IllegalArgumentException("can only setf into a cons cell for now: " + name);
+        }
+
+        // evaluate the value being set to the symbol
+        Value<?> value = evaluateOperand(list.nodes().get(2), environment);
+
+        // ensure it's a list for now
+        if(value.type() != ValueType.CONS_CELL) {
+            throw new IllegalArgumentException("can only setf a cons cell for now: " + value);
+        }
+
+        environment.put(name, value);
+        return value;
     }
 }
