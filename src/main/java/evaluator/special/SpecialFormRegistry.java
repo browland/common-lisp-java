@@ -9,7 +9,7 @@ public class SpecialFormRegistry {
     public SpecialFormRegistry() {
         registry.put("lambda", new Lambda());
         registry.put("defun", new Defun());
-        registry.put("defvar", new DefvarForm());
+        registry.put("defvar", new Defvar());
         registry.put("setf", new Setf());
     }
 
