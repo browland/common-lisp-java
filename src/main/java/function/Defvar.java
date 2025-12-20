@@ -6,6 +6,7 @@ import value.ValueType;
 import java.util.List;
 import java.util.Map;
 
+// todo inline this - no point it being a function. Then rename DefvarForm to Defvar
 public class Defvar implements Function {
     @Override
     public Value<?> apply(List<Value<?>> operands, Map<String, Value<?>> environment) {

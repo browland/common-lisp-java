@@ -1,5 +1,6 @@
 package evaluator;
 
+import evaluator.special.SpecialFormEvaluator;
 import function.*;
 import reader.CharacterReader;
 import syntaxtree.*;
@@ -15,7 +16,8 @@ public class Evaluator {
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
 
     public static void main(String[] args) {
-        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
+//        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
+        String program = "(defvar *db* nil)";
         Evaluator e = new Evaluator();
         System.out.println(e.evaluate(program, new HashMap<>()));
     }
@@ -43,7 +45,10 @@ public class Evaluator {
             // is a predefined value.
             return applyForm(operator, list, environment);
         } else {
-            // operator is ready to use - no more evaluation needed for it
+            // If the operator is a special form we need to evaluate it to get its operator implementation (e.g. a closure for a
+            // lambda definition).
+            // todo: maybe some special forms return a straightforward result when eval'd e.g. defvar, so not always a
+            //       recursive call and don't need to treat all special forms as functions/operators?
             Atom operatorAtom = (Atom) operatorNode;
             Optional<Value<?>> optionalSpecialFormResult =
                     specialFormEvaluator.evaluate(operatorAtom.value(), list, environment, this);
@@ -73,7 +78,7 @@ public class Evaluator {
         return operator.apply((List<Value<?>>) operands, environment);
     }
 
-    Value<?> evaluateOperand(Node node, Map<String,Value<?>> environment) {
+    public Value<?> evaluateOperand(Node node, Map<String,Value<?>> environment) {
         // either an atom or a list
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
