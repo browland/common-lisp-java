@@ -2,11 +2,10 @@
 
 ## Issues
 
-* Environments need handling properly (with a stack).  E.g. a closure is applied with a new environment with
-bindings added in).  But it should be possible to have side-effects on e.g. globals captured in the closure.
-For now just manually copying globals back in to the captured environment after application.
+* Globals defined during closure evaluation: For now just manually copying globals back in to the captured environment 
+  after application.  Should have a separate single shared global environment.
   
-* Globals need handling properly (* prefix and suffix should be recognised)
+* Globals need handling properly (rather than manually handling * prefix and suffix)
 
 * format only works with strings - should work with cons cells for eg.
 

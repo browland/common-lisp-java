@@ -31,17 +31,19 @@ public record Closure(Evaluator evaluator,
 
         capturedEnvironmentPlusBindings.putAll(bindingsMap);
 
-        Value<?> evaluate = evaluator.evaluate(body, capturedEnvironmentPlusBindings);
+        Value<?> result = evaluator.evaluate(body, capturedEnvironmentPlusBindings);
 
-        // todo need to deal with a linked list (stack) of environments, rather than doing this
-        // todo 2 need to handle globals with prefix/suffix and properly
+        // todo first-class support for globals, not looking for asterisk prefix/suffix manually
+        // todo need a first-class environment for globals rather than copying them back to the enclosing
+        //      environment each time we return (as globals may be assigned within the closure evaluation
+        //      and these should ripple outward for later use).
         for(String symbol : capturedEnvironmentPlusBindings.keySet()) {
            if(symbol.startsWith("*") && symbol.endsWith("*")) {
                capturedEnvironment.put(symbol, capturedEnvironmentPlusBindings.get(symbol));
            }
         }
 
-        return evaluate;
+        return result;
     }
 
     public String toString() {
