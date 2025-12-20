@@ -3,25 +3,22 @@ package evaluator;
 import function.*;
 import reader.CharacterReader;
 import syntaxtree.*;
-import value.LispList;
 import value.Value;
 import value.ValueType;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Evaluator {
-    private static final Set<String> SPECIAL_FORM_OPERATORS = Set.of("lambda", "defun", "defvar", "setf");
     private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
 
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
+    private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
 
-//    public static void main(String[] args) {
-//        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
-//        Evaluator e = new Evaluator();
-//        System.out.println(e.evaluate(program, new HashMap<>()));
-//    }
+    public static void main(String[] args) {
+        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
+        Evaluator e = new Evaluator();
+        System.out.println(e.evaluate(program, new HashMap<>()));
+    }
 
     public Value<?> evaluate(String program, Map<String,Value<?>> environment) {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
@@ -36,6 +33,8 @@ public class Evaluator {
         Function operator;
         Node operatorNode = list.get(0);
 
+        // If the operator is itself a list, then we need to evaluate it to get a closure.
+        // We can then apply it to the remaining arguments as a form.
         if (operatorNode instanceof RList) {
             Value<?> evaluatedOperatorValue = evaluate((RList)operatorNode, environment);
             operator = (Function)evaluatedOperatorValue.value();
@@ -44,42 +43,27 @@ public class Evaluator {
             // is a predefined value.
             return applyForm(operator, list, environment);
         } else {
+            // operator is ready to use - no more evaluation needed for it
             Atom operatorAtom = (Atom) operatorNode;
-            if(SPECIAL_FORM_OPERATORS.contains(operatorAtom.value())) {
-                if("lambda".equals(operatorAtom.value())) {
-                    operator = evaluateLambda(list, environment);
-                    return new Value<>(operator, ValueType.OPERATOR);
-                }
-                else if("defun".equals(operatorAtom.value())) {
-                    Closure closure = evaluateDefun(list, environment);
-                    environment.put(closure.optionalName(), new Value<>(closure, ValueType.OPERATOR));
-                    return new Value<>(closure, ValueType.OPERATOR);
-                }
-                else if("defvar".equals(operatorAtom.value())) {
-                    return evaluateDefvar(list, environment);
-                }
-                else if("setf".equals(operatorAtom.value())) {
-                    return evaluateSetf(list, environment);
-                }
-                else {
-                    throw new UnsupportedOperationException("unsupported special form " + operatorAtom.value());
-                }
+            Optional<Value<?>> optionalSpecialFormResult =
+                    specialFormEvaluator.evaluate(operatorAtom.value(), list, environment, this);
+            if(optionalSpecialFormResult.isPresent()) {
+                return optionalSpecialFormResult.get();
             }
-            else {
-                // it's a regular form - operator and operands - we know enough to handle it here
-                operator = functionRegistry.findByName(operatorAtom.value());
-                if(operator == null) {
-                    Value<?> possibleStoredOperator = environment.get(operatorAtom.value());
-                    if(ValueType.OPERATOR == possibleStoredOperator.type()) {
-                        operator = (Function)possibleStoredOperator.value();
 
-                    }
+            // We did not match on any special form, so this must be a regular form.
+            // We know enough to handle it here.
+            operator = functionRegistry.findByName(operatorAtom.value());
+            if (operator == null) {
+                Value<?> possibleStoredOperator = environment.get(operatorAtom.value());
+                if (ValueType.OPERATOR == possibleStoredOperator.type()) {
+                    operator = (Function) possibleStoredOperator.value();
                 }
-                if(operator == null) {
-                    throw new IllegalArgumentException("Could not find operator " + operatorAtom);
-                }
-                return applyForm(operator, list, environment);
             }
+            if (operator == null) {
+                throw new IllegalArgumentException("Could not find operator " + operatorAtom);
+            }
+            return applyForm(operator, list, environment);
         }
     }
 
@@ -89,7 +73,7 @@ public class Evaluator {
         return operator.apply((List<Value<?>>) operands, environment);
     }
 
-    private Value<?> evaluateOperand(Node node, Map<String,Value<?>> environment) {
+    Value<?> evaluateOperand(Node node, Map<String,Value<?>> environment) {
         // either an atom or a list
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
@@ -124,80 +108,5 @@ public class Evaluator {
             int intValue = Integer.parseInt(atomStringValue);
             return new Value<>(intValue, ValueType.INTEGER_LITERAL);
         }
-    }
-
-    private Closure evaluateLambda(RList list, Map<String,Value<?>> capturedEnvironment) {
-        Node operator = list.get(0);
-        if(operator instanceof RList) {
-            throw new IllegalStateException("should not get here - need some better handling?");
-        }
-
-        RList bindingsList = (RList)list.get(1);
-        List<String> bindings = bindingsList.nodes().stream().map(node -> {
-            Atom atom = (Atom)node;
-            return atom.value();
-        }).toList();
-
-        RList body = (RList) list.get(2);
-        return new Closure(this, capturedEnvironment, bindings, body, null);
-    }
-
-    private Closure evaluateDefun(RList list, Map<String,Value<?>> capturedEnvironment) {
-        String name = ((Atom)list.get(1)).value();
-
-        RList bindingsList = (RList)list.get(2);
-        List<String> bindings = bindingsList.nodes().stream().map(node -> {
-            Atom atom = (Atom)node;
-            return atom.value();
-        }).toList();
-
-        RList body = (RList) list.get(3);
-        return new Closure(this, capturedEnvironment, bindings, body, name);
-    }
-
-    private Value<?> evaluateDefvar(RList list, Map<String, Value<?>> environment) {
-        Defvar defvar = new Defvar();
-
-        Atom nameAtom = (Atom) list.get(1);
-        if(nameAtom.prefix() != null || nameAtom.suffix() != null) {
-            throw new IllegalArgumentException("name for defvar must be a symbol: [" + nameAtom + "]");
-        }
-
-        String name = nameAtom.value();
-        Value<?> nameValue = new Value<>(name, ValueType.SYMBOL);
-        Node valueNode = list.get(2);
-        Value<?> valueValue = evaluateOperand(valueNode, environment);
-
-        return defvar.apply(List.of(nameValue, valueValue), environment);
-    }
-
-    private Value<?> evaluateSetf(RList list, Map<String, Value<?>> environment) {
-        Atom symbolAtom = (Atom) list.get(1);
-        if(symbolAtom.prefix() != null || symbolAtom.suffix() != null) {
-            throw new IllegalArgumentException("name for defvar must be a symbol: [" + symbolAtom + "]");
-        }
-
-        String name = symbolAtom.value();
-
-        // for now we only implement setf for lists.  The list must already exist at the given symbol.
-        if(!environment.containsKey(name)) {
-            throw new UnsupportedOperationException("Cannot setf a list which isn't bound: " + name);
-        }
-
-        Value<?> boundConsOrNil = environment.get(name);
-        if(!(boundConsOrNil.type() == ValueType.CONS_CELL || boundConsOrNil.equals(Value.nil()))) {
-            throw new IllegalArgumentException("can only setf into a cons cell for now: " + name);
-        }
-
-        // evaluate the value being set to the symbol
-        Value<?> value = evaluateOperand(list.nodes().get(2), environment);
-
-        // ensure it's a list for now
-        if(value.type() != ValueType.CONS_CELL) {
-            throw new IllegalArgumentException("can only setf a cons cell for now: " + value);
-        }
-
-        environment.put(name, value);
-        return value;
     }
 }
