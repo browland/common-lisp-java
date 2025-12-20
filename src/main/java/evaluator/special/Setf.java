@@ -31,7 +31,7 @@ public class Setf implements SpecialForm {
         }
 
         // evaluate the value being set to the symbol
-        Value<?> value = evaluator.evaluateOperand(entireList.nodes().get(2), environment);
+        Value<?> value = evaluator.evaluate(entireList.nodes().get(2), environment);
 
         // ensure it's a list for now
         if(value.type() != ValueType.CONS_CELL) {

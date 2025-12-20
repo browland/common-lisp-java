@@ -21,7 +21,7 @@ public class Defvar implements SpecialForm {
 
         String name = nameAtom.value();
         Node valueNode = entireList.get(2);
-        Value<?> valueValue = evaluator.evaluateOperand(valueNode, environment);
+        Value<?> valueValue = evaluator.evaluate(valueNode, environment);
 
         environment.put(name, valueValue);
 

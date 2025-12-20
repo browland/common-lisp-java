@@ -11,6 +11,7 @@ public class SpecialFormRegistry {
         registry.put("defun", new Defun());
         registry.put("defvar", new Defvar());
         registry.put("setf", new Setf());
+        registry.put("if", new If());
     }
 
     public SpecialForm findByName(String name) {

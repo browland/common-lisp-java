@@ -17,7 +17,8 @@ public class Evaluator {
 
     public static void main(String[] args) {
 //        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
-        String program = "(defvar *db* nil)";
+//        String program = "(defvar *db* nil)";
+        String program = "(if (+ 1 1) (+ 1 2) (+ 1 3))";
         Evaluator e = new Evaluator();
         System.out.println(e.evaluate(program, new HashMap<>()));
     }
@@ -74,11 +75,11 @@ public class Evaluator {
 
     private Value<?> applyForm(Function operator, RList fullList, Map<String,Value<?>> environment) {
         List<? extends Value<?>> operands = fullList.nodes().subList(1, fullList.size()).stream()
-                .map(node -> evaluateOperand(node, environment)).toList();
+                .map(node -> evaluate(node, environment)).toList();
         return operator.apply((List<Value<?>>) operands, environment);
     }
 
-    public Value<?> evaluateOperand(Node node, Map<String,Value<?>> environment) {
+    public Value<?> evaluate(Node node, Map<String,Value<?>> environment) {
         // either an atom or a list
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
