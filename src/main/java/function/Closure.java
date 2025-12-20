@@ -26,7 +26,8 @@ public record Closure(Evaluator evaluator,
 
         Map<String,Value<?>> bindingsMap = new HashMap<>();
         for(int i=0; i<operands.size(); i++) {
-            bindingsMap.put(bindings.get(i), operands.get(i));
+            String bindingName = bindings.get(i);
+            bindingsMap.put(bindingName, operands.get(i));
         }
 
         capturedEnvironmentPlusBindings.putAll(bindingsMap);

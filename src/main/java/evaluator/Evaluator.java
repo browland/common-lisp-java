@@ -15,13 +15,11 @@ public class Evaluator {
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
 
-    public static void main(String[] args) {
-//        String program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)";
-//        String program = "(defvar *db* nil)";
-        String program = "(if (+ 1 1) (+ 1 2) (+ 1 3))";
-        Evaluator e = new Evaluator();
-        System.out.println(e.evaluate(program, new HashMap<>()));
-    }
+//    public static void main(String[] args) {
+////        String program = "(defvar *db* nil)";
+//        Evaluator e = new Evaluator();
+//        System.out.println(e.evaluate(program, new HashMap<>()));
+//    }
 
     public Value<?> evaluate(String program, Map<String,Value<?>> environment) {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
@@ -62,6 +60,11 @@ public class Evaluator {
             operator = functionRegistry.findByName(operatorAtom.value());
             if (operator == null) {
                 Value<?> possibleStoredOperator = environment.get(operatorAtom.value());
+                if(possibleStoredOperator == null) {
+                    System.out.println("ERROR: Can't find definition for operator " + operatorAtom.value());
+                    System.exit(-1);
+                }
+
                 if (ValueType.OPERATOR == possibleStoredOperator.type()) {
                     operator = (Function) possibleStoredOperator.value();
                 }

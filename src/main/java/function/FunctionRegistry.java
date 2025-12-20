@@ -14,6 +14,7 @@ public class FunctionRegistry {
         registry.put("list", new ListFunction());
         registry.put("getf", new GetF());
         registry.put("cons", new Cons());
+        registry.put("car", new Car());
     }
 
     public Function findByName(String functionName) {
