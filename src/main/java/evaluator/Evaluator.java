@@ -1,9 +1,11 @@
 package evaluator;
 
+import evaluator.macro.MacroEvaluator;
 import evaluator.special.SpecialFormEvaluator;
 import function.*;
 import reader.CharacterReader;
 import syntaxtree.*;
+import value.LispList;
 import value.Value;
 import value.ValueType;
 
@@ -14,12 +16,7 @@ public class Evaluator {
 
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
-
-//    public static void main(String[] args) {
-////        String program = "(defvar *db* nil)";
-//        Evaluator e = new Evaluator();
-//        System.out.println(e.evaluate(program, new HashMap<>()));
-//    }
+    private final MacroEvaluator macroEvaluator = new MacroEvaluator();
 
     public Value<?> evaluate(String program, Map<String,Value<?>> environment) {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
@@ -44,6 +41,19 @@ public class Evaluator {
             // is a predefined value.
             return applyForm(operator, list, environment);
         } else {
+            // Handle the case where the entire list is quoted - we just return the value of the list.
+            // Only handling full quote (not quasi-quote).
+            // Todo there must be a better way to do this.
+            if(list.prefix() != null && list.prefix().contains("'")) {
+                List<Value<?>> values = new ArrayList<>();
+                for(Node node : list.nodes()) {
+                    Value<?> value = evaluate(node, environment);
+                    values.add(value);
+                }
+                ListFunction listFunction = new ListFunction();
+                return listFunction.apply(values, environment);
+            }
+
             // If the operator is a special form we need to evaluate it to get its operator implementation (e.g. a closure for a
             // lambda definition).
             // todo: maybe some special forms return a straightforward result when eval'd e.g. defvar, so not always a
@@ -55,7 +65,13 @@ public class Evaluator {
                 return optionalSpecialFormResult.get();
             }
 
-            // We did not match on any special form, so this must be a regular form.
+            // This might be a macro; try to look it up and evaluate it.
+            Optional<Value<?>> optionalMacroResult = macroEvaluator.evaluate(operatorAtom.value(), list, environment, this);
+            if(optionalMacroResult.isPresent()) {
+                return optionalMacroResult.get();
+            }
+
+            // We did not match on any special form or macro, so this must be a regular form.
             // We know enough to handle it here.
             operator = functionRegistry.findByName(operatorAtom.value());
             if (operator == null) {

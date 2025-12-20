@@ -2,6 +2,9 @@
 
 ## Issues
 
+* Desugaring.  E.g. (f '(1 2 3)) should be parsed into the tree: (f (quote ( 1 2 3))).
+  There is always special forms for any type of quote encountered such as unquote, quasiquote, etc to do this.
+  
 * Globals defined during closure evaluation: For now just manually copying globals back in to the captured environment 
   after application.  Should have a separate single shared global environment.
   
