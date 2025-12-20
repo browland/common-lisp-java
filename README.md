@@ -2,16 +2,15 @@
 
 ## Issues
 
-* Any whitespace (including newline) can be used to separate list elements.  This is causing a bug when doing this:
+* Environments need handling properly (with a stack).  E.g. a closure is applied with a new environment with
+bindings added in).  But it should be possible to have side-effects on e.g. globals captured in the closure.
+For now just manually copying globals back in to the captured environment after application.
+  
+* Globals need handling properly (* prefix and suffix should be recognised)
 
-```
-(add
-1
-2
-)
-```
+* format only works with strings - should work with cons cells for eg.
 
-which should be valid.
+* closure toString() causing StackOverflowException so have hacked in a minimal toString() for now
 
 ## List parsing (ListParser)
 

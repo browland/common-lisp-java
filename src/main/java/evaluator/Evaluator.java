@@ -152,7 +152,6 @@ public class Evaluator {
         }).toList();
 
         RList body = (RList) list.get(3);
-//        return new Defun(this, name, bindings, body);
         return new Closure(this, capturedEnvironment, bindings, body, name);
     }
 
