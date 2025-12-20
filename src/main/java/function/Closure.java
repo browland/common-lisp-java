@@ -1,8 +1,11 @@
 package function;
 
 import evaluator.Evaluator;
+import syntaxtree.Atom;
+import value.LispList;
 import value.Value;
 import syntaxtree.RList;
+import value.ValueType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +13,7 @@ import java.util.Map;
 
 public record Closure(Evaluator evaluator,
                       Map<String,Value<?>> capturedEnvironment,
-                      List<String> bindings,
+                      List<Atom> bindings,
                       RList body,
                       String optionalName) implements Function {
 
@@ -26,8 +29,23 @@ public record Closure(Evaluator evaluator,
 
         Map<String,Value<?>> bindingsMap = new HashMap<>();
         for(int i=0; i<operands.size(); i++) {
-            String bindingName = bindings.get(i);
-            bindingsMap.put(bindingName, operands.get(i));
+            Atom operandAtom = bindings.get(i);
+            String bindingPrefix = operandAtom.prefix();
+            String bindingName = operandAtom.value();
+            if(bindingPrefix != null && bindingPrefix.equals("&") && bindingName.equals("rest")) {
+                // 1. get next binding - this is the name of the list
+                String restBindingName = bindings.get(i+1).value();
+                // 2. get remaining operands - put them all in a list and assign to the name
+                List<Value<?>> restValues = operands.subList(i, operands.size());
+                LispList restValuesList = new LispList(restValues);
+                // 3. add this binding to the bindingsMap
+                bindingsMap.put(restBindingName, new Value<>(restValuesList, ValueType.LIST));
+                // 4. break out of loop
+                break;
+            }
+            else {
+                bindingsMap.put(bindingName, operands.get(i));
+            }
         }
 
         capturedEnvironmentPlusBindings.putAll(bindingsMap);

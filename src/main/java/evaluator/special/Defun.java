@@ -18,10 +18,11 @@ public class Defun implements SpecialForm {
         String name = ((Atom)entireList.get(1)).value();
 
         RList bindingsList = (RList)entireList.get(2);
-        List<String> bindings = bindingsList.nodes().stream().map(node -> {
-            Atom atom = (Atom)node;
-            return atom.value();
-        }).toList();
+        List<Atom> bindings = bindingsList.nodes().stream()
+                .map(node -> (Atom)node)
+                .toList();
+
+        // todo validate bindings - if &rest is present then there should be exactly 1 more binding
 
         RList body = (RList) entireList.get(3);
 
