@@ -2,6 +2,7 @@ package evaluator
 
 import spock.lang.Specification
 import value.Value
+import value.ValueType
 
 class MacroSpec extends Specification {
     def "simple test"() {
@@ -39,5 +40,28 @@ class MacroSpec extends Specification {
 
         then:
         result.value() == 3
+    }
+
+    def "push macro test"() {
+        given:
+        def evaluator = new Evaluator()
+        def env = new HashMap<String, Value<?>>()
+
+        def globalDef = "(defvar *db* nil)"
+        def macroDef = """
+            (defmacro push (item place)
+                `(setf ,place (cons ,item ,place)))
+        """
+        def push = "(push 1 *db*)"
+
+        when:
+        evaluator.evaluate(globalDef, env)
+        evaluator.evaluate(macroDef, env)
+        Value<?> result = evaluator.evaluate(push, env)
+
+        then:
+        result.type() == ValueType.CONS_CELL
+
+        // todo additional tests; can't see the updated global var until we fix global handling (as it doesn't ripple up)
     }
 }

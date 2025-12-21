@@ -14,7 +14,8 @@ public class Setf implements SpecialForm {
                              Map<String, Value<?>> environment,
                              Evaluator evaluator) {
         Atom symbolAtom = (Atom) entireList.get(1);
-        if(symbolAtom.prefix() != null || symbolAtom.suffix() != null) {
+        if((symbolAtom.prefix() != null && !symbolAtom.prefix().isEmpty())
+                || symbolAtom.suffix() != null) {
             throw new IllegalArgumentException("name for defvar must be a symbol: [" + symbolAtom + "]");
         }
 
