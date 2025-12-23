@@ -2,16 +2,12 @@
 
 ## Issues
 
-### Env
-Do this first:
-* Globals defined during closure evaluation: For now just manually copying globals back in to the captured environment
-  after application.  Should have a separate single shared global environment.
-* Globals need handling properly (rather than manually handling * prefix and suffix)
-
-For this, have 3 global scopes: variables, functions, macros (none of these have scopes, always global).
-Though, macros are always run first before functions (Ensure we're checking this first).  This is because macros act
-on code and functions act on code after any macros have run.
-Then, we can have one HashMap env per lexical scope for variables only (only these are lexically scoped).
+### First-class Symbols
+Value should have subclass specialisations which define T.  Can then have underlying types e.g. Integer, String, ConsCell
+and also Symbol.
+Symbol should represent whether constant etc.
+Environment should be keyed off Symbol instead.
+Ideally: Ensure Symbol is interned so identity works
 
 ### Defvar/setf
 

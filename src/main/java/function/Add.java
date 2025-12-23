@@ -15,11 +15,11 @@ public class Add implements Function {
         int result = 0;
 
         for(Value<?> operand : operands) {
-            if(ValueType.INTEGER_LITERAL != operand.type()) {
+            if(ValueType.INTEGER_LITERAL != operand.getType()) {
                 throw new IllegalArgumentException("Only works with integer operands at the mo");
             }
 
-            Object value = operand.value();
+            Object value = operand.getValue();
             if(! (value instanceof Integer)) {
                 throw new IllegalArgumentException("value not of type Integer");
             }

@@ -15,7 +15,7 @@ public class Load implements Function {
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
         Value<String> filenameValue = (Value<String>)operands.get(0);
-        String filename = filenameValue.value();
+        String filename = filenameValue.getValue();
         Path absolutePath = Path.of(DEFAULT_LOAD_PATH, filename);
 
         try {

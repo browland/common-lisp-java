@@ -1,0 +1,8 @@
+package value;
+
+public class IntegerValue extends Value<Integer> {
+
+    public IntegerValue(Integer value) {
+        super(value, ValueType.INTEGER_LITERAL);
+    }
+}

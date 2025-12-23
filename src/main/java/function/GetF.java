@@ -14,18 +14,18 @@ public class GetF implements Function {
         Value<?> listOperand = operands.get(0);
         Value<?> symbol = operands.get(1);
 
-        if (listOperand.type() != ValueType.LIST) {
+        if (listOperand.getType() != ValueType.LIST) {
             throw new IllegalArgumentException("first operand to getf must be a list");
         }
 
-        LispList lispList = (LispList) listOperand.value();
+        LispList lispList = (LispList) listOperand.getValue();
         ConsCell consCell = lispList.getHeadConsCell();
 
         Value<?> cdr;
         Value<?> car = consCell.car();
         cdr = consCell.cdr();
         do {
-            ConsCell nextConsCellValue = (ConsCell) cdr.value();
+            ConsCell nextConsCellValue = (ConsCell) cdr.getValue();
             if (symbol.equals(car)) {
                 return nextConsCellValue.car();
             }

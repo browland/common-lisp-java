@@ -17,7 +17,7 @@ class ListSpec extends Specification {
         Value<?> result = evaluator.evaluate("(car l)", env)
 
         then:
-        result.value() == 1
+        result.getValue() == 1
     }
 
     def "list elements requiring evaluation test"() {
@@ -32,6 +32,6 @@ class ListSpec extends Specification {
         Value<?> result = evaluator.evaluate("(car l)", env)
 
         then:
-        result.value() == 3
+        result.getValue() == 3
     }
 }

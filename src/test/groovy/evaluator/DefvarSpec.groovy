@@ -16,7 +16,7 @@ class DefvarSpec extends Specification {
         Value<?> result = evaluator.evaluate(program, env)
 
         then:
-        result.value() == "*db*"
+        result.getValue() == "*db*"
         env.get("*db*").get() == Value.nil()
     }
 }

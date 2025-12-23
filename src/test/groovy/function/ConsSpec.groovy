@@ -19,7 +19,7 @@ class ConsSpec extends Specification {
         Value<?> consCellValue = cons.apply(List.of(car, cdr), new Environment());
 
         then:
-        ConsCell consCell = consCellValue.value() as ConsCell;
+        ConsCell consCell = consCellValue.getValue() as ConsCell;
         consCell.car() == car
         consCell.cdr() == Value.nil()
     }
@@ -39,7 +39,7 @@ class ConsSpec extends Specification {
         Value<?> newConsCellValue = cons.apply(List.of(newCar, existingCellValue), new Environment());
 
         then:
-        ConsCell newConsCell = newConsCellValue.value() as ConsCell;
+        ConsCell newConsCell = newConsCellValue.getValue() as ConsCell;
         newConsCell.car() == newCar
         newConsCell.cdr() == existingCellValue
     }

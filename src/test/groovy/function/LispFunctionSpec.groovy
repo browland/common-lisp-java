@@ -19,7 +19,7 @@ class LispFunctionSpec extends Specification {
 
         then:
         ConsCell expectedConsCell = new ConsCell(singleValue, Value.nil())
-        LispList lispList = lispListValue.value() as LispList
+        LispList lispList = lispListValue.getValue() as LispList
         lispList.getHeadConsCell() == expectedConsCell
     }
 
@@ -33,10 +33,10 @@ class LispFunctionSpec extends Specification {
         Value<?> lispListValue = listFunction.apply(List.of(value1, value2), new Environment())
 
         then:
-        LispList lispList = lispListValue.value() as LispList
+        LispList lispList = lispListValue.getValue() as LispList
         lispList.getHeadConsCell().car() == value1
 
-        ConsCell secondConsCell = lispList.getHeadConsCell().cdr().value() as ConsCell
+        ConsCell secondConsCell = lispList.getHeadConsCell().cdr().getValue() as ConsCell
         secondConsCell.car() == value2
     }
 }

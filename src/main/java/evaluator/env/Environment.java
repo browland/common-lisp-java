@@ -44,7 +44,7 @@ public class Environment {
             throw new RuntimeException("Can't set for name which already exists in global env " + name);
         }
 
-        switch(value.type()) {
+        switch(value.getType()) {
             case MACRO:
                 globalEnvironment.setMacro(name, value);
             case OPERATOR:

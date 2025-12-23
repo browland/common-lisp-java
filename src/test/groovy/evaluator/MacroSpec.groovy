@@ -21,7 +21,7 @@ class MacroSpec extends Specification {
         Value<?> result = evaluator.evaluate("(testing 1 2)", env)
 
         then:
-        result.value() == 3
+        result.getValue() == 3
     }
 
     def "variadic args test"() {
@@ -40,7 +40,7 @@ class MacroSpec extends Specification {
         Value<?> result = evaluator.evaluate("(testing 1 2 3)", env)
 
         then:
-        result.value() == 3
+        result.getValue() == 3
     }
 
     def "push macro test"() {
@@ -61,7 +61,7 @@ class MacroSpec extends Specification {
         Value<?> result = evaluator.evaluate(push, env)
 
         then:
-        result.type() == ValueType.CONS_CELL
+        result.getType() == ValueType.CONS_CELL
 
         // todo additional tests; can't see the updated global var until we fix global handling (as it doesn't ripple up)
     }

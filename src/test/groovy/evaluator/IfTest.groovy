@@ -16,7 +16,7 @@ class IfTest extends Specification {
         Value<?> result = evaluator.evaluate(program, env)
 
         then:
-        result.value() == 3
+        result.getValue() == 3
     }
 
     def "false test"() {
@@ -30,6 +30,6 @@ class IfTest extends Specification {
         Value<?> result = evaluator.evaluate(program, env)
 
         then:
-        result.value() == 4
+        result.getValue() == 4
     }
 }

@@ -33,7 +33,7 @@ public class Setf implements SpecialForm {
         }
 
         Value<?> boundConsOrNil = optionalBoundConsOrNil.get();
-        if(!(boundConsOrNil.type() == ValueType.CONS_CELL || boundConsOrNil.equals(Value.nil()))) {
+        if(!(boundConsOrNil.getType() == ValueType.CONS_CELL || boundConsOrNil.equals(Value.nil()))) {
             throw new IllegalArgumentException("can only setf into a cons cell for now: " + name);
         }
 
@@ -41,7 +41,7 @@ public class Setf implements SpecialForm {
         Value<?> value = evaluator.evaluate(entireList.nodes().get(2), environment);
 
         // ensure it's a list for now
-        if(value.type() != ValueType.CONS_CELL) {
+        if(value.getType() != ValueType.CONS_CELL) {
             throw new IllegalArgumentException("can only setf a cons cell for now: " + value);
         }
 

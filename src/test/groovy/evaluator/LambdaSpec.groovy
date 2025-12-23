@@ -19,7 +19,7 @@ class LambdaSpec extends Specification {
         Value<?> result = evaluator.evaluate(program, env)
 
         then:
-        result.value() == 15
+        result.getValue() == 15
     }
 
     def "variadic args test"() {
@@ -35,6 +35,6 @@ class LambdaSpec extends Specification {
         Value<?> result = evaluator.evaluate(lambdaDef, env)
 
         then:
-        result.value() == 3
+        result.getValue() == 3
     }
 }

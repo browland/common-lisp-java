@@ -8,6 +8,8 @@ import function.FunctionRegistry;
 import function.ListFunction;
 import reader.CharacterReader;
 import syntaxtree.*;
+import value.IntegerValue;
+import value.StringValue;
 import value.Value;
 import value.ValueType;
 
@@ -40,7 +42,7 @@ public class Evaluator {
         // We can then apply it to the remaining arguments as a form.
         if (operatorNode instanceof RList) {
             Value<?> evaluatedOperatorValue = evaluate((RList)operatorNode, environment);
-            operator = (Function)evaluatedOperatorValue.value();
+            operator = (Function)evaluatedOperatorValue.getValue();
 
             // it's always a regular form when the operator is a list.  Special forms are only legal when the operator
             // is a predefined value.
@@ -87,8 +89,8 @@ public class Evaluator {
 
                 Value<?> resolvedOperator = possibleOperator.get();
 
-                if (ValueType.OPERATOR == resolvedOperator.type()) {
-                    operator = (Function) resolvedOperator.value();
+                if (ValueType.OPERATOR == resolvedOperator.getType()) {
+                    operator = (Function) resolvedOperator.getValue();
                 }
             }
             if (operator == null) {
@@ -127,7 +129,7 @@ public class Evaluator {
             return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
         }
         else if(QuoteType.STRING == atom.quoteType()) {
-            return new Value<>(atomStringValue, ValueType.STRING_LITERAL);
+            return new StringValue(atomStringValue);
         }
         else if(QuoteType.KEYWORD == atom.quoteType()) {
             return new Value<>(atomStringValue, ValueType.KEYWORD);
@@ -140,7 +142,7 @@ public class Evaluator {
             }
 
             int intValue = Integer.parseInt(atomStringValue);
-            return new Value<>(intValue, ValueType.INTEGER_LITERAL);
+            return new IntegerValue(intValue);
         }
     }
 }

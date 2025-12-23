@@ -21,7 +21,7 @@ class SetfSpec extends Specification {
         Value<?> result = evaluator.evaluate(setf, env)
 
         then:
-        result.type() == ValueType.CONS_CELL
+        result.getType() == ValueType.CONS_CELL
     }
 
 }

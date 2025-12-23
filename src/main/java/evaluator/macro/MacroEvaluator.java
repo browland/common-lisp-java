@@ -27,11 +27,11 @@ public class MacroEvaluator {
         }
 
         Value<?> macroValue = optionalMacro.get();
-        if(macroValue.type() != ValueType.MACRO) {
+        if(macroValue.getType() != ValueType.MACRO) {
             return Optional.empty();
         }
 
-        Macro macro = (Macro)macroValue.value();
+        Macro macro = (Macro)macroValue.getValue();
         List<Atom> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();
 

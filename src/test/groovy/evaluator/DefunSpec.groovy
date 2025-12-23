@@ -20,7 +20,7 @@ class DefunSpec extends Specification {
         Value<?> result = evaluator.evaluate("(f 1 2)", env)
 
         then:
-        result.value() == 3
+        result.getValue() == 3
     }
 
     def "variadic args test"() {
@@ -38,6 +38,6 @@ class DefunSpec extends Specification {
         Value<?> result = evaluator.evaluate("(f 1 2)", env)
 
         then:
-        result.value() == 3
+        result.getValue() == 3
     }
 }
