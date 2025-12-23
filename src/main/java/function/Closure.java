@@ -3,11 +3,10 @@ package function;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import syntaxtree.Atom;
-import value.LispList;
-import value.ListValue;
+import value.ConsCell;
+import value.ConsCellValue;
 import value.Value;
 import syntaxtree.RList;
-import value.ValueType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,9 +35,9 @@ public record Closure(Evaluator evaluator,
                 String restBindingName = bindings.get(i+1).value();
                 // 2. get remaining operands - put them all in a list and assign to the name
                 List<Value<?>> restValues = operands.subList(i, operands.size());
-                LispList restValuesList = new LispList(restValues);
+                ConsCell restValuesList = ConsCell.fromJavaList(restValues);
                 // 3. add this binding to the bindingsMap
-                bindingsMap.put(restBindingName, new ListValue(restValuesList));
+                bindingsMap.put(restBindingName, new ConsCellValue(restValuesList));
                 // 4. break out of loop
                 break;
             }

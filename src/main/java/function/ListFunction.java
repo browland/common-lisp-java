@@ -1,7 +1,7 @@
 package function;
 
 import evaluator.env.Environment;
-import value.LispList;
+import value.ConsCell;
 import value.Value;
 import value.ValueType;
 
@@ -13,8 +13,8 @@ public class ListFunction implements Function {
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
         List<Value<?>> copyOfArgs = new ArrayList<>(operands);
-        LispList lispList = new LispList(copyOfArgs);
+        ConsCell consCell = ConsCell.fromJavaList(copyOfArgs);
 
-        return new Value<>(lispList, ValueType.LIST);
+        return new Value<>(consCell, ValueType.CONS_CELL);
     }
 }

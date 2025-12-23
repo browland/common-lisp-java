@@ -4,7 +4,7 @@ import java.util.Objects;
 
 // just holds an evaluation result, but can be of a variety of types, e.g. string literal, quoted list, function, etc.
 public class Value<T> {
-    private T value;
+    protected T value;
     private ValueType type;
 
     public Value(T value, ValueType type) {

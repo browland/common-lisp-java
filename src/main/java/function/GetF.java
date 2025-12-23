@@ -2,7 +2,6 @@ package function;
 
 import evaluator.env.Environment;
 import value.ConsCell;
-import value.LispList;
 import value.Value;
 import value.ValueType;
 
@@ -14,12 +13,11 @@ public class GetF implements Function {
         Value<?> listOperand = operands.get(0);
         Value<?> symbol = operands.get(1);
 
-        if (listOperand.getType() != ValueType.LIST) {
-            throw new IllegalArgumentException("first operand to getf must be a list");
+        if (listOperand.getType() != ValueType.CONS_CELL) {
+            throw new IllegalArgumentException("first operand to getf must be a cons cell");
         }
 
-        LispList lispList = (LispList) listOperand.getValue();
-        ConsCell consCell = lispList.getHeadConsCell();
+        ConsCell consCell = (ConsCell)listOperand.getValue();
 
         Value<?> cdr;
         Value<?> car = consCell.car();

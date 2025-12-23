@@ -3,7 +3,6 @@ package function
 import evaluator.env.Environment;
 import spock.lang.Specification
 import value.ConsCell
-import value.LispList
 import value.Value
 import value.ValueType;
 
@@ -19,8 +18,8 @@ class LispFunctionSpec extends Specification {
 
         then:
         ConsCell expectedConsCell = new ConsCell(singleValue, Value.nil())
-        LispList lispList = lispListValue.getValue() as LispList
-        lispList.getHeadConsCell() == expectedConsCell
+        ConsCell result = lispListValue.getValue() as ConsCell
+        result == expectedConsCell
     }
 
     def "two element list"() {
@@ -33,10 +32,10 @@ class LispFunctionSpec extends Specification {
         Value<?> lispListValue = listFunction.apply(List.of(value1, value2), new Environment())
 
         then:
-        LispList lispList = lispListValue.getValue() as LispList
-        lispList.getHeadConsCell().car() == value1
+        ConsCell result = lispListValue.getValue() as ConsCell
+        result.car() == value1
 
-        ConsCell secondConsCell = lispList.getHeadConsCell().cdr().getValue() as ConsCell
+        ConsCell secondConsCell = result.cdr().getValue() as ConsCell
         secondConsCell.car() == value2
     }
 }
