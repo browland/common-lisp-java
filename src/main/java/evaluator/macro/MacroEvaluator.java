@@ -1,6 +1,7 @@
 package evaluator.macro;
 
 import evaluator.Evaluator;
+import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.NodeBuilder;
@@ -17,13 +18,15 @@ import java.util.Optional;
 public class MacroEvaluator {
     public Optional<Value<?>> evaluate(String operatorName,
                                        RList entireList,
-                                       Map<String, Value<?>> environment,
+                                       Environment environment,
                                        Evaluator evaluator) {
 
-        Value<?> macroValue = environment.get(operatorName);
-        if(macroValue == null) {
+        Optional<Value<?>> optionalMacro = environment.get(operatorName);
+        if(optionalMacro.isEmpty()) {
             return Optional.empty();
         }
+
+        Value<?> macroValue = optionalMacro.get();
         if(macroValue.type() != ValueType.MACRO) {
             return Optional.empty();
         }
@@ -37,9 +40,8 @@ public class MacroEvaluator {
         RList.Builder transformedBodyBuilder = transform(bodyTemplate, bindingsMap, true, null);
         RList transformedBody = transformedBodyBuilder.build();
 
-        Map<String, Value<?>> capturedEnvironment = macro.getCapturedEnvironment();
-        Map<String,Value<?>> capturedEnvironmentPlusBindings = new HashMap<>(capturedEnvironment);
-        Value<?> evaluatedMacro = evaluator.evaluate(transformedBody, capturedEnvironmentPlusBindings);
+        Environment capturedEnvironment = macro.getCapturedEnvironment();
+        Value<?> evaluatedMacro = evaluator.evaluate(transformedBody, capturedEnvironment);
         return Optional.of(evaluatedMacro);
     }
 

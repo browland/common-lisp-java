@@ -1,5 +1,6 @@
-package evaluator;
+package evaluator
 
+import evaluator.env.Environment;
 import spock.lang.Specification;
 import value.Value;
 
@@ -8,7 +9,7 @@ class LambdaSpec extends Specification {
     def "simple test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def program = """
             (( (lambda (x) (lambda (y) (+ x y))) 10) 5)
@@ -24,7 +25,7 @@ class LambdaSpec extends Specification {
     def "variadic args test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def lambdaDef = """
             ((lambda (x &rest others) (+ x (car others))) 1 2 3)

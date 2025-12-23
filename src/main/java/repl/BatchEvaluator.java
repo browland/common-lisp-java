@@ -1,18 +1,17 @@
 package repl;
 
 import evaluator.Evaluator;
-import value.Value;
+import evaluator.env.Environment;
 import reader.CharacterReader;
 import syntaxtree.RList;
 import syntaxtree.SyntaxTreeBuilder;
-
-import java.util.Map;
+import value.Value;
 
 public class BatchEvaluator {
     private final SyntaxTreeBuilder syntaxTreeBuilder;
     private final CharacterReader characterReader;
     private final Evaluator evaluator;
-    private final Map<String, Value<?>> environment;
+    private final Environment environment;
     private final ReplOutput replOutput;
 
     private boolean finishedForm;
@@ -23,7 +22,7 @@ public class BatchEvaluator {
     public BatchEvaluator(SyntaxTreeBuilder syntaxTreeBuilder,
                           CharacterReader characterReader,
                           Evaluator evaluator,
-                          Map<String, Value<?>> environment,
+                          Environment environment,
                           ReplOutput replOutput) {
         this.syntaxTreeBuilder = syntaxTreeBuilder;
         this.characterReader = characterReader;
@@ -52,7 +51,7 @@ public class BatchEvaluator {
     }
 
     private void endExpression(SyntaxTreeBuilder syntaxTreeBuilder,
-                               Map<String, Value<?>> environment,
+                               Environment environment,
                                Evaluator evaluator) {
         RList topLevelList = syntaxTreeBuilder.getResult();
         syntaxTreeBuilder.reset();

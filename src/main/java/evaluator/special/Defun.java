@@ -1,6 +1,7 @@
 package evaluator.special;
 
 import evaluator.Evaluator;
+import evaluator.env.Environment;
 import function.Closure;
 import syntaxtree.Atom;
 import syntaxtree.RList;
@@ -8,12 +9,11 @@ import value.Value;
 import value.ValueType;
 
 import java.util.List;
-import java.util.Map;
 
 public class Defun implements SpecialForm {
     @Override
     public Value<?> evaluate(RList entireList,
-                             Map<String, Value<?>> environment,
+                             Environment environment,
                              Evaluator evaluator) {
         String name = ((Atom)entireList.get(1)).value();
 
@@ -26,8 +26,9 @@ public class Defun implements SpecialForm {
 
         RList body = (RList) entireList.get(3);
 
-        Closure closure = new Closure(evaluator, environment, bindings, body, name);
-        environment.put(closure.optionalName(), new Value<>(closure, ValueType.OPERATOR));
+        Closure closure = new Closure(evaluator, environment.capture(), bindings, body);
+        // todo assuming global
+        environment.setGlobal(name, new Value<>(closure, ValueType.OPERATOR));
 
         return new Value<>(closure, ValueType.OPERATOR);
     }

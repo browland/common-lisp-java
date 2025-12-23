@@ -1,16 +1,15 @@
 package evaluator.special;
 
 import evaluator.Evaluator;
+import evaluator.env.Environment;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.Value;
 
-import java.util.Map;
-
 public class If implements SpecialForm {
     @Override
     public Value<?> evaluate(RList entireList,
-                             Map<String, Value<?>> environment,
+                             Environment environment,
                              Evaluator evaluator) {
         // evaluate test condition.  If nil then we return the evaluation of the second part,
         // otherwise we return the evaluation of the first part.

@@ -1,6 +1,5 @@
 package evaluator.env;
 
-import function.Function;
 import value.Value;
 
 import java.util.HashMap;
@@ -15,7 +14,7 @@ public class ScopeEnvironment {
     }
 
     private final Map<String, Value<?>> bindings = new HashMap<>();
-    private final Map<String, Function> functions = new HashMap<>();
+    private final Map<String, Value<?>> functions = new HashMap<>();
 
     public Optional<Value<?>> getBinding(String name) {
         if(bindings.containsKey(name)) {
@@ -32,14 +31,14 @@ public class ScopeEnvironment {
         bindings.put(name, value);
     }
 
-    public Optional<Function> getFunction(String name) {
+    public Optional<Value<?>> getFunction(String name) {
         if(functions.containsKey(name)) {
             return Optional.of(functions.get(name));
         }
         return Optional.empty();
     }
 
-    public void setFunction(String name, Function function) {
+    public void setFunction(String name, Value<?> function) {
         if(globalEnvironment.isReserved(name)) {
             throw new RuntimeException("Can't bind, already exists: " + name);
         }

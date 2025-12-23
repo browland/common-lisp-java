@@ -1,17 +1,18 @@
 package evaluator.special;
 
 import evaluator.Evaluator;
+import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 import value.Value;
 import value.ValueType;
 
-import java.util.Map;
+import java.util.Optional;
 
 public class Setf implements SpecialForm {
     @Override
     public Value<?> evaluate(RList entireList,
-                             Map<String, Value<?>> environment,
+                             Environment environment,
                              Evaluator evaluator) {
         Atom symbolAtom = (Atom) entireList.get(1);
         if((symbolAtom.prefix() != null && !symbolAtom.prefix().isEmpty())
@@ -22,11 +23,16 @@ public class Setf implements SpecialForm {
         String name = symbolAtom.value();
 
         // for now we only implement setf for lists.  The list must already exist at the given symbol.
-        if(!environment.containsKey(name)) {
+        if(environment.get(name).isEmpty()) {
             throw new UnsupportedOperationException("Cannot setf a list which isn't bound: " + name);
         }
 
-        Value<?> boundConsOrNil = environment.get(name);
+        Optional<Value<?>> optionalBoundConsOrNil = environment.get(name);
+        if(optionalBoundConsOrNil.isEmpty()) {
+            throw new IllegalArgumentException("could not find symbol for setf: " + name);
+        }
+
+        Value<?> boundConsOrNil = optionalBoundConsOrNil.get();
         if(!(boundConsOrNil.type() == ValueType.CONS_CELL || boundConsOrNil.equals(Value.nil()))) {
             throw new IllegalArgumentException("can only setf into a cons cell for now: " + name);
         }
@@ -39,7 +45,8 @@ public class Setf implements SpecialForm {
             throw new IllegalArgumentException("can only setf a cons cell for now: " + value);
         }
 
-        environment.put(name, value);
+        // todo bug: assuming global only!
+        environment.setGlobal(name, value);
         return value;
     }
 }

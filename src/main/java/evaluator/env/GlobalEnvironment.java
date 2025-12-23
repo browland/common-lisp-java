@@ -1,7 +1,5 @@
 package evaluator.env;
 
-import function.Function;
-import value.Macro;
 import value.Value;
 
 import java.util.HashMap;
@@ -11,10 +9,10 @@ import java.util.Optional;
 public class GlobalEnvironment {
     private final Map<String, Value<?>> builtInGlobals = new HashMap<>();
     private final Map<String, Value<?>> globalVariables = new HashMap<>();
-    private final Map<String, Macro> macros = new HashMap<>();
+    private final Map<String, Value<?>> macros = new HashMap<>();
 
-    private final Map<String, Function> builtInFunctions = new HashMap<>();
-    private final Map<String, Function> functions = new HashMap<>();
+    private final Map<String, Value<?>> builtInFunctions = new HashMap<>();
+    private final Map<String, Value<?>> functions = new HashMap<>();
 
     public Optional<Value<?>> getValue(String symbolName) {
         if(builtInGlobals.containsKey(symbolName)) {
@@ -22,6 +20,9 @@ public class GlobalEnvironment {
         }
         else if(globalVariables.containsKey(symbolName)) {
             return Optional.of(globalVariables.get(symbolName));
+        }
+        else if(functions.containsKey(symbolName)) {
+            return Optional.of(functions.get(symbolName));
         }
         return Optional.empty();
     }
@@ -34,18 +35,18 @@ public class GlobalEnvironment {
     }
 
 
-    public Optional<Macro> getMacro(String macroName) {
+    public Optional<Value<?>> getMacro(String macroName) {
         if(macros.containsKey(macroName)) {
             return Optional.of(macros.get(macroName));
         }
         return Optional.empty();
     }
 
-    public void setMacro(String name, Macro macro) {
+    public void setMacro(String name, Value<?> macro) {
         macros.put(name, macro);
     }
 
-    public Optional<Function> getFunction(String functionName) {
+    public Optional<Value<?>> getFunction(String functionName) {
         if(builtInFunctions.containsKey(functionName)) {
             return Optional.of(builtInFunctions.get(functionName));
         }
@@ -56,7 +57,7 @@ public class GlobalEnvironment {
         return Optional.empty();
     }
 
-    public void setFunction(String name, Function function) {
+    public void setFunction(String name, Value<?> function) {
         if(builtInFunctions.containsKey(name)) {
             throw new RuntimeException("Can't set a function with existing built-in function " + name);
         }

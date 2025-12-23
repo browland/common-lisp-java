@@ -1,6 +1,7 @@
 package evaluator.special;
 
 import evaluator.Evaluator;
+import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 import value.Macro;
@@ -13,7 +14,7 @@ import java.util.Map;
 public class DefMacro implements SpecialForm {
     @Override
     public Value<?> evaluate(RList entireList,
-                             Map<String, Value<?>> environment,
+                             Environment environment,
                              Evaluator evaluator) {
         Atom nameAtom = (Atom)entireList.get(1);
         String name = nameAtom.value();
@@ -25,9 +26,9 @@ public class DefMacro implements SpecialForm {
 
         RList body = (RList)entireList.get(3);
 
-        Macro macro = new Macro(environment, bindings, body);
+        Macro macro = new Macro(environment.capture(), bindings, body);
         Value<Macro> macroValue = new Value<>(macro, ValueType.MACRO);
-        environment.put(name, macroValue);
+        environment.setGlobal(name, macroValue);
 
         return new Value<>(name, ValueType.STRING_LITERAL);
     }

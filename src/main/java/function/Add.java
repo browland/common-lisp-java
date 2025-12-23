@@ -1,5 +1,6 @@
 package function;
 
+import evaluator.env.Environment;
 import value.Value;
 import value.ValueType;
 
@@ -9,7 +10,7 @@ import java.util.Map;
 public class Add implements Function {
 
     @Override
-    public Value<Integer> apply(List<Value<?>> operands, Map<String,Value<?>> environment) {
+    public Value<Integer> apply(List<Value<?>> operands, Environment environment) {
         // terrible assumption for now that operands are all Atoms and their string values parse as integers ... can overflow ... etc etc.
         int result = 0;
 

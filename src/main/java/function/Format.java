@@ -1,15 +1,15 @@
 package function;
 
+import evaluator.env.Environment;
 import value.Value;
 import value.ValueType;
 
 import java.util.List;
-import java.util.Map;
 
 public class Format implements Function {
 
     @Override
-    public Value<?> apply(List<Value<?>> operands, Map<String, Value<?>> environment) {
+    public Value<?> apply(List<Value<?>> operands, Environment environment) {
         // The first operand is the output stream to send the string, which is the second operand.
         Value<?> streamValue = operands.get(0);
         String value = (String)operands.get(1).value();

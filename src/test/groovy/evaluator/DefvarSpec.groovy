@@ -1,5 +1,6 @@
 package evaluator
 
+import evaluator.env.Environment
 import spock.lang.Specification
 import value.Value;
 
@@ -7,7 +8,7 @@ class DefvarSpec extends Specification {
     def "simple test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def program = "(defvar *db* nil)"
 
@@ -16,6 +17,6 @@ class DefvarSpec extends Specification {
 
         then:
         result.value() == "*db*"
-        env.get("*db*") == Value.nil()
+        env.get("*db*").get() == Value.nil()
     }
 }

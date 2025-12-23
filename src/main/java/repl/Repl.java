@@ -1,14 +1,12 @@
 package repl;
 
 import evaluator.Evaluator;
-import value.Value;
+import evaluator.env.Environment;
 import reader.CharacterReader;
 import syntaxtree.SyntaxTreeBuilder;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Repl implements ReplOutput {
     private final BatchEvaluator batchEvaluator;
@@ -22,7 +20,8 @@ public class Repl implements ReplOutput {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
         CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
 
-        Map<String,Value<?>> environment = new HashMap<>();
+
+        Environment environment = new Environment();
         Evaluator evaluator = new Evaluator();
 
         batchEvaluator = new BatchEvaluator(syntaxTreeBuilder, characterReader, evaluator, environment, this);

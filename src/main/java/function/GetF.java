@@ -1,16 +1,16 @@
 package function;
 
+import evaluator.env.Environment;
 import value.ConsCell;
 import value.LispList;
 import value.Value;
 import value.ValueType;
 
 import java.util.List;
-import java.util.Map;
 
 public class GetF implements Function {
     @Override
-    public Value<?> apply(List<Value<?>> operands, Map<String, Value<?>> environment) {
+    public Value<?> apply(List<Value<?>> operands, Environment environment) {
         Value<?> listOperand = operands.get(0);
         Value<?> symbol = operands.get(1);
 

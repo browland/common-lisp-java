@@ -1,5 +1,6 @@
 package evaluator
 
+import evaluator.env.Environment
 import spock.lang.Specification
 import value.Value
 
@@ -7,7 +8,7 @@ class DefunSpec extends Specification {
     def "simple test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def functionDef = """
            (defun f (x y)
@@ -25,7 +26,7 @@ class DefunSpec extends Specification {
     def "variadic args test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def functionDef = """
            (defun f (x &rest others)

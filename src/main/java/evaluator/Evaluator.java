@@ -1,15 +1,20 @@
 package evaluator;
 
+import evaluator.env.Environment;
 import evaluator.macro.MacroEvaluator;
 import evaluator.special.SpecialFormEvaluator;
-import function.*;
+import function.Function;
+import function.FunctionRegistry;
+import function.ListFunction;
 import reader.CharacterReader;
 import syntaxtree.*;
-import value.LispList;
 import value.Value;
 import value.ValueType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class Evaluator {
     private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
@@ -18,7 +23,7 @@ public class Evaluator {
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
     private final MacroEvaluator macroEvaluator = new MacroEvaluator();
 
-    public Value<?> evaluate(String program, Map<String,Value<?>> environment) {
+    public Value<?> evaluate(String program, Environment environment) {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
         CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
         characterReader.read(program);
@@ -27,7 +32,7 @@ public class Evaluator {
         return evaluate(list, environment);
     }
 
-    public Value<?> evaluate(RList list, Map<String,Value<?>> environment) {
+    public Value<?> evaluate(RList list, Environment environment) {
         Function operator;
         Node operatorNode = list.get(0);
 
@@ -75,14 +80,15 @@ public class Evaluator {
             // We know enough to handle it here.
             operator = functionRegistry.findByName(operatorAtom.value());
             if (operator == null) {
-                Value<?> possibleStoredOperator = environment.get(operatorAtom.value());
-                if(possibleStoredOperator == null) {
-                    System.out.println("ERROR: Can't find definition for operator " + operatorAtom.value());
-                    System.exit(-1);
+                Optional<Value<?>> possibleOperator = environment.get(operatorAtom.value());
+                if(possibleOperator.isEmpty()) {
+                    throw new RuntimeException("ERROR: Can't find definition for operator " + operatorAtom.value());
                 }
 
-                if (ValueType.OPERATOR == possibleStoredOperator.type()) {
-                    operator = (Function) possibleStoredOperator.value();
+                Value<?> resolvedOperator = possibleOperator.get();
+
+                if (ValueType.OPERATOR == resolvedOperator.type()) {
+                    operator = (Function) resolvedOperator.value();
                 }
             }
             if (operator == null) {
@@ -92,13 +98,15 @@ public class Evaluator {
         }
     }
 
-    private Value<?> applyForm(Function operator, RList fullList, Map<String,Value<?>> environment) {
+    private Value<?> applyForm(Function operator,
+                               RList fullList,
+                               Environment environment) {
         List<? extends Value<?>> operands = fullList.nodes().subList(1, fullList.size()).stream()
                 .map(node -> evaluate(node, environment)).toList();
         return operator.apply((List<Value<?>>) operands, environment);
     }
 
-    public Value<?> evaluate(Node node, Map<String,Value<?>> environment) {
+    public Value<?> evaluate(Node node, Environment environment) {
         // either an atom or a list
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
@@ -113,7 +121,7 @@ public class Evaluator {
         }
     }
 
-    private Value<?> atomToValue(Atom atom, Map<String,Value<?>> environment) {
+    private Value<?> atomToValue(Atom atom, Environment environment) {
         String atomStringValue = atom.value();
         if(BUILTIN_CONSTANTS.contains(atomStringValue)) {
             return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
@@ -126,8 +134,9 @@ public class Evaluator {
         }
         else {
             // could be in the environment; otherwise fall back to int
-            if(environment.containsKey(atomStringValue)) {
-                return environment.get(atomStringValue);
+            Optional<Value<?>> possibleValue = environment.get(atomStringValue);
+            if(possibleValue.isPresent()) {
+                return possibleValue.get();
             }
 
             int intValue = Integer.parseInt(atomStringValue);

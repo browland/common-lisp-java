@@ -1,19 +1,19 @@
 package function;
 
-import value.Value;
+import evaluator.env.Environment;
 import repl.BatchEvaluator;
+import value.Value;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
 public class Load implements Function {
     private static final String DEFAULT_LOAD_PATH = "/Users/ben/git/lisp/lisp-sources/";
 
     @Override
-    public Value<?> apply(List<Value<?>> operands, Map<String, Value<?>> environment) {
+    public Value<?> apply(List<Value<?>> operands, Environment environment) {
         Value<String> filenameValue = (Value<String>)operands.get(0);
         String filename = filenameValue.value();
         Path absolutePath = Path.of(DEFAULT_LOAD_PATH, filename);

@@ -1,5 +1,6 @@
 package function
 
+import evaluator.env.Environment
 import spock.lang.Specification
 import value.ConsCell
 import value.Value
@@ -15,7 +16,7 @@ class ConsSpec extends Specification {
         Value<?> cdr = Value.nil();
 
         when:
-        Value<?> consCellValue = cons.apply(List.of(car, cdr), Map.of());
+        Value<?> consCellValue = cons.apply(List.of(car, cdr), new Environment());
 
         then:
         ConsCell consCell = consCellValue.value() as ConsCell;
@@ -35,7 +36,7 @@ class ConsSpec extends Specification {
         Value<String> newCar = new Value<>("new head of list", ValueType.STRING_LITERAL);
 
         when:
-        Value<?> newConsCellValue = cons.apply(List.of(newCar, existingCellValue), Map.of());
+        Value<?> newConsCellValue = cons.apply(List.of(newCar, existingCellValue), new Environment());
 
         then:
         ConsCell newConsCell = newConsCellValue.value() as ConsCell;

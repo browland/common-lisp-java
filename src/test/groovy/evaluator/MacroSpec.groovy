@@ -1,5 +1,6 @@
 package evaluator
 
+import evaluator.env.Environment
 import spock.lang.Specification
 import value.Value
 import value.ValueType
@@ -8,7 +9,7 @@ class MacroSpec extends Specification {
     def "simple test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def macroDef = """
            (defmacro testing (x y)
@@ -26,7 +27,7 @@ class MacroSpec extends Specification {
     def "variadic args test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def macroDef = """
             (defmacro testing (x &rest rest) 
@@ -45,7 +46,7 @@ class MacroSpec extends Specification {
     def "push macro test"() {
         given:
         def evaluator = new Evaluator()
-        def env = new HashMap<String, Value<?>>()
+        def env = new Environment()
 
         def globalDef = "(defvar *db* nil)"
         def macroDef = """

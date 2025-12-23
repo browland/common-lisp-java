@@ -1,17 +1,17 @@
 package value;
 
+import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 
 import java.util.List;
-import java.util.Map;
 
 public class Macro {
-    private final Map<String,Value<?>> capturedEnvironment;
+    private final Environment capturedEnvironment;
     private final List<Atom> bindings;
     private final RList body;
 
-    public Macro(Map<String,Value<?>> capturedEnvironment,
+    public Macro(Environment capturedEnvironment,
                  List<Atom> bindings,
                  RList body) {
         this.capturedEnvironment = capturedEnvironment;
@@ -27,7 +27,7 @@ public class Macro {
         return body;
     }
 
-    public Map<String, Value<?>> getCapturedEnvironment() {
+    public Environment getCapturedEnvironment() {
         return capturedEnvironment;
     }
 }
