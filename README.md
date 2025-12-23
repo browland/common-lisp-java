@@ -2,13 +2,31 @@
 
 ## Issues
 
-* Desugaring.  E.g. (f '(1 2 3)) should be parsed into the tree: (f (quote ( 1 2 3))).
-  There is always special forms for any type of quote encountered such as unquote, quasiquote, etc to do this.
-  
-* Globals defined during closure evaluation: For now just manually copying globals back in to the captured environment 
+### Env
+Do this first:
+* Globals defined during closure evaluation: For now just manually copying globals back in to the captured environment
   after application.  Should have a separate single shared global environment.
-  
 * Globals need handling properly (rather than manually handling * prefix and suffix)
+
+For this, have 3 global scopes: variables, functions, macros (none of these have scopes, always global).
+Though, macros are always run first before functions (Ensure we're checking this first).  This is because macros act
+on code and functions act on code after any macros have run.
+Then, we can have one HashMap env per lexical scope for variables only (only these are lexically scoped).
+
+### Defvar/setf
+
+Only introduces a new variable if not already bound.  Shouldn't allow a constant (keyword) symbol to be assigned.
+Nor allow assignments to special constants like t.  Calling defvar again on an existing symbol will have no effect -
+works but will not update it.
+
+Setf can update an existing variable, and can't update one which is not yet declared.  Setf also can't assign a new
+value to special constants e.g. t.
+
+Current impl of setf should also work with variables (e.g. when given a symbol as place).
+
+### Desugaring
+E.g. (f '(1 2 3)) should be parsed into the tree: (f (quote ( 1 2 3))).
+  There is always special forms for any type of quote encountered such as unquote, quasiquote, etc to do this.
 
 * format only works with strings - should work with cons cells for eg.
 
