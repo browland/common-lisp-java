@@ -1,6 +1,7 @@
 package function;
 
 import evaluator.env.Environment;
+import value.IntegerValue;
 import value.Value;
 import value.ValueType;
 
@@ -29,6 +30,6 @@ public class Add implements Function {
 
         }
 
-        return new Value<>(result, ValueType.INTEGER_LITERAL);
+        return new IntegerValue(result);
     }
 }

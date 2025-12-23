@@ -4,6 +4,7 @@ import evaluator.Evaluator;
 import evaluator.env.Environment;
 import syntaxtree.Atom;
 import value.LispList;
+import value.ListValue;
 import value.Value;
 import syntaxtree.RList;
 import value.ValueType;
@@ -37,7 +38,7 @@ public record Closure(Evaluator evaluator,
                 List<Value<?>> restValues = operands.subList(i, operands.size());
                 LispList restValuesList = new LispList(restValues);
                 // 3. add this binding to the bindingsMap
-                bindingsMap.put(restBindingName, new Value<>(restValuesList, ValueType.LIST));
+                bindingsMap.put(restBindingName, new ListValue(restValuesList));
                 // 4. break out of loop
                 break;
             }

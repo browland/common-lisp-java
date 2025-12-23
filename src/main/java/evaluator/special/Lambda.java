@@ -3,12 +3,11 @@ package evaluator.special;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import function.Closure;
-import function.Function;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
+import value.ClosureValue;
 import value.Value;
-import value.ValueType;
 
 import java.util.List;
 
@@ -31,6 +30,6 @@ public class Lambda implements SpecialForm {
 
         RList body = (RList) entireList.get(2);
         Closure closure = new Closure(evaluator, environment.capture(), bindings, body);
-        return new Value<Function>(closure, ValueType.OPERATOR);
+        return new ClosureValue(closure);
     }
 }

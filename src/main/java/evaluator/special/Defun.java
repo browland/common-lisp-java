@@ -5,8 +5,8 @@ import evaluator.env.Environment;
 import function.Closure;
 import syntaxtree.Atom;
 import syntaxtree.RList;
+import value.ClosureValue;
 import value.Value;
-import value.ValueType;
 
 import java.util.List;
 
@@ -28,8 +28,8 @@ public class Defun implements SpecialForm {
 
         Closure closure = new Closure(evaluator, environment.capture(), bindings, body);
         // todo assuming global
-        environment.setGlobal(name, new Value<>(closure, ValueType.OPERATOR));
+        environment.setGlobal(name, new ClosureValue(closure));
 
-        return new Value<>(closure, ValueType.OPERATOR);
+        return new ClosureValue(closure);
     }
 }

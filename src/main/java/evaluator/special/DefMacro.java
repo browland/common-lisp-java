@@ -5,11 +5,11 @@ import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 import value.Macro;
+import value.MacroValue;
+import value.StringValue;
 import value.Value;
-import value.ValueType;
 
 import java.util.List;
-import java.util.Map;
 
 public class DefMacro implements SpecialForm {
     @Override
@@ -27,9 +27,9 @@ public class DefMacro implements SpecialForm {
         RList body = (RList)entireList.get(3);
 
         Macro macro = new Macro(environment.capture(), bindings, body);
-        Value<Macro> macroValue = new Value<>(macro, ValueType.MACRO);
+        MacroValue macroValue = new MacroValue(macro);
         environment.setGlobal(name, macroValue);
 
-        return new Value<>(name, ValueType.STRING_LITERAL);
+        return new StringValue(name);
     }
 }
