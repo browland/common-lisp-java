@@ -32,7 +32,11 @@ public class ParseElementBuilder {
         // is called externally and is a bit of a code-smell - shouldn't need it?) then we can determine if this quote
         // character is a prefix or suffix by whether there are characters present in the atomStringBuilder.
         if(atomStringBuilder.isEmpty()) {
-            prefixBuilder.append(event.character());
+            prefixBuilder.append(event.character());  // we'll still need this when we deal with 2-char quote types
+            // Single quote always results in a (quote ...) form being emitted.
+//            if(event.character() == '\'') {
+//                handleQuote(event);
+//            }
         }
         else if(!atomStringBuilder.isEmpty()) {
             suffixBuilder.append(event.character());
@@ -89,10 +93,15 @@ public class ParseElementBuilder {
         syntaxTreeBuilder.endList();
     }
 
+    public void handleQuote(CharacterReaderEvent event) {
+        syntaxTreeBuilder.startList(null);  // null prefix; we're moving away from leaking prefix above this level
+        prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
+    }
+
     public void startList(CharacterReaderEvent event) {
         // Determine the entire prefix - may be null, 1 or 2 characters based on current knowledge
         String prefix = prefixBuilder.length() != 0 ? prefixBuilder.toString() : null;
-        syntaxTreeBuilder.startList(event.depth()-1, prefix);
+        syntaxTreeBuilder.startList(prefix);
         prefixBuilder.delete(0, prefixBuilder.length());  // whenever we consume 'prefix' we need to reset the flag to say prefix has been read
     }
 

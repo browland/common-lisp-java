@@ -14,7 +14,6 @@ public class CharacterReader {
     );
 
     private final ParseElementBuilder parseElementBuilder;
-    private int depth = 0;
 
     public CharacterReader(ParseElementBuilder parseElementBuilder) {
         this.parseElementBuilder = parseElementBuilder;
@@ -28,21 +27,19 @@ public class CharacterReader {
 
     public void consume(char c) {
         if (QUOTE_CHARS.contains(c)) {
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.ON_QUOTE_CHAR, depth);
+            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.ON_QUOTE_CHAR);
             parseElementBuilder.onQuoteChar(event);
         } else if (c == '(') {
-            depth++;
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.OPEN_LIST, depth);
+            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.OPEN_LIST);
             parseElementBuilder.startList(event);
         } else if (c == ')') {
-            depth--;
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.CLOSE_LIST, depth);
+            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.CLOSE_LIST);
             parseElementBuilder.endList(event);
         } else if (Character.isWhitespace(c)) {
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.SPACE, depth);
+            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.SPACE);
             parseElementBuilder.onWhitespace(event);
         } else {
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_ATOM, depth);
+            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_ATOM);
             parseElementBuilder.inAtom(event);
         }
     }
