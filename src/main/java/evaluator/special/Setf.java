@@ -2,7 +2,6 @@ package evaluator.special;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
-import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 import value.Symbol;

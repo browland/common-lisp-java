@@ -13,6 +13,7 @@ public class SpecialFormRegistry {
         registry.put("setf", new Setf());
         registry.put("if", new If());
         registry.put("defmacro", new DefMacro());
+        registry.put("quote", new Quote());
     }
 
     public SpecialForm findByName(String name) {

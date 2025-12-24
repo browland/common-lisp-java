@@ -1,5 +1,5 @@
 package syntaxtree;
 
 public enum QuoteType {
-    NONE, LIST, FUNCTION, STRING, KEYWORD, OTHER
+    QUOTE, FUNCTION_QUOTE, QUASIQUOTE, STRING, KEYWORD
 }

@@ -5,13 +5,23 @@ public class SyntaxTreeBuilder {
     private boolean finished;
     private int depth = -1;  // we start from -1 as the first open-bracket we see will increment it to 0, which is the correct
                              // depth of the top-level list.
+    private QuoteType insertingQuoteType;
+    private FieldTypeForEndQuote fieldTypeForEndQuote;
 
     void newAtom(Atom.Builder atomBuilder) {
         currentListBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
+
+        if(insertingQuoteType != null && fieldTypeForEndQuote == null) {
+            endInsertedQuote();
+        }
     }
 
     void startList(String prefix) {
         depth++;
+        if(insertingQuoteType != null && fieldTypeForEndQuote == null) {
+            this.fieldTypeForEndQuote = FieldTypeForEndQuote.LIST;
+        }
+
         RList.Builder tempListBuilder = new RList.Builder()
                 .parentListBuilder(currentListBuilder)
                 .depth(depth)
@@ -33,6 +43,33 @@ public class SyntaxTreeBuilder {
 
         currentListBuilder = currentListBuilder.getParentListBuilder() != null ?
                 currentListBuilder.getParentListBuilder() : currentListBuilder;
+
+        if(insertingQuoteType != null && fieldTypeForEndQuote != null) {
+            endInsertedQuote();
+        }
+    }
+
+    void insertQuote(QuoteType quoteType) {
+        this.startList(null);
+
+        String quoteText = switch(quoteType) {
+            case QUOTE -> "quote";
+            case FUNCTION_QUOTE -> "function";
+            default -> throw new IllegalArgumentException("unsupported quote type " + quoteType);
+        };
+
+        Atom.Builder quoteAtomBuilder = new Atom.Builder()
+                .value(quoteText);
+
+        this.newAtom(quoteAtomBuilder);
+
+        this.insertingQuoteType = quoteType;
+    }
+
+    void endInsertedQuote() {
+        this.insertingQuoteType = null;
+        this.fieldTypeForEndQuote = null;
+        this.endList();
     }
 
     void reset() {
@@ -45,6 +82,13 @@ public class SyntaxTreeBuilder {
     }
 
     public RList getResult() {
+        if(depth != -1) {
+            throw new IllegalStateException("Can't get result while not at top level");
+        }
         return currentListBuilder.build();
+    }
+
+    enum FieldTypeForEndQuote {
+        ATOM, LIST
     }
 }

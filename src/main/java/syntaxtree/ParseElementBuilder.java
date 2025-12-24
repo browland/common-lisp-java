@@ -33,10 +33,14 @@ public class ParseElementBuilder {
         // character is a prefix or suffix by whether there are characters present in the atomStringBuilder.
         if(atomStringBuilder.isEmpty()) {
             prefixBuilder.append(event.character());  // we'll still need this when we deal with 2-char quote types
+            String prefix = prefixBuilder.toString();;
             // Single quote always results in a (quote ...) form being emitted.
-//            if(event.character() == '\'') {
-//                handleQuote(event);
-//            }
+            if(prefix.equals("'")) {  // todo use constant/enum
+                handleQuote(event);
+            }
+            else if(prefix.equals("#'")) {
+                handleFunctionQuote(event);
+            }
         }
         else if(!atomStringBuilder.isEmpty()) {
             suffixBuilder.append(event.character());
@@ -94,7 +98,12 @@ public class ParseElementBuilder {
     }
 
     public void handleQuote(CharacterReaderEvent event) {
-        syntaxTreeBuilder.startList(null);  // null prefix; we're moving away from leaking prefix above this level
+        syntaxTreeBuilder.insertQuote(QuoteType.QUOTE);
+        prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
+    }
+
+    public void handleFunctionQuote(CharacterReaderEvent event) {
+        syntaxTreeBuilder.insertQuote(QuoteType.FUNCTION_QUOTE);
         prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
     }
 

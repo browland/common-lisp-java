@@ -21,11 +21,11 @@ public class Value<T> {
     }
 
     public static Value<String> of(String value) {
-        return new Value<String>(value, ValueType.STRING_LITERAL);
+        return new StringValue(value);
     }
 
     public static <T> Value<T> of(T value, ValueType valueType) {
-        return new Value<T>(value, valueType);
+        return new Value<>(value, valueType);
     }
 
     public T getValue() {

@@ -36,9 +36,9 @@ public record Closure(Evaluator evaluator,
                 String restBindingName = bindings.get(i+1).value();
                 // 2. get remaining operands - put them all in a list and assign to the name
                 List<Value<?>> restValues = operands.subList(i, operands.size());
-                ConsCell restValuesList = ConsCell.fromJavaList(restValues);
+                ConsCellValue restValuesCons = ConsCellValue.fromJavaList(restValues);
                 // 3. add this binding to the bindingsMap
-                bindingsMap.put(restBindingName, new ConsCellValue(restValuesList));
+                bindingsMap.put(restBindingName, restValuesCons);
                 // 4. break out of loop
                 break;
             }

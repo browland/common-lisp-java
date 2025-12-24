@@ -48,20 +48,23 @@ class CharacterReaderSpec extends Specification {
         def outerList = syntaxTreeBuilder.getResult()
 
         then:
+        // Expect: (filter (quote (6 4 3 5 2)) (function even))
         ((Atom)outerList.get(0)).value() == "filter"
 
         def innerList = (RList)outerList.get(1)
-        innerList.prefix() == "'"
 
-        ((Atom)innerList.get(0)).value() == "6"
-        ((Atom)innerList.get(1)).value() == "4"
-        ((Atom)innerList.get(2)).value() == "3"
-        ((Atom)innerList.get(3)).value() == "5"
-        ((Atom)innerList.get(4)).value() == "2"
+        ((Atom)innerList.get(0)).value() == "quote"
 
-        def atom = (Atom) outerList.get(2)
-        atom.value() == "even"
-        atom.prefix() == "#'"
+        def quotedList = (RList)innerList.get(1)
+        ((Atom)quotedList.get(0)).value() == "6"
+        ((Atom)quotedList.get(1)).value() == "4"
+        ((Atom)quotedList.get(2)).value() == "3"
+        ((Atom)quotedList.get(3)).value() == "5"
+        ((Atom)quotedList.get(4)).value() == "2"
+
+        def quotedFunction = (RList) outerList.get(2)
+        ((Atom)quotedFunction.get(0)).value() == "function"
+        ((Atom)quotedFunction.get(1)).value() == "even"
     }
 
     def "reads string with space within"() {
