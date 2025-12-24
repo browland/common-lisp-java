@@ -36,10 +36,16 @@ public class ParseElementBuilder {
             String prefix = prefixBuilder.toString();;
             // Single quote always results in a (quote ...) form being emitted.
             if(prefix.equals("'")) {  // todo use constant/enum
-                handleQuote(event);
+                handleQuote(QuoteType.QUOTE);
             }
             else if(prefix.equals("#'")) {
-                handleFunctionQuote(event);
+                handleQuote(QuoteType.FUNCTION_QUOTE);
+            }
+            else if(prefix.equals("`")) {
+                handleQuote(QuoteType.QUASIQUOTE);
+            }
+            else if(prefix.equals(",")) {
+                handleQuote(QuoteType.UNQUOTE);
             }
         }
         else if(!atomStringBuilder.isEmpty()) {
@@ -97,13 +103,8 @@ public class ParseElementBuilder {
         syntaxTreeBuilder.endList();
     }
 
-    public void handleQuote(CharacterReaderEvent event) {
-        syntaxTreeBuilder.insertQuote(QuoteType.QUOTE);
-        prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
-    }
-
-    public void handleFunctionQuote(CharacterReaderEvent event) {
-        syntaxTreeBuilder.insertQuote(QuoteType.FUNCTION_QUOTE);
+    public void handleQuote(QuoteType quoteType) {
+        syntaxTreeBuilder.insertQuote(quoteType);
         prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
     }
 

@@ -5,27 +5,26 @@ public class SyntaxTreeBuilder {
     private boolean finished;
     private int depth = -1;  // we start from -1 as the first open-bracket we see will increment it to 0, which is the correct
                              // depth of the top-level list.
-    private QuoteType insertingQuoteType;
-    private FieldTypeForEndQuote fieldTypeForEndQuote;
+    private boolean insertingQuote;
 
     void newAtom(Atom.Builder atomBuilder) {
         currentListBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
 
-        if(insertingQuoteType != null && fieldTypeForEndQuote == null) {
-            endInsertedQuote();
+        if(insertingQuote) {
+            this.endList();
+            this.insertingQuote = false;
         }
     }
 
     void startList(String prefix) {
         depth++;
-        if(insertingQuoteType != null && fieldTypeForEndQuote == null) {
-            this.fieldTypeForEndQuote = FieldTypeForEndQuote.LIST;
-        }
 
         RList.Builder tempListBuilder = new RList.Builder()
                 .parentListBuilder(currentListBuilder)
                 .depth(depth)
-                .prefix(prefix);
+                .prefix(prefix)
+                .quoted(insertingQuote);
+        this.insertingQuote = false;
 
         if(currentListBuilder != null) {
             currentListBuilder.addNodeBuilder(tempListBuilder);
@@ -41,11 +40,13 @@ public class SyntaxTreeBuilder {
             finished = true;
         }
 
+        boolean isQuoted = currentListBuilder.isQuoted();
+
         currentListBuilder = currentListBuilder.getParentListBuilder() != null ?
                 currentListBuilder.getParentListBuilder() : currentListBuilder;
 
-        if(insertingQuoteType != null && fieldTypeForEndQuote != null) {
-            endInsertedQuote();
+        if(isQuoted) {
+            endList();
         }
     }
 
@@ -55,6 +56,8 @@ public class SyntaxTreeBuilder {
         String quoteText = switch(quoteType) {
             case QUOTE -> "quote";
             case FUNCTION_QUOTE -> "function";
+            case QUASIQUOTE -> "quasiquote";
+            case UNQUOTE -> "unquote";
             default -> throw new IllegalArgumentException("unsupported quote type " + quoteType);
         };
 
@@ -63,13 +66,7 @@ public class SyntaxTreeBuilder {
 
         this.newAtom(quoteAtomBuilder);
 
-        this.insertingQuoteType = quoteType;
-    }
-
-    void endInsertedQuote() {
-        this.insertingQuoteType = null;
-        this.fieldTypeForEndQuote = null;
-        this.endList();
+        this.insertingQuote = true;
     }
 
     void reset() {
@@ -86,9 +83,5 @@ public class SyntaxTreeBuilder {
             throw new IllegalStateException("Can't get result while not at top level");
         }
         return currentListBuilder.build();
-    }
-
-    enum FieldTypeForEndQuote {
-        ATOM, LIST
     }
 }

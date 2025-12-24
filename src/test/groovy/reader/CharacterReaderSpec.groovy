@@ -183,4 +183,36 @@ class CharacterReaderSpec extends Specification {
         ((Atom)innerList.get(1)).value() == "1"
         ((Atom)innerList.get(2)).value() == "2"
     }
+
+    def "reads quasiquoted list"() {
+        given:
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
+        def characterReader = new CharacterReader(reader)
+        def program = "`(add ,1 2)"
+
+        when:
+        characterReader.read(program)
+        def outerList = syntaxTreeBuilder.getResult()
+
+        then:
+        // result should be: (quasiquote (add (unquote 1) 2))
+        outerList.depth() == 0
+
+        outerList.size() == 2
+        outerList.get(0) instanceof Atom
+        ((Atom)outerList.get(0)).value() == "quasiquote"
+
+        def innerList = (RList)outerList.get(1)
+        innerList.depth() == 1
+
+        innerList.size() == 3
+        ((Atom)innerList.get(0)).value() == "add"
+        ((Atom)innerList.get(2)).value() == "2"
+
+        def unquoteList = (RList)innerList.get(1)
+        ((Atom)unquoteList.get(0)).value() == "unquote"
+        ((Atom)unquoteList.get(1)).value() == "1"
+    }
+
 }

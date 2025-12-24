@@ -98,35 +98,35 @@ public class MacroEvaluator {
                                     Map<String, Node> bindingsMap,
                                     boolean unquote,
                                     String transferredPrefix) {
-        RList.Builder generatedListBuilder = new RList.Builder();
-        generatedListBuilder.prefix(transferredPrefix);
+        RList.Builder transformedListBuilder = new RList.Builder();
+//        generatedListBuilder.prefix(transferredPrefix);
 
-        if(unquote) {
-            // we only discard the quasi-quote as we're just always unquoting anything anyway
-            generatedListBuilder.prefix(templateList.prefix().replace("`", ""));
-
-        }
-        else {
-            String prefix = generatedListBuilder.getPrefix();
-            if(prefix != null) {
-                generatedListBuilder.prefix(prefix+templateList.prefix());
-            }
-            else {
-                generatedListBuilder.prefix(templateList.prefix());
-            }
-        }
+//        if(unquote) {
+//            // we only discard the quasi-quote as we're just always unquoting anything anyway
+//            generatedListBuilder.prefix(templateList.prefix().replace("`", ""));
+//
+//        }
+//        else {
+//            String prefix = generatedListBuilder.getPrefix();
+//            if(prefix != null) {
+//                generatedListBuilder.prefix(prefix+templateList.prefix());
+//            }
+//            else {
+//                generatedListBuilder.prefix(templateList.prefix());
+//            }
+//        }
 
         for(Node node : templateList.nodes()) {
             if(node instanceof Atom) {
                 Atom templateAtom = (Atom)node;
-                generatedListBuilder.addNodeBuilder(transform(templateAtom, bindingsMap));
+                transformedListBuilder.addNodeBuilder(transform(templateAtom, bindingsMap));
             }
             else {
                 RList.Builder transformedRListBuilder = transform((RList) node, bindingsMap, false, null);
-                generatedListBuilder.addNodeBuilder(transformedRListBuilder);
+                transformedListBuilder.addNodeBuilder(transformedRListBuilder);
             }
         }
 
-        return generatedListBuilder;
+        return transformedListBuilder;
     }
 }
