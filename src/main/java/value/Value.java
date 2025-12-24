@@ -20,8 +20,14 @@ public class Value<T> {
         return new Value<>("T", ValueType.BUILTIN_CONSTANT);
     }
 
-    public static Value<String> of(String value) {
-        return new StringValue(value);
+    public static Value<?> of(String value) {
+        try {
+            int i = Integer.parseInt(value);
+            return new IntegerValue(i);
+        }
+        catch(Exception e) {
+            return new StringValue(value);
+        }
     }
 
     public static <T> Value<T> of(T value, ValueType valueType) {
