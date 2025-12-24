@@ -5,6 +5,7 @@ import evaluator.env.Environment;
 import syntaxtree.Atom;
 import value.ConsCell;
 import value.ConsCellValue;
+import value.Symbol;
 import value.Value;
 import syntaxtree.RList;
 
@@ -48,8 +49,9 @@ public record Closure(Evaluator evaluator,
 
         capturedEnvironment.enterScope();
         for(String name : bindingsMap.keySet()) {
+            Symbol symbol = environment.getSymbols().internSymbol(name);
             // todo should we enter new scope for the closure call? We're just piggy-backing on the captured scope
-            capturedEnvironment.setInScope(name, bindingsMap.get(name));
+            capturedEnvironment.setInScope(symbol, bindingsMap.get(name));
         }
 
         Value<?> evalResult = evaluator.evaluate(body, capturedEnvironment);

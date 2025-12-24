@@ -1,5 +1,6 @@
 package evaluator.env;
 
+import value.Symbol;
 import value.Value;
 
 import java.util.HashMap;
@@ -13,36 +14,36 @@ public class ScopeEnvironment {
         this.globalEnvironment = globalEnvironment;
     }
 
-    private final Map<String, Value<?>> bindings = new HashMap<>();
-    private final Map<String, Value<?>> functions = new HashMap<>();
+    private final Map<Symbol, Value<?>> bindings = new HashMap<>();
+    private final Map<Symbol, Value<?>> functions = new HashMap<>();
 
-    public Optional<Value<?>> getBinding(String name) {
-        if(bindings.containsKey(name)) {
-            return Optional.of(bindings.get(name));
+    public Optional<Value<?>> getBinding(Symbol symbol) {
+        if(bindings.containsKey(symbol)) {
+            return Optional.of(bindings.get(symbol));
         }
         return Optional.empty();
     }
 
-    public void setBinding(String name, Value<?> value) {
-        if(globalEnvironment.isReserved(name)) {
-            throw new RuntimeException("Can't bind, already exists: " + name);
+    public void setBinding(Symbol symbol, Value<?> value) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't bind, already exists: " + symbol);
         }
 
-        bindings.put(name, value);
+        bindings.put(symbol, value);
     }
 
-    public Optional<Value<?>> getFunction(String name) {
-        if(functions.containsKey(name)) {
-            return Optional.of(functions.get(name));
+    public Optional<Value<?>> getFunction(Symbol symbol) {
+        if(functions.containsKey(symbol)) {
+            return Optional.of(functions.get(symbol));
         }
         return Optional.empty();
     }
 
-    public void setFunction(String name, Value<?> function) {
-        if(globalEnvironment.isReserved(name)) {
-            throw new RuntimeException("Can't bind, already exists: " + name);
+    public void setFunction(Symbol symbol, Value<?> function) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't bind, already exists: " + symbol);
         }
 
-        functions.put(name, function);
+        functions.put(symbol, function);
     }
 }

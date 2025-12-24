@@ -1,5 +1,6 @@
 package evaluator.env;
 
+import value.Symbol;
 import value.Value;
 
 import java.util.Deque;
@@ -10,18 +11,21 @@ import java.util.Optional;
 public class Environment {
     private GlobalEnvironment globalEnvironment;
     private Deque<ScopeEnvironment> scopes;
+    private Symbols symbols;
 
     public Environment() {
-        this(new GlobalEnvironment());
+        this(new GlobalEnvironment(), new Symbols());
     }
 
-    public Environment(GlobalEnvironment globalEnvironment) {
+    public Environment(GlobalEnvironment globalEnvironment, Symbols symbols) {
         this.globalEnvironment = globalEnvironment;
         this.scopes = new LinkedList<>();
+        this.symbols = symbols;
     }
 
-    public Optional<Value<?>> get(String symbolName) {
-        Optional<Value<?>> global = globalEnvironment.getValue(symbolName);
+
+    public Optional<Value<?>> get(Symbol symbol) {
+        Optional<Value<?>> global = globalEnvironment.getValue(symbol);
         if(global.isPresent()) {
             return global;
         }
@@ -30,7 +34,7 @@ public class Environment {
         Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
         while(scopeIter.hasNext()) {
             ScopeEnvironment scope = scopeIter.next();
-            Optional<Value<?>> value = scope.getBinding(symbolName);
+            Optional<Value<?>> value = scope.getBinding(symbol);
             if(value.isPresent()) {
                 return value;
             }
@@ -39,25 +43,25 @@ public class Environment {
         return Optional.empty();
     }
 
-    public void setGlobal(String name, Value<?> value) {
-        if(globalEnvironment.isReserved(name)) {
-            throw new RuntimeException("Can't set for name which already exists in global env " + name);
+    public void setGlobal(Symbol symbol, Value<?> value) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't set for name which already exists in global env " + symbol);
         }
 
         switch(value.getType()) {
             case MACRO:
-                globalEnvironment.setMacro(name, value);
+                globalEnvironment.setMacro(symbol, value);
             case OPERATOR:
-                globalEnvironment.setFunction(name, value);
+                globalEnvironment.setFunction(symbol, value);
             // todo bug!
             default:
-                globalEnvironment.setGlobal(name, value);
+                globalEnvironment.setGlobal(symbol, value);
         }
     }
 
-    public void setInScope(String name, Value<?> value) {
-        if(globalEnvironment.isReserved(name)) {
-            throw new RuntimeException("Can't set for name which already exists in global env " + name);
+    public void setInScope(Symbol symbol, Value<?> value) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't set for symbol which already exists in global env " + symbol);
         }
 
         ScopeEnvironment thisScopeEnv = scopes.peek();
@@ -66,11 +70,11 @@ public class Environment {
         }
 
         // todo should have some kind of protection around this
-        thisScopeEnv.setBinding(name, value);
+        thisScopeEnv.setBinding(symbol, value);
     }
 
-    public Optional<Value<?>> getFunction(String name) {
-        Optional<Value<?>> global = globalEnvironment.getFunction(name);
+    public Optional<Value<?>> getFunction(Symbol symbol) {
+        Optional<Value<?>> global = globalEnvironment.getFunction(symbol);
         if(global.isPresent()) {
             return global;
         }
@@ -79,7 +83,7 @@ public class Environment {
         Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
         while(scopeIter.hasNext()) {
             ScopeEnvironment scope = scopeIter.next();
-            Optional<Value<?>> function = scope.getFunction(name);
+            Optional<Value<?>> function = scope.getFunction(symbol);
             if(function.isPresent()) {
                 return function;
             }
@@ -101,8 +105,12 @@ public class Environment {
     }
 
     public Environment capture() {
-        Environment capturedEnvironment = new Environment(this.globalEnvironment);
+        Environment capturedEnvironment = new Environment(this.globalEnvironment, this.symbols);
         capturedEnvironment.scopes = new LinkedList<>(this.scopes);
         return capturedEnvironment;
+    }
+
+    public Symbols getSymbols() {
+        return symbols;
     }
 }

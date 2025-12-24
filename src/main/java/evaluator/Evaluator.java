@@ -8,10 +8,7 @@ import function.FunctionRegistry;
 import function.ListFunction;
 import reader.CharacterReader;
 import syntaxtree.*;
-import value.IntegerValue;
-import value.StringValue;
-import value.Value;
-import value.ValueType;
+import value.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +79,9 @@ public class Evaluator {
             // We know enough to handle it here.
             operator = functionRegistry.findByName(operatorAtom.value());
             if (operator == null) {
-                Optional<Value<?>> possibleOperator = environment.get(operatorAtom.value());
+                String operatorName = operatorAtom.value();
+                Symbol operatorSymbol = environment.getSymbols().internSymbol(operatorName);
+                Optional<Value<?>> possibleOperator = environment.get(operatorSymbol);
                 if(possibleOperator.isEmpty()) {
                     throw new RuntimeException("ERROR: Can't find definition for operator " + operatorAtom.value());
                 }
@@ -136,7 +135,8 @@ public class Evaluator {
         }
         else {
             // could be in the environment; otherwise fall back to int
-            Optional<Value<?>> possibleValue = environment.get(atomStringValue);
+            Symbol symbol = environment.getSymbols().internSymbol(atomStringValue);
+            Optional<Value<?>> possibleValue = environment.get(symbol);
             if(possibleValue.isPresent()) {
                 return possibleValue.get();
             }

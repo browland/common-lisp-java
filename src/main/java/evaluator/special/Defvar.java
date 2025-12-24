@@ -5,8 +5,9 @@ import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
+import value.Symbol;
+import value.SymbolValue;
 import value.Value;
-import value.ValueType;
 
 public class Defvar implements SpecialForm {
     @Override
@@ -14,18 +15,25 @@ public class Defvar implements SpecialForm {
                              Environment environment,
                              Evaluator evaluator) {
         Atom nameAtom = (Atom) entireList.get(1);
-        if(nameAtom.prefix() != null || nameAtom.suffix() != null) {
-            throw new IllegalArgumentException("name for defvar must be a symbol: [" + nameAtom + "]");
-        }
+
+        // todo remove if we don't run into any problems ...
+//        if(nameAtom.prefix() != null || nameAtom.suffix() != null) {
+//            throw new IllegalArgumentException("name for defvar must be a symbol: [" + nameAtom + "]");
+//        }
 
         String name = nameAtom.value();
+        Symbol symbol = environment.getSymbols().internSymbol(name);
+        if(symbol.isKeyword()) {
+            throw new RuntimeException("Can't assign a keyword symbol for " + name);
+        }
+
         Node valueNode = entireList.get(2);
         Value<?> valueValue = evaluator.evaluate(valueNode, environment);
 
         // todo assuming global
-        environment.setGlobal(name, valueValue);
+        environment.setGlobal(symbol, valueValue);
 
         // returns the name of the variable
-        return new Value<>(name, ValueType.SYMBOL);
+        return new SymbolValue(symbol);
     }
 }

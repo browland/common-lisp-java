@@ -1,5 +1,6 @@
 package evaluator.env;
 
+import value.Symbol;
 import value.Value;
 
 import java.util.HashMap;
@@ -7,64 +8,63 @@ import java.util.Map;
 import java.util.Optional;
 
 public class GlobalEnvironment {
-    private final Map<String, Value<?>> builtInGlobals = new HashMap<>();
-    private final Map<String, Value<?>> globalVariables = new HashMap<>();
-    private final Map<String, Value<?>> macros = new HashMap<>();
+    private final Map<Symbol, Value<?>> builtInGlobals = new HashMap<>();
+    private final Map<Symbol, Value<?>> globalVariables = new HashMap<>();
+    private final Map<Symbol, Value<?>> macros = new HashMap<>();
 
-    private final Map<String, Value<?>> builtInFunctions = new HashMap<>();
-    private final Map<String, Value<?>> functions = new HashMap<>();
+    private final Map<Symbol, Value<?>> builtInFunctions = new HashMap<>();
+    private final Map<Symbol, Value<?>> functions = new HashMap<>();
 
-    public Optional<Value<?>> getValue(String symbolName) {
-        if(builtInGlobals.containsKey(symbolName)) {
-            return Optional.of(builtInGlobals.get(symbolName));
+    public Optional<Value<?>> getValue(Symbol symbol) {
+        if(builtInGlobals.containsKey(symbol)) {
+            return Optional.of(builtInGlobals.get(symbol));
         }
-        else if(globalVariables.containsKey(symbolName)) {
-            return Optional.of(globalVariables.get(symbolName));
+        else if(globalVariables.containsKey(symbol)) {
+            return Optional.of(globalVariables.get(symbol));
         }
-        else if(functions.containsKey(symbolName)) {
-            return Optional.of(functions.get(symbolName));
-        }
-        return Optional.empty();
-    }
-
-    public void setGlobal(String name, Value<?> value) {
-        if(builtInGlobals.containsKey(name)) {
-            throw new RuntimeException("Can't set a built-in global " + name);
-        }
-        globalVariables.put(name, value);
-    }
-
-
-    public Optional<Value<?>> getMacro(String macroName) {
-        if(macros.containsKey(macroName)) {
-            return Optional.of(macros.get(macroName));
+        else if(functions.containsKey(symbol)) {
+            return Optional.of(functions.get(symbol));
         }
         return Optional.empty();
     }
 
-    public void setMacro(String name, Value<?> macro) {
-        macros.put(name, macro);
+    public void setGlobal(Symbol symbol, Value<?> value) {
+        if(builtInGlobals.containsKey(symbol)) {
+            throw new RuntimeException("Can't set a built-in global " + symbol);
+        }
+        globalVariables.put(symbol, value);
     }
 
-    public Optional<Value<?>> getFunction(String functionName) {
-        if(builtInFunctions.containsKey(functionName)) {
-            return Optional.of(builtInFunctions.get(functionName));
+    public Optional<Value<?>> getMacro(Symbol macroSymbol) {
+        if(macros.containsKey(macroSymbol)) {
+            return Optional.of(macros.get(macroSymbol));
         }
-        if(functions.containsKey(functionName)) {
-            return Optional.of(functions.get(functionName));
+        return Optional.empty();
+    }
+
+    public void setMacro(Symbol symbol, Value<?> macro) {
+        macros.put(symbol, macro);
+    }
+
+    public Optional<Value<?>> getFunction(Symbol symbol) {
+        if(builtInFunctions.containsKey(symbol)) {
+            return Optional.of(builtInFunctions.get(symbol));
+        }
+        if(functions.containsKey(symbol)) {
+            return Optional.of(functions.get(symbol));
         }
 
         return Optional.empty();
     }
 
-    public void setFunction(String name, Value<?> function) {
-        if(builtInFunctions.containsKey(name)) {
-            throw new RuntimeException("Can't set a function with existing built-in function " + name);
+    public void setFunction(Symbol symbol, Value<?> function) {
+        if(builtInFunctions.containsKey(symbol)) {
+            throw new RuntimeException("Can't set a function with existing built-in function " + symbol);
         }
-        functions.put(name, function);
+        functions.put(symbol, function);
     }
 
-    public boolean isReserved(String name) {
-        return builtInGlobals.containsKey(name) || builtInFunctions.containsKey(name);
+    public boolean isReserved(Symbol symbol) {
+        return builtInGlobals.containsKey(symbol) || builtInFunctions.containsKey(symbol);
     }
 }

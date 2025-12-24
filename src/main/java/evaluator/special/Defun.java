@@ -6,6 +6,7 @@ import function.Closure;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 import value.ClosureValue;
+import value.Symbol;
 import value.Value;
 
 import java.util.List;
@@ -27,8 +28,9 @@ public class Defun implements SpecialForm {
         RList body = (RList) entireList.get(3);
 
         Closure closure = new Closure(evaluator, environment.capture(), bindings, body);
+        Symbol symbol = environment.getSymbols().internSymbol(name);
         // todo assuming global
-        environment.setGlobal(name, new ClosureValue(closure));
+        environment.setGlobal(symbol, new ClosureValue(closure));
 
         return new ClosureValue(closure);
     }

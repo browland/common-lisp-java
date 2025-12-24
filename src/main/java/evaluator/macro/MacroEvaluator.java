@@ -7,6 +7,7 @@ import syntaxtree.Node;
 import syntaxtree.NodeBuilder;
 import syntaxtree.RList;
 import value.Macro;
+import value.Symbol;
 import value.Value;
 import value.ValueType;
 
@@ -21,7 +22,8 @@ public class MacroEvaluator {
                                        Environment environment,
                                        Evaluator evaluator) {
 
-        Optional<Value<?>> optionalMacro = environment.get(operatorName);
+        Symbol symbol = environment.getSymbols().internSymbol(operatorName);
+        Optional<Value<?>> optionalMacro = environment.get(symbol);
         if(optionalMacro.isEmpty()) {
             return Optional.empty();
         }

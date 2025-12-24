@@ -2,6 +2,8 @@ package evaluator
 
 import evaluator.env.Environment
 import spock.lang.Specification
+import value.Symbol
+import value.SymbolValue
 import value.Value;
 
 class DefvarSpec extends Specification {
@@ -13,10 +15,10 @@ class DefvarSpec extends Specification {
         def program = "(defvar *db* nil)"
 
         when:
-        Value<?> result = evaluator.evaluate(program, env)
+        SymbolValue result = evaluator.evaluate(program, env)
 
         then:
-        result.getValue() == "*db*"
-        env.get("*db*").get() == Value.nil()
+        result.getValue() == new Symbol("*db*")
+        env.get(result.getValue()).get() == Value.nil()
     }
 }
