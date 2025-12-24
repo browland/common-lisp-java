@@ -4,11 +4,13 @@ import evaluator.Evaluator;
 import evaluator.env.Environment;
 import reader.CharacterReader;
 import syntaxtree.RList;
+import syntaxtree.ParseElementBuilder;
 import syntaxtree.SyntaxTreeBuilder;
 import value.Value;
 
 public class BatchEvaluator {
     private final SyntaxTreeBuilder syntaxTreeBuilder;
+    private final ParseElementBuilder parseElementBuilder;
     private final CharacterReader characterReader;
     private final Evaluator evaluator;
     private final Environment environment;
@@ -20,11 +22,13 @@ public class BatchEvaluator {
     public static BatchEvaluator INSTANCE;
 
     public BatchEvaluator(SyntaxTreeBuilder syntaxTreeBuilder,
+                          ParseElementBuilder parseElementBuilder,
                           CharacterReader characterReader,
                           Evaluator evaluator,
                           Environment environment,
                           ReplOutput replOutput) {
         this.syntaxTreeBuilder = syntaxTreeBuilder;
+        this.parseElementBuilder = parseElementBuilder;
         this.characterReader = characterReader;
         this.evaluator = evaluator;
         this.environment = environment;
@@ -54,7 +58,7 @@ public class BatchEvaluator {
                                Environment environment,
                                Evaluator evaluator) {
         RList topLevelList = syntaxTreeBuilder.getResult();
-        syntaxTreeBuilder.reset();
+        parseElementBuilder.reset();
         Value<?> value = evaluator.evaluate(topLevelList, environment);
         replOutput.emitOutput(value.toString());
         replOutput.promptForNewForm();

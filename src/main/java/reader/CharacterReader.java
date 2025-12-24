@@ -1,6 +1,6 @@
 package reader;
 
-import syntaxtree.SyntaxTreeBuilder;
+import syntaxtree.ParseElementBuilder;
 
 import java.util.Set;
 
@@ -13,11 +13,11 @@ public class CharacterReader {
             '\'', '#', '`', '"', ':', '&', ','
     );
 
-    private final SyntaxTreeBuilder syntaxTreeBuilder;
+    private final ParseElementBuilder parseElementBuilder;
     private int depth = 0;
 
-    public CharacterReader(SyntaxTreeBuilder syntaxTreeBuilder) {
-        this.syntaxTreeBuilder = syntaxTreeBuilder;
+    public CharacterReader(ParseElementBuilder parseElementBuilder) {
+        this.parseElementBuilder = parseElementBuilder;
     }
 
     public void read(String program) {
@@ -29,21 +29,21 @@ public class CharacterReader {
     public void consume(char c) {
         if (QUOTE_CHARS.contains(c)) {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.ON_QUOTE_CHAR, depth);
-            syntaxTreeBuilder.onQuoteChar(event);
+            parseElementBuilder.onQuoteChar(event);
         } else if (c == '(') {
             depth++;
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.OPEN_LIST, depth);
-            syntaxTreeBuilder.startList(event);
+            parseElementBuilder.startList(event);
         } else if (c == ')') {
             depth--;
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.CLOSE_LIST, depth);
-            syntaxTreeBuilder.endList(event);
+            parseElementBuilder.endList(event);
         } else if (Character.isWhitespace(c)) {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.SPACE, depth);
-            syntaxTreeBuilder.onWhitespace(event);
+            parseElementBuilder.onWhitespace(event);
         } else {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_ATOM, depth);
-            syntaxTreeBuilder.inAtom(event);
+            parseElementBuilder.inAtom(event);
         }
     }
 }

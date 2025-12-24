@@ -24,7 +24,8 @@ public class Evaluator {
 
     public Value<?> evaluate(String program, Environment environment) {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
-        CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
+        ParseElementBuilder parseElementBuilder = new ParseElementBuilder(syntaxTreeBuilder);
+        CharacterReader characterReader = new CharacterReader(parseElementBuilder);
         characterReader.read(program);
 
         RList list = syntaxTreeBuilder.getResult();

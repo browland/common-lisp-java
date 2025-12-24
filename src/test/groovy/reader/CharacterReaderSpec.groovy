@@ -4,19 +4,21 @@ import spock.lang.Specification
 import syntaxtree.Atom
 import syntaxtree.QuoteType
 import syntaxtree.RList
+import syntaxtree.ParseElementBuilder
 import syntaxtree.SyntaxTreeBuilder
 
 class CharacterReaderSpec extends Specification {
 
     def "reads simple program"() {
         given:
-        def reader = new SyntaxTreeBuilder()
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
         def program = "(add (add 1 2) 2)"
 
         when:
         characterReader.read(program)
-        def outerList = reader.getResult()
+        def outerList = syntaxTreeBuilder.getResult()
 
         then:
         outerList.depth() == 0
@@ -36,13 +38,14 @@ class CharacterReaderSpec extends Specification {
     }
 
     def "reads program with quoted list and quoted function"() {
-        def reader = new SyntaxTreeBuilder()
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
         def program = "(filter '(6 4 3 5 2) #'even)"
 
         when:
         characterReader.read(program)
-        def outerList = reader.getResult()
+        def outerList = syntaxTreeBuilder.getResult()
 
         then:
         ((Atom)outerList.get(0)).value() == "filter"
@@ -62,13 +65,14 @@ class CharacterReaderSpec extends Specification {
     }
 
     def "reads string with space within"() {
-        def reader = new SyntaxTreeBuilder()
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
         def program = "(format t \"hello world\")"
 
         when:
         characterReader.read(program)
-        def outerList = reader.getResult()
+        def outerList = syntaxTreeBuilder.getResult()
 
         then:
         ((Atom)outerList.get(2)).value() == "hello world"
@@ -78,13 +82,14 @@ class CharacterReaderSpec extends Specification {
     }
 
     def "reads keyword symbol"() {
-        def reader = new SyntaxTreeBuilder()
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
         def program = "(list :a 1 :b 2)"
 
         when:
         characterReader.read(program)
-        def outerList = reader.getResult()
+        def outerList = syntaxTreeBuilder.getResult()
 
         then:
         ((Atom)outerList.get(1)).value() == "a"
@@ -93,13 +98,14 @@ class CharacterReaderSpec extends Specification {
     }
 
     def "reads string issue"() {
-        def reader = new SyntaxTreeBuilder()
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
         def program = "(make-cd \"Roses\" \"Kathy Mattea\")"
 
         when:
         characterReader.read(program)
-        def outerList = reader.getResult()
+        def outerList = syntaxTreeBuilder.getResult()
 
         then:
         ((Atom)outerList.get(1)).value() == "Roses"
@@ -108,13 +114,14 @@ class CharacterReaderSpec extends Specification {
 
     def "reads complex lambda"() {
         given:
-        def reader = new SyntaxTreeBuilder()
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
         def program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
 
         when:
         characterReader.read(program)
-        def outerLambdaApplicationList = reader.getResult()
+        def outerLambdaApplicationList = syntaxTreeBuilder.getResult()
 
         then:
         outerLambdaApplicationList.depth() == 0
@@ -148,13 +155,14 @@ class CharacterReaderSpec extends Specification {
 
     def "reads quoted list"() {
         given:
-        def reader = new SyntaxTreeBuilder()
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
         def program = "'(add 1 2)"
 
         when:
         characterReader.read(program)
-        def outerList = reader.getResult()
+        def outerList = syntaxTreeBuilder.getResult()
 
         then:
         // result should be: (quote (add 1 2))

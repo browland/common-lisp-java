@@ -3,6 +3,7 @@ package repl;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import reader.CharacterReader;
+import syntaxtree.ParseElementBuilder;
 import syntaxtree.SyntaxTreeBuilder;
 
 import java.io.IOException;
@@ -18,13 +19,13 @@ public class Repl implements ReplOutput {
 
     public Repl() {
         SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
-        CharacterReader characterReader = new CharacterReader(syntaxTreeBuilder);
-
+        ParseElementBuilder parseElementBuilder = new ParseElementBuilder(syntaxTreeBuilder);
+        CharacterReader characterReader = new CharacterReader(parseElementBuilder);
 
         Environment environment = new Environment();
         Evaluator evaluator = new Evaluator();
 
-        batchEvaluator = new BatchEvaluator(syntaxTreeBuilder, characterReader, evaluator, environment, this);
+        batchEvaluator = new BatchEvaluator(syntaxTreeBuilder, parseElementBuilder, characterReader, evaluator, environment, this);
     }
 
     public void run() {
