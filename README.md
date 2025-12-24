@@ -2,13 +2,6 @@
 
 ## Issues
 
-### First-class Symbols
-Value should have subclass specialisations which define T.  Can then have underlying types e.g. Integer, String, ConsCell
-and also Symbol.
-Symbol should represent whether constant etc.
-Environment should be keyed off Symbol instead.
-Ideally: Ensure Symbol is interned so identity works
-
 ### Defvar/setf
 
 Only introduces a new variable if not already bound.  Shouldn't allow a constant (keyword) symbol to be assigned.
