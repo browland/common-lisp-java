@@ -4,6 +4,10 @@ import syntaxtree.SyntaxTreeBuilder;
 
 import java.util.Set;
 
+/**
+ * This layer reads character by character from the supplied program, characterises them, tracks depth and
+ * pushes each character (with its category and depth) to the layer above.
+ */
 public class CharacterReader {
     private final static Set<Character> QUOTE_CHARS = Set.of(
             '\'', '#', '`', '"', ':', '&', ','

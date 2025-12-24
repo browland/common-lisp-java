@@ -145,4 +145,31 @@ class CharacterReaderSpec extends Specification {
         ((Atom)innerLambdaDefinitionList.get(0)).value() == "lambda"
         ((Atom)((RList)innerLambdaDefinitionList.get(1)).nodes()[0]).value() == "y"
     }
+
+    def "reads quoted list"() {
+        given:
+        def reader = new SyntaxTreeBuilder()
+        def characterReader = new CharacterReader(reader)
+        def program = "'(add 1 2)"
+
+        when:
+        characterReader.read(program)
+        def outerList = reader.getResult()
+
+        then:
+        // result should be: (quote (add 1 2))
+        outerList.depth() == 0
+
+        outerList.size() == 2
+        outerList.get(0) instanceof Atom
+        ((Atom)outerList.get(0)).value() == "quote"
+
+        def innerList = (RList)outerList.get(1)
+        innerList.depth() == 1
+
+        innerList.size() == 3
+        ((Atom)innerList.get(0)).value() == "add"
+        ((Atom)innerList.get(1)).value() == "1"
+        ((Atom)innerList.get(2)).value() == "2"
+    }
 }
