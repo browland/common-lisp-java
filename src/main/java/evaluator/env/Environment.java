@@ -106,6 +106,19 @@ public class Environment {
 
     public Environment capture() {
         Environment capturedEnvironment = new Environment(this.globalEnvironment, this.symbols);
+
+        // We have to be very careful re. scopes captured by closures:
+        // 1. We must create a new stack (LinkedList) so closures don't lose any enclosing scope when that scope terminates.
+        // 2. However, we must also keep a 'live view' of the captured scopes (HashMaps) so we see any changes to the
+        //    variables within the scopes.  These changes may happen after a closure is created but before it's applied,
+        //    and we should see the new value at application time.
+        // 3. When multiple closures are created within a certain enclosing scope, they all see a single shared view of the
+        //    captured scope.  The impl below fulfils this, as the captured scopes (HashMaps) are pointed to by the new
+        //    stack (LinkedList).  The only small problem is we create a new stack (LinkedList) for each closure (in order
+        //    to fulfil point 1) which could become memory-inefficient, but is simple enough for now.
+        //
+        // By creating a new LinkedList and passing the "canonical" one into the constructor, we fulfil all these
+        // requirements.
         capturedEnvironment.scopes = new LinkedList<>(this.scopes);
         return capturedEnvironment;
     }

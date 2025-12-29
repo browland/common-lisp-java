@@ -3,7 +3,6 @@ package function;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import syntaxtree.Atom;
-import value.ConsCell;
 import value.ConsCellValue;
 import value.Symbol;
 import value.Value;
@@ -26,6 +25,7 @@ public record Closure(Evaluator evaluator,
 
         // Order matters - ensure bound arguments shadow (overwrite) variables with the same name from the environment
         // captured at closure creation time
+        // todo clean up - the bindings map is just a temp thing now, as we put stuff in the Environment further down
         Map<String,Value<?>> bindingsMap = new HashMap<>();
         for(int i=0; i<operands.size(); i++) {
             Atom operandAtom = bindings.get(i);
@@ -50,16 +50,11 @@ public record Closure(Evaluator evaluator,
         capturedEnvironment.enterScope();
         for(String name : bindingsMap.keySet()) {
             Symbol symbol = environment.getSymbols().internSymbol(name);
-            // todo should we enter new scope for the closure call? We're just piggy-backing on the captured scope
             capturedEnvironment.setInScope(symbol, bindingsMap.get(name));
         }
 
         Value<?> evalResult = evaluator.evaluate(body, capturedEnvironment);
         capturedEnvironment.leaveScope();
         return evalResult;
-    }
-
-    public String toString() {
-        return "closure";
     }
 }

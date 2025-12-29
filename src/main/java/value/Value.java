@@ -54,4 +54,8 @@ public class Value<T> {
     public int hashCode() {
         return Objects.hash(value, type);
     }
+
+    public String toString() {
+        return value.toString();
+    }
 }

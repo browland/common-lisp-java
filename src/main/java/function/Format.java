@@ -12,7 +12,7 @@ public class Format implements Function {
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
         // The first operand is the output stream to send the string, which is the second operand.
         Value<?> streamValue = operands.get(0);
-        String value = (String)operands.get(1).getValue();
+        String value = operands.get(1).getValue().toString();
 
         // t is a built-in symbol for constant logical true.  Correct CL behaviour is to treat t as meaning stdout.
         if(ValueType.BUILTIN_CONSTANT == streamValue.getType()) {
