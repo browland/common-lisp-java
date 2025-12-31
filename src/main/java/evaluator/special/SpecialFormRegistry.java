@@ -15,6 +15,7 @@ public class SpecialFormRegistry {
         registry.put("if", new If());
         registry.put("defmacro", new DefMacro());
         registry.put("quote", new Quote());
+        registry.put("let", new Let());
     }
 
     public Optional<SpecialForm> findByName(String name) {

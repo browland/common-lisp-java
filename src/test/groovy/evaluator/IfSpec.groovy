@@ -3,7 +3,7 @@ package evaluator
 import spock.lang.Specification
 import value.Value
 
-class IfTest extends Specification {
+class IfSpec extends Specification {
     def "true test"() {
         given:
         def interpreter = new Interpreter()

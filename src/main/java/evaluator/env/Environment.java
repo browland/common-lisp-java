@@ -25,13 +25,14 @@ public class Environment {
 
 
     public Optional<Value<?>> get(Symbol symbol) {
+        // try to find a global variable first
         Optional<Value<?>> global = globalEnvironment.getValue(symbol);
         if(global.isPresent()) {
             return global;
         }
 
-        // otherwise walk stack
-        Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
+        // otherwise walk stack of lexical scopes
+        Iterator<ScopeEnvironment> scopeIter = scopes.iterator();
         while(scopeIter.hasNext()) {
             ScopeEnvironment scope = scopeIter.next();
             Optional<Value<?>> value = scope.getBinding(symbol);
