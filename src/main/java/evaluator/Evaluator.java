@@ -46,19 +46,6 @@ public class Evaluator {
             // is a predefined value.
             return applyForm(operator, list, environment);
         } else {
-            // Handle the case where the entire list is quoted - we just return the value of the list.
-            // Only handling full quote (not quasi-quote).
-            // Todo there must be a better way to do this.
-            if(list.prefix() != null && list.prefix().contains("'")) {
-                List<Value<?>> values = new ArrayList<>();
-                for(Node node : list.nodes()) {
-                    Value<?> value = evaluate(node, environment);
-                    values.add(value);
-                }
-                ListFunction listFunction = new ListFunction();
-                return listFunction.apply(values, environment);
-            }
-
             // If the operator is a special form we need to evaluate it to get its operator implementation (e.g. a closure for a
             // lambda definition).
             // todo: maybe some special forms return a straightforward result when eval'd e.g. defvar, so not always a
