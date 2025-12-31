@@ -55,7 +55,7 @@ public class MacroEvaluator {
             String bindingName = bindingAtom.value();
 
             // deal with &rest variadic args if present
-            if (bindingAtom.prefix() != null && bindingAtom.prefix().contains("&") && bindingAtom.value().equals("rest")) {
+            if (bindingName.equals("&rest")) {
                 // 1. get next binding - this is the name of the list
                 String restBindingName = bindings.get(i + 1).value();
                 // 2. add this list binding to the boundArgs; we're not copying them as they were provided for this macro application

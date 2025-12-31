@@ -128,8 +128,10 @@ public class Evaluator {
         if(BUILTIN_CONSTANTS.contains(atomStringValue)) {
             return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
         }
-        else if(QuoteType.KEYWORD == atom.quoteType()) {
-            return new Value<>(atomStringValue, ValueType.KEYWORD);
+        else if(atomStringValue.startsWith(":")) {
+            // keyword symbol - a literal symbol which evaluates to itself
+            Symbol symbol = environment.getSymbols().internSymbol(atomStringValue);
+            return new SymbolValue(symbol);
         }
         else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
             String stringWithoutQuotes = atomStringValue.substring(1, atomStringValue.length()-1);

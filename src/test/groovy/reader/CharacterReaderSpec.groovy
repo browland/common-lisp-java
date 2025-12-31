@@ -2,7 +2,6 @@ package reader
 
 import spock.lang.Specification
 import syntaxtree.Atom
-import syntaxtree.QuoteType
 import syntaxtree.RList
 import syntaxtree.ParseElementBuilder
 import syntaxtree.SyntaxTreeBuilder
@@ -92,9 +91,7 @@ class CharacterReaderSpec extends Specification {
         def outerList = syntaxTreeBuilder.getResult()
 
         then:
-        ((Atom)outerList.get(1)).value() == "a"
-        ((Atom)outerList.get(1)).prefix() == ":"
-        ((Atom)outerList.get(1)).quoteType() == QuoteType.KEYWORD
+        ((Atom)outerList.get(1)).value() == ":a"
     }
 
     def "reads multiple string args"() {

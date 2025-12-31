@@ -3,7 +3,7 @@ package syntaxtree;
 import java.util.Optional;
 
 public enum QuoteType {
-    QUOTE, FUNCTION_QUOTE, QUASIQUOTE, UNQUOTE, KEYWORD;
+    QUOTE, FUNCTION_QUOTE, QUASIQUOTE, UNQUOTE;
 
     public static Optional<QuoteType> ofPrefix(String quotePrefix) {
         return switch (quotePrefix) {

@@ -30,13 +30,4 @@ public record Atom(String value,
             return new Atom(this.value, this.prefix);
         }
     }
-
-    public QuoteType quoteType() {
-        if(":".equals(prefix)) {
-            return QuoteType.KEYWORD;
-        }
-        else {
-            return null;
-        }
-    }
 }

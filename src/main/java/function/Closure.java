@@ -29,9 +29,8 @@ public record Closure(Evaluator evaluator,
         Map<String,Value<?>> bindingsMap = new HashMap<>();
         for(int i=0; i<operands.size(); i++) {
             Atom operandAtom = bindings.get(i);
-            String bindingPrefix = operandAtom.prefix();
             String bindingName = operandAtom.value();
-            if(bindingPrefix != null && bindingPrefix.equals("&") && bindingName.equals("rest")) {
+            if(bindingName.equals("&rest")) {
                 // 1. get next binding - this is the name of the list
                 String restBindingName = bindings.get(i+1).value();
                 // 2. get remaining operands - put them all in a list and assign to the name
