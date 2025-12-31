@@ -21,7 +21,7 @@ public class DefMacro implements SpecialForm {
 
         RList body = (RList)entireList.get(3);
 
-        Macro macro = new Macro(environment.capture(), bindings, body);
+        Macro macro = new Macro(bindings, body);
         MacroValue macroValue = new MacroValue(macro);
 
         Atom nameAtom = (Atom)entireList.get(1);

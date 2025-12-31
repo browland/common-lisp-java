@@ -1,7 +1,7 @@
 package evaluator;
 
 import evaluator.env.Environment;
-import evaluator.macro.MacroEvaluator;
+import evaluator.macro.MacroExpander;
 import evaluator.special.SpecialForm;
 import evaluator.special.SpecialFormEvaluator;
 import function.Function;
@@ -16,7 +16,7 @@ public class Evaluator {
     private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
 
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
-    private final MacroEvaluator macroEvaluator = new MacroEvaluator();
+    private final MacroExpander macroExpander = new MacroExpander();
     private final OperatorLookup operatorLookup = new OperatorLookup();
 
     public Value<?> evaluate(RList list, Environment environment) {
@@ -37,14 +37,13 @@ public class Evaluator {
             Atom operatorAtom = (Atom) operatorNode;
             OperatorType operatorType = operatorLookup.determineOperatorType(operatorAtom, environment);
 
-            // todo use strategy pattern to deal with each of 3 operator types
             if(operatorType == OperatorType.SPECIAL_FORM) {
                 SpecialForm specialForm = operatorLookup.lookupSpecialForm(operatorAtom.value(), environment);
                 return specialFormEvaluator.evaluate(specialForm, list, environment, this);
             }
             else if(operatorType == OperatorType.MACRO) {
                 Macro macro = operatorLookup.lookupMacro(operatorAtom.value(), environment);
-                RList expandedMacro = macroEvaluator.expand(macro, list, environment);
+                RList expandedMacro = macroExpander.expand(macro, list);
                 return evaluate(expandedMacro, environment);
             }
             else {

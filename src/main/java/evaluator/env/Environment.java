@@ -119,6 +119,11 @@ public class Environment {
         //
         // By creating a new LinkedList and passing the "canonical" one into the constructor, we fulfil all these
         // requirements.
+        //
+        // Additionally .. the captured scope still 'sees' a live (updating) view of the global variables.  So a closure
+        // can reference global variables which aren't captured at creation time, but will be set at application time.
+        // This is fulfilled by using the Environment copy constructor above, which points to the existing (single) global
+        // environment.
         capturedEnvironment.scopes = new LinkedList<>(this.scopes);
         return capturedEnvironment;
     }

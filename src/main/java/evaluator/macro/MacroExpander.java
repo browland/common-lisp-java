@@ -11,10 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MacroEvaluator {
+public class MacroExpander {
     public RList expand(Macro macro,
-                        RList entireList,
-                        Environment environment) {
+                        RList entireList) {
 
         List<Atom> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();

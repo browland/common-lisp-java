@@ -18,14 +18,14 @@ public record Closure(Evaluator evaluator,
                       RList body) implements Function {
 
     @Override
-    public Value<?> apply(List<Value<?>> operands, Environment environment) {
+    public Value<?> apply(List<Value<?>> operands, Environment noApplyTimeEnv) {
         // The application environment passed in at application time cannot be used.  We can only access the captured
         // environment at creation (evaluation) time, and the values of the bindings passed at application time.  Not
         // any of the lexical scope at apply time.  So we ignore noApplicationEnvironment.
 
         // Order matters - ensure bound arguments shadow (overwrite) variables with the same name from the environment
         // captured at closure creation time
-        // todo clean up - the bindings map is just a temp thing now, as we put stuff in the Environment further down
+        // todo generify handling of atom arg handling
         Map<String,Value<?>> bindingsMap = new HashMap<>();
         for(int i=0; i<operands.size(); i++) {
             Atom operandAtom = bindings.get(i);
@@ -48,7 +48,7 @@ public record Closure(Evaluator evaluator,
 
         capturedEnvironment.enterScope();
         for(String name : bindingsMap.keySet()) {
-            Symbol symbol = environment.getSymbols().internSymbol(name);
+            Symbol symbol = capturedEnvironment.getSymbols().internSymbol(name);
             capturedEnvironment.setInScope(symbol, bindingsMap.get(name));
         }
 
