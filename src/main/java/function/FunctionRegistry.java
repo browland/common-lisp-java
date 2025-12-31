@@ -16,6 +16,7 @@ public class FunctionRegistry {
         registry.put("getf", new GetF());
         registry.put("cons", new Cons());
         registry.put("car", new Car());
+        registry.put("cdr", new Cdr());
         registry.put("=", new NumsEqual());
     }
 

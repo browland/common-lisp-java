@@ -70,4 +70,30 @@ class MacroSpec extends Specification {
         ConsCellValue updatedConsValue = env.get(dbSymbol).get() as ConsCellValue
         updatedConsValue.value.car().value == 1
     }
+
+    // todo this breaks because there's an outer quote in the body.  But handling it where we
+    //      handle quasiquote breaks the variadic args test, as the quote in that one needs to
+    //      stay until evaluation time.  Naively stripping quotes at all levels is at breaking point.
+    //      The solution might just be to strip *outer* list/quote/quasiquote only?
+    //      Issue is that technically we're supposed to evalute the macro body *once* at expansion time
+    //      in order to get the code to evaluate.  But this will result in a value which I can't get
+    //      back to an RList (unless I add support for that).  So I'm stuck with naively stripping outer
+    //      quote/list/quasiquote and unquoting naively in the macro expander for now.
+    def "regular quote test"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def macroDef = """
+          (defmacro foo () 
+            '(+ 1 2))
+        """
+
+        when:
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(foo)")
+
+        then:
+        result.getValue() == 3
+    }
 }

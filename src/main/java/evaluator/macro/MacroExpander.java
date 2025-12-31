@@ -1,6 +1,5 @@
 package evaluator.macro;
 
-import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.NodeBuilder;
@@ -91,8 +90,10 @@ public class MacroExpander {
         }
 
         // Deal with quasiquote - expect 2 nodes in total
-        if (firstNode instanceof Atom possibleQuasiquote) {
-            if (possibleQuasiquote.value().equals("quasiquote")) {
+        if (firstNode instanceof Atom possibleQuote) {
+            String value = possibleQuote.value();
+            // todo not handling 'list' or 'quote' around the body, but adding them breaks any inner lists/quotes
+            if (value.equals("quasiquote")) {
                 Node secondNode = templateList.get(1);
                 if (secondNode instanceof Atom quasiquotedAtom) {
                     return expand(quasiquotedAtom, bindingsMap, true);
@@ -110,9 +111,8 @@ public class MacroExpander {
             // This if/else seems a bit pointless - we do the same thing in each branch, but
             // we just need to dispatch to the appropriate overloaded method for the Node subtype
             if (node instanceof Atom templateAtom) {
-                // I ***think*** we can only get an atom back here ...
-                Atom.Builder expandedAtom = (Atom.Builder)expand(templateAtom, bindingsMap, quasiquote);
-                expandedListBuilder.addNodeBuilder(expandedAtom);
+                NodeBuilder expanded = expand(templateAtom, bindingsMap, quasiquote);
+                expandedListBuilder.addNodeBuilder(expanded);
             } else {
                 NodeBuilder transformedRListBuilder = expand((RList) node, bindingsMap, quasiquote);
                 expandedListBuilder.addNodeBuilder(transformedRListBuilder);
