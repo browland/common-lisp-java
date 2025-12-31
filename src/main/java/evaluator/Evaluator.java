@@ -128,11 +128,12 @@ public class Evaluator {
         if(BUILTIN_CONSTANTS.contains(atomStringValue)) {
             return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
         }
-        else if(QuoteType.STRING == atom.quoteType()) {
-            return new StringValue(atomStringValue);
-        }
         else if(QuoteType.KEYWORD == atom.quoteType()) {
             return new Value<>(atomStringValue, ValueType.KEYWORD);
+        }
+        else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
+            String stringWithoutQuotes = atomStringValue.substring(1, atomStringValue.length()-1);
+            return new StringValue(stringWithoutQuotes);
         }
         else {
             // could be in the environment; otherwise fall back to int

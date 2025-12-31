@@ -1,22 +1,15 @@
 package syntaxtree;
 
 public record Atom(String value,
-                   String prefix,
-                   String suffix) implements Node {
+                   String prefix) implements Node {
 
     public final static class Builder implements NodeBuilder {
         private String prefix;
-        private String suffix;
         private String value;
         private Atom atom;  // for macros where we need to copy an atom
 
         public Builder prefix(String prefix) {
             this.prefix = prefix;
-            return this;
-        }
-
-        public Builder suffix(String suffix) {
-            this.suffix = suffix;
             return this;
         }
 
@@ -31,18 +24,15 @@ public record Atom(String value,
 
         public Atom build() {
             if(atom != null) {
-                return new Atom(atom.value, atom.prefix, atom.suffix);
+                return new Atom(atom.value, atom.prefix);
             }
 
-            return new Atom(this.value, this.prefix, this.suffix);
+            return new Atom(this.value, this.prefix);
         }
     }
 
     public QuoteType quoteType() {
-        if("\"".equals(prefix) && "\"".equals(suffix)) {
-            return QuoteType.STRING;
-        }
-        else if(":".equals(prefix)) {
+        if(":".equals(prefix)) {
             return QuoteType.KEYWORD;
         }
         else {

@@ -10,7 +10,7 @@ import java.util.Set;
  */
 public class CharacterReader {
     private final static Set<Character> QUOTE_CHARS = Set.of(
-            '\'', '#', '`', '"', ':', '&', ','
+            '\'', '#', '`', ':', '&', ','
     );
 
     private final ParseElementBuilder parseElementBuilder;

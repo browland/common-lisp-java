@@ -78,10 +78,7 @@ class CharacterReaderSpec extends Specification {
         def outerList = syntaxTreeBuilder.getResult()
 
         then:
-        ((Atom)outerList.get(2)).value() == "hello world"
-        ((Atom)outerList.get(2)).prefix() == "\""
-        ((Atom)outerList.get(2)).suffix() == "\""
-        ((Atom)outerList.get(2)).quoteType() == QuoteType.STRING
+        ((Atom)outerList.get(2)).value() == "\"hello world\""
     }
 
     def "reads keyword symbol"() {
@@ -111,8 +108,8 @@ class CharacterReaderSpec extends Specification {
         def outerList = syntaxTreeBuilder.getResult()
 
         then:
-        ((Atom)outerList.get(1)).value() == "Roses"
-        ((Atom)outerList.get(1)).quoteType() == QuoteType.STRING
+        ((Atom)outerList.get(1)).value() == "\"Roses\""
+        ((Atom)outerList.get(2)).value() == "\"Kathy Mattea\""
     }
 
     def "reads complex lambda"() {

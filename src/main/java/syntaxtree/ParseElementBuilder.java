@@ -13,20 +13,21 @@ import java.util.Optional;
 public class ParseElementBuilder {
     // The job of this layer is to gather state for a prefix, suffix, or atom into the appropriate builder.
     private final StringBuilder prefixBuilder = new StringBuilder();
-    private final StringBuilder suffixBuilder = new StringBuilder();
     private final StringBuilder atomStringBuilder = new StringBuilder();
-
     private final SyntaxTreeBuilder syntaxTreeBuilder;
+    private boolean inString = false;
 
     public ParseElementBuilder(SyntaxTreeBuilder syntaxTreeBuilder) {
         this.syntaxTreeBuilder = syntaxTreeBuilder;
     }
 
     public void inAtom(CharacterReaderEvent event) {
-        if(!suffixBuilder.isEmpty()) {
-            throw new IllegalArgumentException("Seeing atom characters after suffix quote");
+        char character = event.character();
+        atomStringBuilder.append(character);
+
+        if(character == '"') {
+            inString = !inString;  // flip the boolean so we detect start/end of strings
         }
-        atomStringBuilder.append(event.character());
     }
 
     public void onQuoteChar(CharacterReaderEvent event) {
@@ -39,9 +40,6 @@ public class ParseElementBuilder {
             // Single quote always results in a (quote ...) form being emitted.
             Optional<QuoteType> optionalQuoteType = QuoteType.ofPrefix(prefix);
             optionalQuoteType.ifPresent(this::handleQuote);
-        }
-        else {
-            suffixBuilder.append(event.character());
         }
     }
 
@@ -57,7 +55,7 @@ public class ParseElementBuilder {
 
         // If we're within a string literal (seen open-quote but not close-quote) then treat space as just another
         // character for the current atom
-        if(!prefixBuilder.isEmpty() && "\"".equals(prefixBuilder.toString()) && suffixBuilder.isEmpty()) {
+        if(inString) {
             atomStringBuilder.append(event.character());
             return;
         }
@@ -66,28 +64,22 @@ public class ParseElementBuilder {
         String atom = atomStringBuilder.toString();
 
         String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
-        String suffix = !suffixBuilder.isEmpty() ? suffixBuilder.toString() : null;
-
         Atom.Builder atomBuilder = new Atom.Builder()
                 .value(atom)
-                .prefix(prefix)
-                .suffix(suffix);
+                .prefix(prefix);
         syntaxTreeBuilder.newAtom(atomBuilder);
 
         atomStringBuilder.delete(0, atomStringBuilder.length());
         prefixBuilder.delete(0, prefixBuilder.length());
-        suffixBuilder.delete(0, suffixBuilder.length());
     }
 
     public void endList() {
         if(!atomStringBuilder.isEmpty()) {
             String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
-            String suffix = !suffixBuilder.isEmpty() ? suffixBuilder.toString() : null;
 
             Atom.Builder atomBuilder = new Atom.Builder()
                     .value(atomStringBuilder.toString())
-                    .prefix(prefix)
-                    .suffix(suffix);
+                    .prefix(prefix);
             syntaxTreeBuilder.newAtom(atomBuilder);
 
             atomStringBuilder.delete(0, atomStringBuilder.length());
@@ -104,7 +96,6 @@ public class ParseElementBuilder {
 
     public void reset() {
         prefixBuilder.delete(0, prefixBuilder.length());
-        suffixBuilder.delete(0, suffixBuilder.length());
         atomStringBuilder.delete(0, atomStringBuilder.length());
         syntaxTreeBuilder.reset();
     }
