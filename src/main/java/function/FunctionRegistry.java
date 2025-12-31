@@ -2,6 +2,7 @@ package function;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class FunctionRegistry {
     private final Map<String,Function> registry = new HashMap<>();
@@ -17,7 +18,7 @@ public class FunctionRegistry {
         registry.put("car", new Car());
     }
 
-    public Function findByName(String functionName) {
-        return registry.get(functionName);
+    public Optional<Function> findByName(String functionName) {
+        return Optional.ofNullable(registry.get(functionName));
     }
 }

@@ -1,60 +1,28 @@
 package evaluator.macro;
 
-import evaluator.Evaluator;
 import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.NodeBuilder;
 import syntaxtree.RList;
 import value.Macro;
-import value.Symbol;
-import value.Value;
-import value.ValueType;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class MacroEvaluator {
-    public Optional<Value<?>> evaluate(String operatorName,
-                                       RList entireList,
-                                       Environment environment,
-                                       Evaluator evaluator) {
+    public RList expand(Macro macro,
+                        RList entireList,
+                        Environment environment) {
 
-        Optional<Macro> optionalMacro = lookUpMacro(operatorName, environment);
-        if (optionalMacro.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Macro macro = optionalMacro.get();
         List<Atom> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();
 
         Map<String, Node> bindingsMap = prepareBindings(entireList, bindings);
 
         NodeBuilder transformedBodyBuilder = expand(bodyTemplate, bindingsMap, false);
-        RList expandedBody = (RList) transformedBodyBuilder.build();
-
-        Environment capturedEnvironment = macro.getCapturedEnvironment();
-        Value<?> evaluatedMacro = evaluator.evaluate(expandedBody, capturedEnvironment);
-        return Optional.of(evaluatedMacro);
-    }
-
-    private Optional<Macro> lookUpMacro(String name, Environment environment) {
-        Symbol symbol = environment.getSymbols().internSymbol(name);
-        Optional<Value<?>> optionalMacro = environment.get(symbol);
-        if (optionalMacro.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Value<?> macroValue = optionalMacro.get();
-        if (macroValue.getType() != ValueType.MACRO) {
-            return Optional.empty();
-        }
-
-        Macro macro = (Macro) macroValue.getValue();
-        return Optional.of(macro);
+        return (RList) transformedBodyBuilder.build();
     }
 
     private Map<String, Node> prepareBindings(RList entireList, List<Atom> bindings) {

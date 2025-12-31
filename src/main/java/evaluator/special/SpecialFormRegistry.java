@@ -2,6 +2,7 @@ package evaluator.special;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class SpecialFormRegistry {
     private final Map<String, SpecialForm> registry = new HashMap<>();
@@ -16,7 +17,7 @@ public class SpecialFormRegistry {
         registry.put("quote", new Quote());
     }
 
-    public SpecialForm findByName(String name) {
-        return registry.get(name);
+    public Optional<SpecialForm> findByName(String name) {
+        return Optional.ofNullable(registry.get(name));
     }
 }
