@@ -23,6 +23,26 @@ class DefunSpec extends Specification {
         result.getValue() == 3
     }
 
+    def "recursion test"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def functionDef = """
+          (defun sum-to (n)
+            (if (= n 0)
+              0
+              (+ n (sum-to (+ n -1)))))
+        """
+
+        when:
+        interpreter.interpret(functionDef)
+        Value<?> result = interpreter.interpret("(sum-to 4)")
+
+        then:
+        result.getValue() == 10
+    }
+
     def "variadic args test"() {
         given:
         def env = new Environment()

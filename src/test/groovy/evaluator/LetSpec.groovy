@@ -5,7 +5,39 @@ import spock.lang.Specification
 
 class LetSpec extends Specification {
 
-    def "shadowing test"() {
+    def "two bindings"() {
+        given:
+        def interpreter = new Interpreter()
+        def program = """
+          (let ((x 2)
+                (y 3))
+                (+ x y))"""
+
+        when:
+        def result = interpreter.interpret(program)
+
+        then:
+        result.value == 5
+    }
+
+    def "nested let"() {
+        given:
+        def interpreter = new Interpreter()
+        def program = """
+          (let ((x 5))
+            (let ((x 2)
+                  (y 3))
+                  (+ x y)))
+        """
+
+        when:
+        def result = interpreter.interpret(program)
+
+        then:
+        result.value == 5
+    }
+
+    def "shadowing"() {
         given:
         def env = new Environment()
         def interpreter = new Interpreter(env)
