@@ -6,7 +6,6 @@ import value.Value;
 import value.ValueType;
 
 import java.util.List;
-import java.util.Map;
 
 public class Add implements Function {
 

@@ -4,8 +4,8 @@ import java.util.Objects;
 
 // just holds an evaluation result, but can be of a variety of types, e.g. string literal, quoted list, function, etc.
 public class Value<T> {
-    protected T value;
-    private ValueType type;
+    protected final T value;
+    private final ValueType type;
 
     public Value(T value, ValueType type) {
         this.value = value;

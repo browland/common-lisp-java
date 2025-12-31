@@ -128,31 +128,14 @@ public class MacroEvaluator {
             }
         }
 
-        // todo deal with (quasiquote x)
-        //      x may be an atom or a list.
-        //      Remove the quasiquote node, keep track that we're quasiquoting, and then essentially, go through each node
-        //      in x, and either quote it or let unquote do its thing if present.
-        //      Need to ensure recursive calls for unquote lists don't get re-quoted - e.g. pass a boolean through recursive
-        //      calls to say we're quasiquoting, so quote anything which isn't explicitly being unquoted.
-        //      Eventually should not quote any literals.  At the mo, we just have Atoms, we don't know if they're a
-        //      symbol or integer or string or what.
-
         RList.Builder expandedListBuilder = new RList.Builder();
         for (Node node : templateList.nodes()) {
-            if (node instanceof Atom) {
-                Atom templateAtom = (Atom) node;
+            // This if/else seems a bit pointless - we do the same thing in each branch, but
+            // we just need to dispatch to the appropriate overloaded method for the Node subtype
+            if (node instanceof Atom templateAtom) {
                 // I ***think*** we can only get an atom back here ...
                 Atom.Builder expandedAtom = (Atom.Builder)expand(templateAtom, bindingsMap, quasiquote);
-                if(quasiquote) {
-//                    RList.Builder quotedListBuilder = new RList.Builder();
-//                    quotedListBuilder.addNodeBuilder(new Atom.Builder().value("quote"));
-//                    quotedListBuilder.addNodeBuilder(expandedAtom);
-//                    expandedListBuilder.addNodeBuilder(quotedListBuilder);
-                    expandedListBuilder.addNodeBuilder(expandedAtom);
-                }
-                else {
-                    expandedListBuilder.addNodeBuilder(expandedAtom);
-                }
+                expandedListBuilder.addNodeBuilder(expandedAtom);
             } else {
                 NodeBuilder transformedRListBuilder = expand((RList) node, bindingsMap, quasiquote);
                 expandedListBuilder.addNodeBuilder(transformedRListBuilder);

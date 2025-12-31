@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ScopeEnvironment {
-    private GlobalEnvironment globalEnvironment;
+    private final GlobalEnvironment globalEnvironment;
 
     public ScopeEnvironment(GlobalEnvironment globalEnvironment) {
         this.globalEnvironment = globalEnvironment;

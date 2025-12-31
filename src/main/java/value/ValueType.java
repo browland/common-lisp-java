@@ -5,9 +5,7 @@ public enum ValueType {
     STRING_LITERAL,
     INTEGER_LITERAL,
     BUILTIN_CONSTANT,
-    LIST,
     CONS_CELL,
-    KEYWORD,
     SYMBOL,
     MACRO
 }

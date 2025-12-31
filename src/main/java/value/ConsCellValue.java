@@ -1,7 +1,6 @@
 package value;
 
 import syntaxtree.Atom;
-import syntaxtree.Node;
 import syntaxtree.RList;
 
 import java.util.List;
@@ -34,17 +33,12 @@ public class ConsCellValue extends Value<ConsCell> {
     }
 
     private static Value<?> toValue(Object object) {
-        if(object instanceof Value) {
-            return (Value<?>)object;
-        }
-        else if(object instanceof Atom atom) {
-            return Value.of(atom.value());
-        }
-        else if(object instanceof RList rlist) {
-            return fromJavaList(rlist);
-        }
-        else {
-            throw new UnsupportedOperationException("unsupported type to build cons cell " + object);
-        }
+        return switch (object) {
+            case Value<?> value1 -> value1;
+            case Atom atom -> Value.of(atom.value());
+            case RList rlist -> fromJavaList(rlist);
+            case null, default ->
+                    throw new UnsupportedOperationException("unsupported type to build cons cell " + object);
+        };
     }
 }

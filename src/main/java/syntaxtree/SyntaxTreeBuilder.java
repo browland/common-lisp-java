@@ -58,7 +58,6 @@ public class SyntaxTreeBuilder {
             case FUNCTION_QUOTE -> "function";
             case QUASIQUOTE -> "quasiquote";
             case UNQUOTE -> "unquote";
-            default -> throw new IllegalArgumentException("unsupported quote type " + quoteType);
         };
 
         Atom.Builder quoteAtomBuilder = new Atom.Builder()

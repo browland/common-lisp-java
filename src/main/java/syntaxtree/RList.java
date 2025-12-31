@@ -40,8 +40,6 @@ public record RList(int depth,
 
     public static final class Builder implements NodeBuilder {
         private final List<NodeBuilder> nodeBuilders = new ArrayList<>();
-        // todo dead code?
-        private RList rlist;  // Used by macros when we just want to directly patch in a list from the macro def
 
         private RList.Builder parentListBuilder;
         private int depth;
@@ -76,17 +74,7 @@ public record RList(int depth,
             this.nodeBuilders.add(nodeBuilder);
         }
 
-        public void forRList(RList rList) {
-            this.rlist = rList;
-        }
-
         public RList build() {
-            // todo dead code?
-            if(rlist != null) {
-                // todo needs to create a copy, not clobber original syntax tree
-                return rlist;
-            }
-
             List<Node> nodes = nodeBuilders.stream().map(NodeBuilder::build).toList();
             return new RList(depth, prefix, isQuoted, nodes);
         }
@@ -97,10 +85,6 @@ public record RList(int depth,
 
         public int getDepth() {
             return depth;
-        }
-
-        public String getPrefix() {
-            return prefix;
         }
     }
 }

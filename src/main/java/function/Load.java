@@ -14,20 +14,21 @@ public class Load implements Function {
 
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
-        Value<String> filenameValue = (Value<String>)operands.get(0);
+        Value<String> filenameValue = (Value<String>)operands.getFirst();
         String filename = filenameValue.getValue();
         Path absolutePath = Path.of(DEFAULT_LOAD_PATH, filename);
 
         try {
-            FileInputStream fis = new FileInputStream(absolutePath.toFile());
-            while (true) {
-                int readByte = fis.read();
-                if(readByte == -1) {
-                    break;
-                }
+            try (FileInputStream fis = new FileInputStream(absolutePath.toFile())) {
+                while (true) {
+                    int readByte = fis.read();
+                    if (readByte == -1) {
+                        break;
+                    }
 
-                char c = (char)readByte;
-                BatchEvaluator.INSTANCE.consume(c);
+                    char c = (char) readByte;
+                    BatchEvaluator.INSTANCE.consume(c);
+                }
             }
             return Value.t();
         } catch (IOException e) {

@@ -9,9 +9,9 @@ import java.util.LinkedList;
 import java.util.Optional;
 
 public class Environment {
-    private GlobalEnvironment globalEnvironment;
+    private final GlobalEnvironment globalEnvironment;
+    private final Symbols symbols;
     private Deque<ScopeEnvironment> scopes;
-    private Symbols symbols;
 
     public Environment() {
         this(new GlobalEnvironment(), new Symbols());

@@ -36,7 +36,7 @@ public class ParseElementBuilder {
         // character is a prefix or suffix by whether there are characters present in the atomStringBuilder.
         if(atomStringBuilder.isEmpty()) {
             prefixBuilder.append(event.character());  // we'll still need this when we deal with 2-char quote types
-            String prefix = prefixBuilder.toString();;
+            String prefix = prefixBuilder.toString();
             // Single quote always results in a (quote ...) form being emitted.
             Optional<QuoteType> optionalQuoteType = QuoteType.ofPrefix(prefix);
             optionalQuoteType.ifPresent(this::handleQuote);

@@ -12,7 +12,7 @@ import java.io.InputStreamReader;
 public class Repl implements ReplOutput {
     private final BatchEvaluator batchEvaluator;
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         Repl repl = new Repl();
         repl.run();
     }

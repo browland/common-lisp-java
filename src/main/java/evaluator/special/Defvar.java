@@ -15,14 +15,9 @@ public class Defvar implements SpecialForm {
                              Environment environment,
                              Evaluator evaluator) {
         Atom nameAtom = (Atom) entireList.get(1);
-
-        // todo remove if we don't run into any problems ...
-//        if(nameAtom.prefix() != null || nameAtom.suffix() != null) {
-//            throw new IllegalArgumentException("name for defvar must be a symbol: [" + nameAtom + "]");
-//        }
-
         String name = nameAtom.value();
         Symbol symbol = environment.getSymbols().internSymbol(name);
+
         if(symbol.isKeyword()) {
             throw new RuntimeException("Can't assign a keyword symbol for " + name);
         }

@@ -2,8 +2,8 @@ package function;
 
 import evaluator.env.Environment;
 import value.ConsCell;
+import value.ConsCellValue;
 import value.Value;
-import value.ValueType;
 
 import java.util.List;
 
@@ -21,12 +21,12 @@ public class Cons implements Function {
         if(Value.nil().equals(cdr) && !Value.nil().equals(car)) {
             // first cons cell
             consCell = new ConsCell(car, cdr);
-            return new Value(consCell, ValueType.CONS_CELL);
+            return new ConsCellValue(consCell);
         }
         else if(!Value.nil().equals(cdr) && !Value.nil().equals(car)) {
             // subsequent cons cell
             consCell = new ConsCell(car, cdr);
-            return new Value(consCell, ValueType.CONS_CELL);
+            return new ConsCellValue(consCell);
         }
         return null;
     }
