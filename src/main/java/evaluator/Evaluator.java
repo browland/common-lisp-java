@@ -5,7 +5,6 @@ import evaluator.macro.MacroEvaluator;
 import evaluator.special.SpecialFormEvaluator;
 import function.Function;
 import function.FunctionRegistry;
-import reader.CharacterReader;
 import syntaxtree.*;
 import value.*;
 
@@ -36,8 +35,6 @@ public class Evaluator {
         } else {
             // If the operator is a special form we need to evaluate it to get its operator implementation (e.g. a closure for a
             // lambda definition).
-            // todo: maybe some special forms return a straightforward result when eval'd e.g. defvar, so not always a
-            //       recursive call and don't need to treat all special forms as functions/operators?
             Atom operatorAtom = (Atom) operatorNode;
             Optional<Value<?>> optionalSpecialFormResult =
                     specialFormEvaluator.evaluate(operatorAtom.value(), list, environment, this);

@@ -22,18 +22,12 @@ public class MacroEvaluator {
                                        Environment environment,
                                        Evaluator evaluator) {
 
-        Symbol symbol = environment.getSymbols().internSymbol(operatorName);
-        Optional<Value<?>> optionalMacro = environment.get(symbol);
+        Optional<Macro> optionalMacro = lookUpMacro(operatorName, environment);
         if (optionalMacro.isEmpty()) {
             return Optional.empty();
         }
 
-        Value<?> macroValue = optionalMacro.get();
-        if (macroValue.getType() != ValueType.MACRO) {
-            return Optional.empty();
-        }
-
-        Macro macro = (Macro) macroValue.getValue();
+        Macro macro = optionalMacro.get();
         List<Atom> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();
 
@@ -45,6 +39,22 @@ public class MacroEvaluator {
         Environment capturedEnvironment = macro.getCapturedEnvironment();
         Value<?> evaluatedMacro = evaluator.evaluate(expandedBody, capturedEnvironment);
         return Optional.of(evaluatedMacro);
+    }
+
+    private Optional<Macro> lookUpMacro(String name, Environment environment) {
+        Symbol symbol = environment.getSymbols().internSymbol(name);
+        Optional<Value<?>> optionalMacro = environment.get(symbol);
+        if (optionalMacro.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Value<?> macroValue = optionalMacro.get();
+        if (macroValue.getType() != ValueType.MACRO) {
+            return Optional.empty();
+        }
+
+        Macro macro = (Macro) macroValue.getValue();
+        return Optional.of(macro);
     }
 
     private Map<String, Node> prepareBindings(RList entireList, List<Atom> bindings) {
