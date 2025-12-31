@@ -1,7 +1,7 @@
 package function;
 
 import evaluator.env.Environment;
-import repl.BatchEvaluator;
+import repl.IncrementalInterpreter;
 import value.Value;
 
 import java.io.FileInputStream;
@@ -27,7 +27,7 @@ public class Load implements Function {
                     }
 
                     char c = (char) readByte;
-                    BatchEvaluator.INSTANCE.consume(c);
+                    IncrementalInterpreter.INSTANCE.consume(c);
                 }
             }
             return Value.t();

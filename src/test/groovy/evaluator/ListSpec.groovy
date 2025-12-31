@@ -7,14 +7,14 @@ import value.Value
 class ListSpec extends Specification {
     def "simple test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter()
 
         def defVar = "(defvar l (list 1 2 3))";
 
         when:
-        evaluator.evaluate(defVar, env)
-        Value<?> result = evaluator.evaluate("(car l)", env)
+        interpreter.interpret(defVar)
+        Value<?> result = interpreter.interpret("(car l)")
 
         then:
         result.getValue() == 1
@@ -22,14 +22,14 @@ class ListSpec extends Specification {
 
     def "list elements requiring evaluation test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter()
 
         def defVar = "(defvar l (list (add 1 2) 2 3))";
 
         when:
-        evaluator.evaluate(defVar, env)
-        Value<?> result = evaluator.evaluate("(car l)", env)
+        interpreter.interpret(defVar)
+        Value<?> result = interpreter.interpret("(car l)")
 
         then:
         result.getValue() == 3

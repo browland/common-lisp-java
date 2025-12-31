@@ -9,13 +9,13 @@ import value.Value;
 class DefvarSpec extends Specification {
     def "simple test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter(env)
 
         def program = "(defvar *db* nil)"
 
         when:
-        SymbolValue result = evaluator.evaluate(program, env)
+        SymbolValue result = interpreter.interpret(program) as SymbolValue
 
         then:
         result.getValue() == new Symbol("*db*")

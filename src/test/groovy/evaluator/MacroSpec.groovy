@@ -1,15 +1,18 @@
 package evaluator
 
 import evaluator.env.Environment
+import evaluator.env.Symbols
 import spock.lang.Specification
+import value.ConsCellValue
+import value.Symbol
 import value.Value
 import value.ValueType
 
 class MacroSpec extends Specification {
     def "simple test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter(env)
 
         def macroDef = """
            (defmacro testing (x y)
@@ -17,8 +20,8 @@ class MacroSpec extends Specification {
         """
 
         when:
-        evaluator.evaluate(macroDef, env)
-        Value<?> result = evaluator.evaluate("(testing 1 2)", env)
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(testing 1 2)")
 
         then:
         result.getValue() == 3
@@ -26,8 +29,8 @@ class MacroSpec extends Specification {
 
     def "variadic args test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter(env)
 
         def macroDef = """
             (defmacro testing (x &rest rest) 
@@ -36,8 +39,8 @@ class MacroSpec extends Specification {
         """
 
         when:
-        evaluator.evaluate(macroDef, env)
-        Value<?> result = evaluator.evaluate("(testing 1 2 3)", env)
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(testing 1 2 3)")
 
         then:
         result.getValue() == 3
@@ -45,8 +48,8 @@ class MacroSpec extends Specification {
 
     def "push macro test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter(env)
 
         def globalDef = "(defvar *db* nil)"
         def macroDef = """
@@ -56,13 +59,15 @@ class MacroSpec extends Specification {
         def push = "(push 1 *db*)"
 
         when:
-        evaluator.evaluate(globalDef, env)
-        evaluator.evaluate(macroDef, env)
-        Value<?> result = evaluator.evaluate(push, env)
+        interpreter.interpret(globalDef)
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret(push)
 
         then:
         result.getType() == ValueType.CONS_CELL
 
-        // todo additional tests; can't see the updated global var until we fix global handling (as it doesn't ripple up)
+        Symbol dbSymbol = new Symbols().internSymbol("*db*");
+        ConsCellValue updatedConsValue = env.get(dbSymbol).get() as ConsCellValue
+        updatedConsValue.value.car().value == 1
     }
 }

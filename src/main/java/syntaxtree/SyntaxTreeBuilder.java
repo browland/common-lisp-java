@@ -68,7 +68,7 @@ public class SyntaxTreeBuilder {
         this.insertingQuote = true;
     }
 
-    void reset() {
+    public void reset() {
         currentListBuilder = null;
         finished = false;
     }

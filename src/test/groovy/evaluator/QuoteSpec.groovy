@@ -1,6 +1,5 @@
 package evaluator
 
-import evaluator.env.Environment
 import spock.lang.Specification
 import value.ConsCell
 import value.ValueType
@@ -8,13 +7,12 @@ import value.ValueType
 class QuoteSpec extends Specification {
     def "evaluates quoted list"() {
         given:
-        def evaluator = new Evaluator()
-        def env = new Environment()
+        def interpreter = new Interpreter()
 
         def program = "'(1 2 3)"
 
         when:
-        var result = evaluator.evaluate(program, env)
+        var result = interpreter.interpret(program)
 
         then:
         result.type == ValueType.CONS_CELL

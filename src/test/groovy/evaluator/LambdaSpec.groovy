@@ -8,15 +8,14 @@ class LambdaSpec extends Specification {
 
     def "simple test"() {
         given:
-        def evaluator = new Evaluator()
-        def env = new Environment()
+        def interpreter = new Interpreter()
 
         def program = """
             (( (lambda (x) (lambda (y) (+ x y))) 10) 5)
         """
 
         when:
-        Value<?> result = evaluator.evaluate(program, env)
+        Value<?> result = interpreter.interpret(program)
 
         then:
         result.getValue() == 15
@@ -24,15 +23,14 @@ class LambdaSpec extends Specification {
 
     def "variadic args test"() {
         given:
-        def evaluator = new Evaluator()
-        def env = new Environment()
+        def interpreter = new Interpreter()
 
         def lambdaDef = """
             ((lambda (x &rest others) (+ x (car others))) 1 2 3)
         """
 
         when:
-        Value<?> result = evaluator.evaluate(lambdaDef, env)
+        Value<?> result = interpreter.interpret(lambdaDef)
 
         then:
         result.getValue() == 3

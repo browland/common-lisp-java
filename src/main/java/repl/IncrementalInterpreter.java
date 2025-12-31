@@ -8,7 +8,7 @@ import syntaxtree.ParseElementBuilder;
 import syntaxtree.SyntaxTreeBuilder;
 import value.Value;
 
-public class BatchEvaluator {
+public class IncrementalInterpreter {
     private final SyntaxTreeBuilder syntaxTreeBuilder;
     private final ParseElementBuilder parseElementBuilder;
     private final CharacterReader characterReader;
@@ -19,14 +19,14 @@ public class BatchEvaluator {
     private boolean finishedForm;
 
     // For now it's convenient to ensure we've got a singleton instance and easily acquired, e.g. by load() function.
-    public static BatchEvaluator INSTANCE;
+    public static IncrementalInterpreter INSTANCE;
 
-    public BatchEvaluator(SyntaxTreeBuilder syntaxTreeBuilder,
-                          ParseElementBuilder parseElementBuilder,
-                          CharacterReader characterReader,
-                          Evaluator evaluator,
-                          Environment environment,
-                          ReplOutput replOutput) {
+    public IncrementalInterpreter(SyntaxTreeBuilder syntaxTreeBuilder,
+                                  ParseElementBuilder parseElementBuilder,
+                                  CharacterReader characterReader,
+                                  Evaluator evaluator,
+                                  Environment environment,
+                                  ReplOutput replOutput) {
         this.syntaxTreeBuilder = syntaxTreeBuilder;
         this.parseElementBuilder = parseElementBuilder;
         this.characterReader = characterReader;

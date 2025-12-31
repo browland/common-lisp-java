@@ -8,8 +8,8 @@ import value.ValueType
 class SetfSpec extends Specification {
     def "cd db test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter(env)
 
         def globalDef = "(defvar *db* nil)"
         def setf = """
@@ -17,8 +17,8 @@ class SetfSpec extends Specification {
         """
 
         when:
-        evaluator.evaluate(globalDef, env)
-        Value<?> result = evaluator.evaluate(setf, env)
+        interpreter.interpret(globalDef)
+        Value<?> result = interpreter.interpret(setf)
 
         then:
         result.getType() == ValueType.CONS_CELL

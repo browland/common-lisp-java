@@ -7,8 +7,8 @@ import value.Value
 class DefunSpec extends Specification {
     def "simple test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter(env)
 
         def functionDef = """
            (defun f (x y)
@@ -16,8 +16,8 @@ class DefunSpec extends Specification {
         """
 
         when:
-        evaluator.evaluate(functionDef, env)
-        Value<?> result = evaluator.evaluate("(f 1 2)", env)
+        interpreter.interpret(functionDef)
+        Value<?> result = interpreter.interpret("(f 1 2)")
 
         then:
         result.getValue() == 3
@@ -25,8 +25,8 @@ class DefunSpec extends Specification {
 
     def "variadic args test"() {
         given:
-        def evaluator = new Evaluator()
         def env = new Environment()
+        def interpreter = new Interpreter(env)
 
         def functionDef = """
            (defun f (x &rest others)
@@ -34,8 +34,8 @@ class DefunSpec extends Specification {
         """
 
         when:
-        evaluator.evaluate(functionDef, env)
-        Value<?> result = evaluator.evaluate("(f 1 2)", env)
+        interpreter.interpret(functionDef)
+        Value<?> result = interpreter.interpret("(f 1 2)")
 
         then:
         result.getValue() == 3

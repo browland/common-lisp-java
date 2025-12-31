@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Repl implements ReplOutput {
-    private final BatchEvaluator batchEvaluator;
+    private final IncrementalInterpreter incrementalInterpreter;
 
     static void main(String[] args) {
         Repl repl = new Repl();
@@ -25,7 +25,7 @@ public class Repl implements ReplOutput {
         Environment environment = new Environment();
         Evaluator evaluator = new Evaluator();
 
-        batchEvaluator = new BatchEvaluator(syntaxTreeBuilder, parseElementBuilder, characterReader, evaluator, environment, this);
+        incrementalInterpreter = new IncrementalInterpreter(syntaxTreeBuilder, parseElementBuilder, characterReader, evaluator, environment, this);
     }
 
     public void run() {
@@ -35,7 +35,7 @@ public class Repl implements ReplOutput {
         try {
             while (true) {
                 char c = (char) isr.read();
-                batchEvaluator.consume(c);
+                incrementalInterpreter.consume(c);
             }
         } catch (IOException e) {
             e.printStackTrace();

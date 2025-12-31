@@ -5,12 +5,10 @@ import evaluator.macro.MacroEvaluator;
 import evaluator.special.SpecialFormEvaluator;
 import function.Function;
 import function.FunctionRegistry;
-import function.ListFunction;
 import reader.CharacterReader;
 import syntaxtree.*;
 import value.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,16 +19,6 @@ public class Evaluator {
     private final FunctionRegistry functionRegistry = new FunctionRegistry();
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
     private final MacroEvaluator macroEvaluator = new MacroEvaluator();
-
-    public Value<?> evaluate(String program, Environment environment) {
-        SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
-        ParseElementBuilder parseElementBuilder = new ParseElementBuilder(syntaxTreeBuilder);
-        CharacterReader characterReader = new CharacterReader(parseElementBuilder);
-        characterReader.read(program);
-
-        RList list = syntaxTreeBuilder.getResult();
-        return evaluate(list, environment);
-    }
 
     public Value<?> evaluate(RList list, Environment environment) {
         Function operator;
