@@ -100,7 +100,7 @@ class CharacterReaderSpec extends Specification {
         ((Atom)outerList.get(1)).quoteType() == QuoteType.KEYWORD
     }
 
-    def "reads string issue"() {
+    def "reads multiple string args"() {
         def syntaxTreeBuilder = new SyntaxTreeBuilder()
         def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)

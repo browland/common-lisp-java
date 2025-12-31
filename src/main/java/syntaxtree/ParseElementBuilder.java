@@ -2,6 +2,8 @@ package syntaxtree;
 
 import reader.CharacterReaderEvent;
 
+import java.util.Optional;
+
 /**
  * This is more complex than the layer below (CharacterReader).
  * This receives character-level events, then gathers prefixes, and detects the start and end of lists as events are incrementally received
@@ -35,20 +37,10 @@ public class ParseElementBuilder {
             prefixBuilder.append(event.character());  // we'll still need this when we deal with 2-char quote types
             String prefix = prefixBuilder.toString();;
             // Single quote always results in a (quote ...) form being emitted.
-            if(prefix.equals("'")) {  // todo use constant/enum
-                handleQuote(QuoteType.QUOTE);
-            }
-            else if(prefix.equals("#'")) {
-                handleQuote(QuoteType.FUNCTION_QUOTE);
-            }
-            else if(prefix.equals("`")) {
-                handleQuote(QuoteType.QUASIQUOTE);
-            }
-            else if(prefix.equals(",")) {
-                handleQuote(QuoteType.UNQUOTE);
-            }
+            Optional<QuoteType> optionalQuoteType = QuoteType.ofPrefix(prefix);
+            optionalQuoteType.ifPresent(this::handleQuote);
         }
-        else if(!atomStringBuilder.isEmpty()) {
+        else {
             suffixBuilder.append(event.character());
         }
     }
@@ -73,8 +65,8 @@ public class ParseElementBuilder {
         // otherwise this space signifies the end of the atom we've been building
         String atom = atomStringBuilder.toString();
 
-        String prefix = prefixBuilder.length() != 0 ? prefixBuilder.toString() : null;
-        String suffix = suffixBuilder.length() != 0 ? suffixBuilder.toString() : null;
+        String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
+        String suffix = !suffixBuilder.isEmpty() ? suffixBuilder.toString() : null;
 
         Atom.Builder atomBuilder = new Atom.Builder()
                 .value(atom)
@@ -87,10 +79,10 @@ public class ParseElementBuilder {
         suffixBuilder.delete(0, suffixBuilder.length());
     }
 
-    public void endList(CharacterReaderEvent event) {
+    public void endList() {
         if(!atomStringBuilder.isEmpty()) {
-            String prefix = prefixBuilder.length() != 0 ? prefixBuilder.toString() : null;
-            String suffix = suffixBuilder.length() != 0 ? suffixBuilder.toString() : null;
+            String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
+            String suffix = !suffixBuilder.isEmpty() ? suffixBuilder.toString() : null;
 
             Atom.Builder atomBuilder = new Atom.Builder()
                     .value(atomStringBuilder.toString())
@@ -103,14 +95,9 @@ public class ParseElementBuilder {
         syntaxTreeBuilder.endList();
     }
 
-    public void handleQuote(QuoteType quoteType) {
-        syntaxTreeBuilder.insertQuote(quoteType);
-        prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
-    }
-
-    public void startList(CharacterReaderEvent event) {
+    public void startList() {
         // Determine the entire prefix - may be null, 1 or 2 characters based on current knowledge
-        String prefix = prefixBuilder.length() != 0 ? prefixBuilder.toString() : null;
+        String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
         syntaxTreeBuilder.startList(prefix);
         prefixBuilder.delete(0, prefixBuilder.length());  // whenever we consume 'prefix' we need to reset the flag to say prefix has been read
     }
@@ -120,5 +107,10 @@ public class ParseElementBuilder {
         suffixBuilder.delete(0, suffixBuilder.length());
         atomStringBuilder.delete(0, atomStringBuilder.length());
         syntaxTreeBuilder.reset();
+    }
+
+    private void handleQuote(QuoteType quoteType) {
+        syntaxTreeBuilder.insertQuote(quoteType);
+        prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
     }
 }

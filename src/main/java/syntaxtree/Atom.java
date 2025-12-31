@@ -1,6 +1,8 @@
 package syntaxtree;
 
-public record Atom(String value, String prefix, String suffix) implements Node {
+public record Atom(String value,
+                   String prefix,
+                   String suffix) implements Node {
 
     public final static class Builder implements NodeBuilder {
         private String prefix;

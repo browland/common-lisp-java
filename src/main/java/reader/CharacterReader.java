@@ -30,11 +30,9 @@ public class CharacterReader {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.ON_QUOTE_CHAR);
             parseElementBuilder.onQuoteChar(event);
         } else if (c == '(') {
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.OPEN_LIST);
-            parseElementBuilder.startList(event);
+            parseElementBuilder.startList();
         } else if (c == ')') {
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.CLOSE_LIST);
-            parseElementBuilder.endList(event);
+            parseElementBuilder.endList();
         } else if (Character.isWhitespace(c)) {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.SPACE);
             parseElementBuilder.onWhitespace(event);
