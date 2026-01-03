@@ -15,6 +15,15 @@ public class GlobalEnvironment {
     private final Map<Symbol, Value<?>> builtInFunctions = new HashMap<>();
     private final Map<Symbol, Value<?>> functions = new HashMap<>();
 
+    public GlobalEnvironment() {
+        // Set up built-in symbols
+        Symbol t = Symbols.t();
+        builtInGlobals.put(t, Value.t());
+
+        Symbol nil = Symbols.nil();
+        builtInGlobals.put(nil, Value.nil());
+    }
+
     public Optional<Value<?>> getValue(Symbol symbol) {
         if(builtInGlobals.containsKey(symbol)) {
             return Optional.of(builtInGlobals.get(symbol));

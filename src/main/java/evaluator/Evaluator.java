@@ -1,6 +1,7 @@
 package evaluator;
 
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
 import evaluator.macro.MacroExpander;
 import evaluator.special.SpecialForm;
 import evaluator.special.SpecialFormEvaluator;
@@ -10,14 +11,26 @@ import value.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class Evaluator {
-    private static final Set<String> BUILTIN_CONSTANTS = Set.of("t", "nil");
-
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
     private final MacroExpander macroExpander = new MacroExpander();
     private final OperatorLookup operatorLookup = new OperatorLookup();
+
+    public Value<?> evaluate(Node node, Environment environment) {
+        // either an atom or a list
+        // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
+        // if a list, then pass it back through evaluate() with the environment
+        if(node instanceof Atom atom) {
+            return atomToValue(atom, environment);
+        }
+        else if (node instanceof RList rlist) {
+            return evaluate(rlist, environment);
+        }
+        else {
+            throw new UnsupportedOperationException("Unhandled node type");
+        }
+    }
 
     public Value<?> evaluate(RList list, Environment environment) {
         Node operatorNode = list.get(0);
@@ -62,29 +75,11 @@ public class Evaluator {
         return operator.apply((List<Value<?>>) operands, environment);
     }
 
-    public Value<?> evaluate(Node node, Environment environment) {
-        // either an atom or a list
-        // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
-        // if a list, then pass it back through evaluate() with the environment
-        if(node instanceof Atom atom) {
-            return atomToValue(atom, environment);
-        }
-        else if (node instanceof RList rlist) {
-            return evaluate(rlist, environment);
-        }
-        else {
-            throw new UnsupportedOperationException("Unhandled node type");
-        }
-    }
-
     private Value<?> atomToValue(Atom atom, Environment environment) {
         String atomStringValue = atom.value();
-        if(BUILTIN_CONSTANTS.contains(atomStringValue)) {
-            return new Value<>(atomStringValue, ValueType.BUILTIN_CONSTANT);
-        }
-        else if(atomStringValue.startsWith(":")) {
+        if(atomStringValue.startsWith(":")) {
             // keyword symbol - a literal symbol which evaluates to itself
-            Symbol symbol = environment.getSymbols().internSymbol(atomStringValue);
+            Symbol symbol = environment.internSymbol(atomStringValue);
             return new SymbolValue(symbol);
         }
         else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
@@ -93,7 +88,7 @@ public class Evaluator {
         }
         else {
             // could be in the environment; otherwise fall back to int
-            Symbol symbol = environment.getSymbols().internSymbol(atomStringValue);
+            Symbol symbol = Symbols.internSymbol(atomStringValue);
             Optional<Value<?>> possibleValue = environment.get(symbol);
             if(possibleValue.isPresent()) {
                 return possibleValue.get();

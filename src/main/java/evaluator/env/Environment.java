@@ -132,4 +132,8 @@ public class Environment {
     public Symbols getSymbols() {
         return symbols;
     }
+
+    public Symbol internSymbol(String symbolName) {
+        return symbols.internSymbol(symbolName);
+    }
 }
