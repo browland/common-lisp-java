@@ -25,7 +25,7 @@ public class Evaluator {
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
         if(node instanceof Atom atom) {
-            return atomEvaluator.atomToValue(atom, environment);
+            return atomEvaluator.atomToValueWithLookup(atom, environment);
         }
         else if (node instanceof RList rlist) {
             return evaluate(rlist, environment);
@@ -59,7 +59,7 @@ public class Evaluator {
             }
             else if(operatorType == OperatorType.MACRO) {
                 Macro macro = operatorLookup.lookupMacro(operatorAtom.value(), environment);
-                RList expandedMacro = macroExpander.expand(macro, list, this, environment);
+                RList expandedMacro = macroExpander.expand(macro, list, this);
                 return evaluate(expandedMacro, environment);
             }
             else {

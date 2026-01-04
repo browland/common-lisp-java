@@ -8,7 +8,8 @@ import value.*;
 import java.util.Optional;
 
 public class AtomEvaluator {
-    Value<?> atomToValue(Atom atom, Environment environment) {
+    Value<?> atomToValueWithLookup(Atom atom,
+                                   Environment environment) {
         String atomStringValue = atom.value();
         if(atomStringValue.startsWith(":")) {
             // keyword symbol - a literal symbol which evaluates to itself
@@ -29,6 +30,36 @@ public class AtomEvaluator {
 
             int intValue = Integer.parseInt(atomStringValue);
             return new IntegerValue(intValue);
+        }
+    }
+
+    Value<?> atomToValueNoLookup(String atomStringValue) {
+        if(atomStringValue.startsWith(":")) {
+            // keyword symbol - a literal symbol which evaluates to itself
+            Symbol symbol = Symbols.internSymbol(atomStringValue);
+            return new SymbolValue(symbol);
+        }
+        else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
+            String stringWithoutQuotes = atomStringValue.substring(1, atomStringValue.length()-1);
+            return new StringValue(stringWithoutQuotes);
+        }
+        else if(isNumeric(atomStringValue)) {
+            int intValue = Integer.parseInt(atomStringValue);
+            return new IntegerValue(intValue);
+        }
+        else {
+            // treat as symbol
+            Symbol symbol = Symbols.internSymbol(atomStringValue);
+            return new SymbolValue(symbol);
+        }
+    }
+
+    private boolean isNumeric(String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 }

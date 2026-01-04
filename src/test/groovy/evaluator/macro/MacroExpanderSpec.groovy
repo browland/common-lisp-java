@@ -14,8 +14,6 @@ class MacroExpanderSpec extends Specification {
     def "simple quote"() {
         given:
         def evaluator = new Evaluator()
-        def env = new Environment()  // todo shouldn't need this
-
         def macroExpander = new MacroExpander()
 
         def macroDef = """
@@ -34,7 +32,7 @@ class MacroExpanderSpec extends Specification {
         def macroInvocationList = programToRList(macroInvocation)
 
         when:
-        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator, env) as RList
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator) as RList
 
         then:
         def firstSymbol = expandedMacroList.nodes().get(0) as Atom

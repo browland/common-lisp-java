@@ -20,23 +20,22 @@ public class MacroExpander {
 
     public RList expand(Macro macro,
                         RList entireList,
-                        Evaluator evaluator,
-                        Environment env) {
-        // todo should not use parent env - use a brand new one just for macro expansion with the bindings only
+                        Evaluator evaluator) {
+        Environment localEnv = new Environment();
         List<Atom> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();
 
         // evaluate bindings
         List<Node> operandNodes = entireList.nodes().subList(1, entireList.size());
-        Map<Symbol, Value<?>> bindingsMap = bindingEvaluator.evaluateWithNodes(bindings, operandNodes, env);
+        Map<Symbol, Value<?>> bindingsMap = bindingEvaluator.evaluateWithNodes(bindings, operandNodes, localEnv);
 
         try {
-            env.enterScope();
+            localEnv.enterScope();
             for (Symbol bindingSymbol : bindingsMap.keySet()) {
-                env.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
+                localEnv.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
             }
 
-            Value<?> evaluatedList = evaluator.evaluate(bodyTemplate, env);
+            Value<?> evaluatedList = evaluator.evaluate(bodyTemplate, localEnv);
             if (evaluatedList instanceof ConsCellValue consCellValue) {
                 Node translatedNode = consToRList.translate(consCellValue);
                 if(translatedNode instanceof RList translatedRList) {
@@ -50,7 +49,7 @@ public class MacroExpander {
             }
         }
         finally {
-            env.leaveScope();
+            localEnv.leaveScope();
         }
     }
 }

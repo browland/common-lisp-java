@@ -44,8 +44,8 @@ public class Value<T> {
         return type;
     }
 
-    // TODO duplicate code (also in BindingEvaluator, which needs to not take an Atom,
-    //      just a string and not take an env, just use Symbols
+    // TODO duplicate code with AtomEvaluator.  Upstream callers should migrate to use
+    //      AtomEvaluator rather than Value.of(string) as it needs to do too much heavy lifting.
     static Value<?> atomToValueNoLookup(String valueFromAtom) {
         if(valueFromAtom.startsWith(":")) {
             // keyword symbol - a literal symbol which evaluates to itself

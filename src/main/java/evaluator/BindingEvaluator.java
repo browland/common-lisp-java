@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 public class BindingEvaluator {
     private static final String AMP_REST = "&rest";
 
+    private final AtomEvaluator atomEvaluator = new AtomEvaluator();
+
     /**
      * For macro expansion - does not evaluate the binding values, but passes them as literal symbols or other values.
      */
@@ -22,7 +24,7 @@ public class BindingEvaluator {
                                                    Environment environment) {
 
         List<Value<?>> operandValues = operands.stream()
-                .map(operand -> nodeToValueNoLookup(operand, environment))
+                .map(this::nodeToValueNoLookup)
                 .collect(Collectors.toUnmodifiableList());
 
         return evaluateWithValues(bindings, operandValues, environment);
@@ -59,45 +61,12 @@ public class BindingEvaluator {
         return bindingsMap;
     }
 
-    Value<?> nodeToValueNoLookup(Node node,
-                                 Environment environment) {
+    Value<?> nodeToValueNoLookup(Node node) {
         if(node instanceof Atom atom) {
-            return atomToValueNoLookup(atom, environment);
+            return atomEvaluator.atomToValueNoLookup(atom.value());
         }
         else {
             throw new UnsupportedOperationException("lists not yet supported here");
-        }
-    }
-
-    Value<?> atomToValueNoLookup(Atom atom,
-                                 Environment environment) {
-        String atomStringValue = atom.value();
-        if(atomStringValue.startsWith(":")) {
-            // keyword symbol - a literal symbol which evaluates to itself
-            Symbol symbol = environment.internSymbol(atomStringValue);
-            return new SymbolValue(symbol);
-        }
-        else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
-            String stringWithoutQuotes = atomStringValue.substring(1, atomStringValue.length()-1);
-            return new StringValue(stringWithoutQuotes);
-        }
-        else if(isNumeric(atomStringValue)) {
-            int intValue = Integer.parseInt(atomStringValue);
-            return new IntegerValue(intValue);
-        }
-        else {
-            // treat as symbol
-            Symbol symbol = Symbols.internSymbol(atomStringValue);
-            return new SymbolValue(symbol);
-        }
-    }
-
-    private boolean isNumeric(String value) {
-        try {
-            Integer.parseInt(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
         }
     }
 }
