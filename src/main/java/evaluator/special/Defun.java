@@ -1,5 +1,6 @@
 package evaluator.special;
 
+import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import function.Closure;
@@ -27,7 +28,8 @@ public class Defun implements SpecialForm {
 
         RList body = (RList) entireList.get(3);
 
-        Closure closure = new Closure(evaluator, environment.capture(), bindings, body);
+        BindingEvaluator bindingEvaluator = new BindingEvaluator();
+        Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, body);
         Symbol symbol = environment.getSymbols().internSymbol(name);
         // todo assuming global
         environment.setGlobal(symbol, new ClosureValue(closure));

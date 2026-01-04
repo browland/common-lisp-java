@@ -1,12 +1,22 @@
 package function;
 
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
+import value.Symbol;
+import value.SymbolValue;
 import value.Value;
-import value.ValueType;
 
 import java.util.List;
+import java.util.Set;
 
 public class Format implements Function {
+    private static final Symbol T = Symbols.internSymbol("t");
+    private static final Symbol NIL = Symbols.internSymbol("nil");
+
+    private final Set<Symbol> SUPPORTED_STREAMS = Set.of(
+            T,
+            NIL
+    );
 
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
@@ -15,13 +25,18 @@ public class Format implements Function {
         String value = operands.get(1).getValue().toString();
 
         // t is a built-in symbol for constant logical true.  Correct CL behaviour is to treat t as meaning stdout.
-        if(ValueType.BUILTIN_CONSTANT == streamValue.getType()) {
-            if("t".equals(streamValue.getValue())) {
+        if(streamValue instanceof SymbolValue streamSymbolValue) {
+            Symbol streamSymbol = streamSymbolValue.getValue();
+            if(!SUPPORTED_STREAMS.contains(streamSymbol)) {
+                throw new UnsupportedOperationException("Unsupported stream symbol: " + streamSymbol);
+            }
+
+            if(T.equals(streamSymbol)) {
                 // print value to standard out; return nil
                 System.out.println(value);
                 return Value.nil();
             }
-            else if(Value.nil().equals(streamValue)) {
+            else if(NIL.equals(streamSymbol)) {
                 return operands.get(1);
             }
             else {

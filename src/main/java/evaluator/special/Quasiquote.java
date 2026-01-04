@@ -92,7 +92,7 @@ public class Quasiquote implements SpecialForm {
 
     private boolean isNumeric(String value) {
         try {
-            int intValue = Integer.parseInt(value);
+            Integer.parseInt(value);
             return true;
         } catch (NumberFormatException e) {
             return false;

@@ -25,7 +25,7 @@ public class ConsCellValue extends Value<ConsCell> {
             ConsCell consCell = new ConsCell(car, cdr);
 
             car = toValue(javaList.get(i));
-            cdr = new Value<>(consCell, ValueType.CONS_CELL);
+            cdr = new ConsCellValue(consCell);
         }
 
         ConsCell consCell = new ConsCell(car, cdr);

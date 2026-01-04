@@ -1,5 +1,7 @@
 package evaluator.macro
 
+import evaluator.Evaluator
+import evaluator.env.Environment
 import reader.CharacterReader
 import spock.lang.Specification
 import syntaxtree.Atom
@@ -11,6 +13,9 @@ import value.Macro
 class MacroExpanderSpec extends Specification {
     def "simple quote"() {
         given:
+        def evaluator = new Evaluator()
+        def env = new Environment()  // todo shouldn't need this
+
         def macroExpander = new MacroExpander()
 
         def macroDef = """
@@ -29,11 +34,17 @@ class MacroExpanderSpec extends Specification {
         def macroInvocationList = programToRList(macroInvocation)
 
         when:
-        def expandedMacroList = macroExpander.expand(macro, macroInvocationList) as RList
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator, env) as RList
 
         then:
         def firstSymbol = expandedMacroList.nodes().get(0) as Atom
         firstSymbol.value() == "+"
+
+        def firstArg = expandedMacroList.nodes().get(1) as Atom
+        firstArg.value() == "1"
+
+        def secondArg = expandedMacroList.nodes().get(2) as Atom
+        secondArg.value() == "2"
     }
 
     def programToRList(program) {

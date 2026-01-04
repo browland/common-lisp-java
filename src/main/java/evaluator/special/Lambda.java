@@ -1,5 +1,6 @@
 package evaluator.special;
 
+import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import function.Closure;
@@ -29,7 +30,8 @@ public class Lambda implements SpecialForm {
         // todo validate bindings - if &rest is present then there should be exactly 1 more binding
 
         RList body = (RList) entireList.get(2);
-        Closure closure = new Closure(evaluator, environment.capture(), bindings, body);
+        BindingEvaluator bindingEvaluator = new BindingEvaluator();
+        Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, body);
         return new ClosureValue(closure);
     }
 }

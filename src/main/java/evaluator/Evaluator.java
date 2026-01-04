@@ -1,28 +1,31 @@
 package evaluator;
 
 import evaluator.env.Environment;
-import evaluator.env.Symbols;
 import evaluator.macro.MacroExpander;
 import evaluator.special.SpecialForm;
 import evaluator.special.SpecialFormEvaluator;
 import function.Function;
-import syntaxtree.*;
-import value.*;
+import syntaxtree.Atom;
+import syntaxtree.Node;
+import syntaxtree.RList;
+import value.Macro;
+import value.Value;
 
 import java.util.List;
-import java.util.Optional;
 
 public class Evaluator {
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
     private final MacroExpander macroExpander = new MacroExpander();
     private final OperatorLookup operatorLookup = new OperatorLookup();
+    private final AtomEvaluator atomEvaluator = new AtomEvaluator();
+    private final BindingEvaluator bindingEvaluator = new BindingEvaluator();
 
     public Value<?> evaluate(Node node, Environment environment) {
         // either an atom or a list
         // if an atom then it could be a symbol (in which case look it up) or otherwise a literal value
         // if a list, then pass it back through evaluate() with the environment
         if(node instanceof Atom atom) {
-            return atomToValue(atom, environment);
+            return atomEvaluator.atomToValue(atom, environment);
         }
         else if (node instanceof RList rlist) {
             return evaluate(rlist, environment);
@@ -56,7 +59,7 @@ public class Evaluator {
             }
             else if(operatorType == OperatorType.MACRO) {
                 Macro macro = operatorLookup.lookupMacro(operatorAtom.value(), environment);
-                RList expandedMacro = macroExpander.expand(macro, list);
+                RList expandedMacro = macroExpander.expand(macro, list, this, environment);
                 return evaluate(expandedMacro, environment);
             }
             else {
@@ -73,29 +76,5 @@ public class Evaluator {
         List<? extends Value<?>> operands = fullList.nodes().subList(1, fullList.size()).stream()
                 .map(node -> evaluate(node, environment)).toList();
         return operator.apply((List<Value<?>>) operands, environment);
-    }
-
-    private Value<?> atomToValue(Atom atom, Environment environment) {
-        String atomStringValue = atom.value();
-        if(atomStringValue.startsWith(":")) {
-            // keyword symbol - a literal symbol which evaluates to itself
-            Symbol symbol = environment.internSymbol(atomStringValue);
-            return new SymbolValue(symbol);
-        }
-        else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {
-            String stringWithoutQuotes = atomStringValue.substring(1, atomStringValue.length()-1);
-            return new StringValue(stringWithoutQuotes);
-        }
-        else {
-            // could be in the environment; otherwise fall back to int
-            Symbol symbol = Symbols.internSymbol(atomStringValue);
-            Optional<Value<?>> possibleValue = environment.get(symbol);
-            if(possibleValue.isPresent()) {
-                return possibleValue.get();
-            }
-
-            int intValue = Integer.parseInt(atomStringValue);
-            return new IntegerValue(intValue);
-        }
     }
 }
