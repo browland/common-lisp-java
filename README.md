@@ -2,70 +2,24 @@
 
 ## Issues
 
+### Loops
+
+How to impl the simplest loop behaviour (not the 'loop' macro)?  So things like do, dolist, dotimes.
+E.g. what's the simplest building block - is it tagbody etc?
+
 ### Defvar/setf
 
-Only introduces a new variable if not already bound.  Shouldn't allow a constant (keyword) symbol to be assigned.
+The existing setf impl should be replaced (eventually) with a macro which can do matching on the place operand.  Need
+to implement things like cond and consp, 'and', rplaca, rplacd, cadr, symbolp etc first!
+
+The existing setf is closer to setq so should be renamed.
+
+Defvar only introduces a new variable if not already bound.  Shouldn't allow a constant (keyword) symbol to be assigned.
 Nor allow assignments to special constants like t.  Calling defvar again on an existing symbol will have no effect -
 works but will not update it.
 
 Setf can update an existing variable, and can't update one which is not yet declared.  Setf also can't assign a new
 value to special constants e.g. t.
-
-Current impl of setf should also work with variables (e.g. when given a symbol as place).
-
-### Desugaring
-E.g. (f '(1 2 3)) should be parsed into the tree: (f (quote ( 1 2 3))).
-  There is always special forms for any type of quote encountered such as unquote, quasiquote, etc to do this.
-
-* format only works with strings - should work with cons cells for eg.
-
-* closure toString() causing StackOverflowException so have hacked in a minimal toString() for now
-
-## List parsing (ListParser)
-
-The first layer (ListParser) turns the program into a tree of nodes.  Each node is an element in the list.  We don't know
-yet what each node is - it's just a string.
-
-We need to do a little more at this level - we need to understand quoting otherwise we'll get an invalid tree.
-A simple use of a quoted function looks like this:
-
-```
-(funcall #'+ 1 2 3)
-```
-
-In this case, the second element of the list is the quoted '+' function.  In this case we want to treat this as the '+'
-symbol, but also set some state on this symbol to indicate it's quoted rather than just ingesting the #'+ as one element.  
-
-This might make more sense in this example:
-
-```
-(funcall #'(lambda (x) (+ x 1)) 1)
-```
-
-The top-level list contains three elements, and the second element is the quoted function.  Without special handling of
-quotes at this level, this would break list parsing which otherwise might just look for text elements separated by a space,
-and nested within parentheses. Bearing in mind we don't understand what a lambda is yet, we need to ensure we pick up the 
-sharp-quote pair of characters correctly and attach some state to the inner list so we remember the inner list is quoted.  
-We track each type of quote (e.g. function quote, quoted string etc) as we need to understand what they are at this level 
-anyway, in order to parse correctly.
-
-The next layer up will transform quoted forms into the (quote ...) form.  It's easier to do this once we already have a
-tree form.
-
-So the result of ListParser.parse() is a ParsedList.  This contains a List<ListNode> and a QuoteType which is an enum
-type which captures the quote type mentioned above.
-
-A ListNode contains either:
-* a plain value (as a String), or 
-* a ParsedList (where this element is itself a list)
-
-The ListNode also contains a QuoteType, which is only set when the value is present.  It's not set when a ParsedList is
-present because the QuoteType would be set on the ParsedList itself.
-
-TODO For this reason we should refactor ListNode so it doesn't have these two flavours.
-
-The output of this level should be a valid ParsedList when any program is passed into parse().
-
 
 # Program Examples
 
