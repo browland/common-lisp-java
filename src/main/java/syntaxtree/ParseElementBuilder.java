@@ -15,13 +15,19 @@ public class ParseElementBuilder {
     private final StringBuilder prefixBuilder = new StringBuilder();
     private final StringBuilder atomStringBuilder = new StringBuilder();
     private final SyntaxTreeBuilder syntaxTreeBuilder;
+
     private boolean inString = false;
+    private boolean inComment = false;
 
     public ParseElementBuilder(SyntaxTreeBuilder syntaxTreeBuilder) {
         this.syntaxTreeBuilder = syntaxTreeBuilder;
     }
 
     public void inAtom(CharacterReaderEvent event) {
+        if(inComment) {
+            return;
+        }
+
         char character = event.character();
         atomStringBuilder.append(character);
 
@@ -49,6 +55,11 @@ public class ParseElementBuilder {
         // However, we also need to check for the lack of a prefix, as we may be handling a string (double-quoted) beginning
         // with 1 or more spaces.  This is why we treat double-quote specially (as a quote char) even though it's not
         // a quote char in terms of lisp syntax.  Maybe we could break it out somehow, but for now this works.
+        // commenting resets at line endings
+        if(event.character() == '\n' && inComment) {
+            inComment = false;
+        }
+
         if(atomStringBuilder.isEmpty() && prefixBuilder.isEmpty()) {
             return;
         }
@@ -71,6 +82,15 @@ public class ParseElementBuilder {
 
         atomStringBuilder.delete(0, atomStringBuilder.length());
         prefixBuilder.delete(0, prefixBuilder.length());
+    }
+
+    public void onCommentSymbol(CharacterReaderEvent event) {
+        if(!inString) {
+            inComment = true;
+        }
+        else {
+            inAtom(event);
+        }
     }
 
     public void endList() {

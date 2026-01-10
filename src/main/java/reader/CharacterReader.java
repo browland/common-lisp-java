@@ -25,17 +25,25 @@ public class CharacterReader {
         }
     }
 
+    /**
+     * Returns true if we should skip the rest of the current line, otherwise false.
+     */
     public void consume(char c) {
-        if (QUOTE_CHARS.contains(c)) {
+        // handle beginning of comment
+        if(c == ';') {
+            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.COMMENT_START);
+            parseElementBuilder.onCommentSymbol(event);
+        } else if (Character.isWhitespace(c)) {
+            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.WHITESPACE);
+            parseElementBuilder.onWhitespace(event);
+        }
+        else if (QUOTE_CHARS.contains(c)) {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.ON_QUOTE_CHAR);
             parseElementBuilder.onQuoteChar(event);
         } else if (c == '(') {
             parseElementBuilder.startList();
         } else if (c == ')') {
             parseElementBuilder.endList();
-        } else if (Character.isWhitespace(c)) {
-            CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.SPACE);
-            parseElementBuilder.onWhitespace(event);
         } else {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_ATOM);
             parseElementBuilder.inAtom(event);

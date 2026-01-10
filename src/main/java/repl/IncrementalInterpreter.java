@@ -16,8 +16,6 @@ public class IncrementalInterpreter {
     private final Environment environment;
     private final ReplOutput replOutput;
 
-    private boolean finishedForm;
-
     // For now it's convenient to ensure we've got a singleton instance and easily acquired, e.g. by load() function.
     public static IncrementalInterpreter INSTANCE;
 
@@ -41,26 +39,25 @@ public class IncrementalInterpreter {
         characterReader.consume(c);
 
         if (syntaxTreeBuilder.isFinished()) {
-            finishedForm = true;
-            endExpression(syntaxTreeBuilder, environment, evaluator);
+            Value<?> value = evaluateExpression(syntaxTreeBuilder, environment, evaluator);
+            replOutput.emitOutput(value.toString());
         } else {
-            // we're in the middle of a form
-            if(c != '\n') {
-                finishedForm = false;  // reset flag; only needs doing once per form really
-            }
-            if (!finishedForm && c == '\n') {
-                replOutput.promptForMidForm();
+            if (c == '\n') {
+                if(syntaxTreeBuilder.isEmpty()) {
+                    replOutput.promptForNewForm();
+                }
+                else {
+                    replOutput.promptForMidForm();
+                }
             }
         }
     }
 
-    private void endExpression(SyntaxTreeBuilder syntaxTreeBuilder,
-                               Environment environment,
-                               Evaluator evaluator) {
+    private Value<?> evaluateExpression(SyntaxTreeBuilder syntaxTreeBuilder,
+                                    Environment environment,
+                                    Evaluator evaluator) {
         RList topLevelList = syntaxTreeBuilder.getResult();
         parseElementBuilder.reset();
-        Value<?> value = evaluator.evaluate(topLevelList, environment);
-        replOutput.emitOutput(value.toString());
-        replOutput.promptForNewForm();
+        return evaluator.evaluate(topLevelList, environment);
     }
 }

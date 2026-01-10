@@ -86,5 +86,9 @@ public record RList(int depth,
         public int getDepth() {
             return depth;
         }
+
+        public int getSize() {
+            return nodeBuilders.size();
+        }
     }
 }

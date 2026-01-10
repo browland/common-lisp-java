@@ -83,4 +83,8 @@ public class SyntaxTreeBuilder {
         }
         return currentListBuilder.build();
     }
+
+    public boolean isEmpty() {
+        return currentListBuilder == null || (currentListBuilder.getDepth() == 0 && currentListBuilder.getSize() == 0);
+    }
 }
