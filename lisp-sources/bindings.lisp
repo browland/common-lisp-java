@@ -1,0 +1,10 @@
+(defun print (x)
+  (format t x))
+
+(let ((x 1))
+  (print x)
+  (let ((x 2))
+    (print x)
+    (setq x 3)
+    (print x))
+  (print x))

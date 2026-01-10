@@ -51,4 +51,17 @@ class LetSpec extends Specification {
         then:
         result.value == 2
     }
+
+    def "evaluates multiple forms"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+        def program = "(let ((x 1)) (+ x 1) (+ x 2))"
+
+        when:
+        def result = interpreter.interpret(program)
+
+        then:
+        result.value == 3
+    }
 }

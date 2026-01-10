@@ -2,6 +2,7 @@ package evaluator.special;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 import value.*;
@@ -26,7 +27,7 @@ public class DefMacro implements SpecialForm {
 
         Atom nameAtom = (Atom)entireList.get(1);
         String name = nameAtom.value();
-        Symbol symbol = environment.getSymbols().internSymbol(name);
+        Symbol symbol = Symbols.internSymbol(name);
         environment.setGlobal(symbol, macroValue);
 
         return new StringValue(name);

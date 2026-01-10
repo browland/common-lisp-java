@@ -2,6 +2,7 @@ package evaluator.special;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
@@ -16,7 +17,7 @@ public class Defvar implements SpecialForm {
                              Evaluator evaluator) {
         Atom nameAtom = (Atom) entireList.get(1);
         String name = nameAtom.value();
-        Symbol symbol = environment.getSymbols().internSymbol(name);
+        Symbol symbol = Symbols.internSymbol(name);
 
         if(symbol.isKeyword()) {
             throw new RuntimeException("Can't assign a keyword symbol for " + name);

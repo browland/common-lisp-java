@@ -40,7 +40,7 @@ public class BindingEvaluator {
             if (bindingName.equals(AMP_REST)) {
                 // 1. get next binding - this is the name of the list representing the remaining args
                 String restArgsBindingName = bindings.get(i + 1).value();
-                Symbol restArgsBindingSymbol = environment.internSymbol(restArgsBindingName);
+                Symbol restArgsBindingSymbol = Symbols.internSymbol(restArgsBindingName);
 
                 // 2. get remaining operands - put them all in a list and assign to the symbol
                 List<Value<?>> restOperands = operands.subList(i, operands.size());
@@ -54,7 +54,7 @@ public class BindingEvaluator {
                 // 5. break out of loop; for now we're treating the &rest binding as the last thing we'd see
                 break;
             } else {
-                Symbol bindingSymbol = environment.internSymbol(bindingName);
+                Symbol bindingSymbol = Symbols.internSymbol(bindingName);
                 bindingsMap.put(bindingSymbol, operands.get(i));
             }
         }

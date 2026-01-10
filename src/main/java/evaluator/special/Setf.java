@@ -2,6 +2,7 @@ package evaluator.special;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.RList;
 import value.Symbol;
@@ -21,7 +22,7 @@ public class Setf implements SpecialForm {
         }
 
         String name = symbolAtom.value();
-        Symbol symbol = environment.getSymbols().internSymbol(name);
+        Symbol symbol = Symbols.internSymbol(name);
 
         // for now we only implement setf for lists.  The list must already exist at the given symbol.
         if(environment.get(symbol).isEmpty()) {

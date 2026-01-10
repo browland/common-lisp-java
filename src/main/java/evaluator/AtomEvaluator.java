@@ -13,7 +13,7 @@ public class AtomEvaluator {
         String atomStringValue = atom.value();
         if(atomStringValue.startsWith(":")) {
             // keyword symbol - a literal symbol which evaluates to itself
-            Symbol symbol = environment.internSymbol(atomStringValue);
+            Symbol symbol = Symbols.internSymbol(atomStringValue);
             return new SymbolValue(symbol);
         }
         else if(atomStringValue.startsWith("\"") && atomStringValue.endsWith("\"")) {

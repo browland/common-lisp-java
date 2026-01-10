@@ -10,38 +10,28 @@ import java.util.Optional;
 
 public class Environment {
     private final GlobalEnvironment globalEnvironment;
-    private final Symbols symbols;
     private Deque<ScopeEnvironment> scopes;
 
     public Environment() {
-        this(new GlobalEnvironment(), new Symbols());
+        this(new GlobalEnvironment());
     }
 
-    public Environment(GlobalEnvironment globalEnvironment, Symbols symbols) {
+    public Environment(GlobalEnvironment globalEnvironment) {
         this.globalEnvironment = globalEnvironment;
         this.scopes = new LinkedList<>();
-        this.symbols = symbols;
     }
 
-
     public Optional<Value<?>> get(Symbol symbol) {
-        // try to find a global variable first
-        Optional<Value<?>> global = globalEnvironment.getValue(symbol);
-        if(global.isPresent()) {
-            return global;
-        }
-
-        // otherwise walk stack of lexical scopes
-        Iterator<ScopeEnvironment> scopeIter = scopes.iterator();
-        while(scopeIter.hasNext()) {
-            ScopeEnvironment scope = scopeIter.next();
+        // first walk stack of lexical scopes
+        for (ScopeEnvironment scope : scopes) {
             Optional<Value<?>> value = scope.getBinding(symbol);
-            if(value.isPresent()) {
+            if (value.isPresent()) {
                 return value;
             }
         }
 
-        return Optional.empty();
+        // otherwise try to find a global variable
+        return globalEnvironment.getValue(symbol);
     }
 
     public void setGlobal(Symbol symbol, Value<?> value) {
@@ -129,7 +119,7 @@ public class Environment {
     }
 
     public Environment capture() {
-        Environment capturedEnvironment = new Environment(this.globalEnvironment, this.symbols);
+        Environment capturedEnvironment = new Environment(this.globalEnvironment);
 
         // We have to be very careful re. scopes captured by closures:
         // 1. We must create a new stack (LinkedList) so closures don't lose any enclosing scope when that scope terminates.
@@ -150,13 +140,5 @@ public class Environment {
         // environment.
         capturedEnvironment.scopes = new LinkedList<>(this.scopes);
         return capturedEnvironment;
-    }
-
-    public Symbols getSymbols() {
-        return symbols;
-    }
-
-    public Symbol internSymbol(String symbolName) {
-        return symbols.internSymbol(symbolName);
     }
 }

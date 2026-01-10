@@ -2,6 +2,7 @@ package evaluator.special;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
@@ -9,6 +10,7 @@ import value.Symbol;
 import value.Value;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Let implements SpecialForm {
@@ -21,11 +23,14 @@ public class Let implements SpecialForm {
 
         addBindingsIntoScope(entireList, environment, evaluator);
 
-        RList body = (RList)entireList.get(2);
-        Value<?> bodyValue = evaluator.evaluate(body, environment);
+        List<Node> nodes = entireList.nodes();
+        Value<?> bodyEvaluation = null;
+        for(Node bodyNode : nodes.subList(2, nodes.size())) {
+            bodyEvaluation = evaluator.evaluate(bodyNode, environment);
+        }
 
         environment.leaveScope();
-        return bodyValue;
+        return bodyEvaluation;
     }
 
     /**
@@ -42,7 +47,7 @@ public class Let implements SpecialForm {
         for(Node bindingNode : bindings.nodes()) {
             RList bindingList = (RList)bindingNode;
             Atom name = (Atom)bindingList.get(0);
-            Symbol nameSymbol = environment.getSymbols().internSymbol(name.value());
+            Symbol nameSymbol = Symbols.internSymbol(name.value());
             Node value = bindingList.get(1);
             Value<?> evaluatedValue = evaluator.evaluate(value, environment);
             evaluatedBindings.put(nameSymbol, evaluatedValue);

@@ -3,6 +3,7 @@ package evaluator.special;
 import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
 import function.Closure;
 import syntaxtree.Atom;
 import syntaxtree.RList;
@@ -30,7 +31,7 @@ public class Defun implements SpecialForm {
 
         BindingEvaluator bindingEvaluator = new BindingEvaluator();
         Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, body);
-        Symbol symbol = environment.getSymbols().internSymbol(name);
+        Symbol symbol = Symbols.internSymbol(name);
         // todo assuming global
         environment.setGlobal(symbol, new ClosureValue(closure));
 
