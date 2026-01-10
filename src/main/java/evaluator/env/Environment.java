@@ -92,6 +92,7 @@ public class Environment {
         }
 
         // otherwise walk stack of scopes
+        // todo probably wrong and should be regular iterator using enhanced for loop
         Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
         while(scopeIter.hasNext()) {
             ScopeEnvironment scope = scopeIter.next();
