@@ -74,13 +74,36 @@ public class Environment {
         thisScopeEnv.setBinding(symbol, value);
     }
 
+    /**
+     * E.g. for setq we find the binding at the closest lexical level.  We work through lexical
+     * scopes from inner to outer, and then consider the globals last.
+     */
+    public void setInMostLocalScope(Symbol symbol,
+                                    Value<?> value) {
+        // walk stack of scopes first
+        Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
+        while(scopeIter.hasNext()) {
+            ScopeEnvironment scope = scopeIter.next();
+            Optional<Value<?>> possibleBinding = scope.getBinding(symbol);
+            if(possibleBinding.isPresent()) {
+                scope.setBinding(symbol, value);
+                return;
+            }
+        }
+
+        setGlobal(symbol, value);
+    }
+
+    /**
+     * todo Bug?  Should look at scopes first and then globals last?
+     */
     public Optional<Value<?>> getFunction(Symbol symbol) {
         Optional<Value<?>> global = globalEnvironment.getFunction(symbol);
         if(global.isPresent()) {
             return global;
         }
 
-        // otherwise walk stack
+        // otherwise walk stack of scopes
         Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
         while(scopeIter.hasNext()) {
             ScopeEnvironment scope = scopeIter.next();

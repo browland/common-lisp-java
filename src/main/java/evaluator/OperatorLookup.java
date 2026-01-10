@@ -17,7 +17,6 @@ import java.util.Optional;
 public class OperatorLookup {
     private static final SpecialFormRegistry specialFormRegistry = new SpecialFormRegistry();
     private static final FunctionRegistry functionRegistry = new FunctionRegistry();
-    private static final Symbols symbols = new Symbols();
 
     public OperatorType determineOperatorType(Atom operatorAtom,
                                               Environment environment) {
@@ -29,7 +28,7 @@ public class OperatorLookup {
             return OperatorType.FUNCTION;
         }
 
-        Symbol operatorSymbol = symbols.internSymbol(operatorName);
+        Symbol operatorSymbol = Symbols.internSymbol(operatorName);
 
         Optional<Value<?>> optionalOperator = environment.get(operatorSymbol);
         if(optionalOperator.isEmpty()) {
@@ -55,7 +54,7 @@ public class OperatorLookup {
             return builtInFunction.get();
         }
 
-        Symbol operatorSymbol = symbols.internSymbol(name);
+        Symbol operatorSymbol = Symbols.internSymbol(name);
 
         Optional<Value<?>> optionalOperator = environment.get(operatorSymbol);
         if(optionalOperator.isPresent()) {
@@ -83,7 +82,7 @@ public class OperatorLookup {
     }
 
     public Macro lookupMacro(String name, Environment environment) {
-        Symbol operatorSymbol = symbols.internSymbol(name);
+        Symbol operatorSymbol = Symbols.internSymbol(name);
 
         Optional<Value<?>> optionalMacro = environment.get(operatorSymbol);
         if(optionalMacro.isPresent()) {
