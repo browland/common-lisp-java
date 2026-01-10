@@ -9,17 +9,15 @@ E.g. what's the simplest building block - is it tagbody etc?
 
 ### Defvar/setf
 
-The existing setf impl should be replaced (eventually) with a macro which can do matching on the place operand.  Need
-to implement things like cond and consp, 'and', rplaca, rplacd, cadr, symbolp etc first!
+Setf should be implemented by a macro which can do matching on the place operand.  Need to implement things like cond 
+and consp, 'and', rplaca, rplacd, cadr, symbolp etc first!
 
-The existing setf is closer to setq so should be renamed.
+Setf can update an existing variable, and can't update one which is not yet declared.  Setf also can't assign a new
+value to special constants e.g. t.
 
 Defvar only introduces a new variable if not already bound.  Shouldn't allow a constant (keyword) symbol to be assigned.
 Nor allow assignments to special constants like t.  Calling defvar again on an existing symbol will have no effect -
 works but will not update it.
-
-Setf can update an existing variable, and can't update one which is not yet declared.  Setf also can't assign a new
-value to special constants e.g. t.
 
 # Program Examples
 

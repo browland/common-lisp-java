@@ -4,5 +4,5 @@
 (getf (make-cd "Roses" "Kathy Mattea" 7 t) :rating)
 
 (defvar *db* nil)
-(defun add-record (cd) (setf *db* (cons cd *db*)))
+(defun add-record (cd) (setq *db* (cons cd *db*)))
 (add-record (make-cd "Roses" "Kathy Mattea" 7 t))

@@ -54,7 +54,7 @@ class MacroSpec extends Specification {
         def globalDef = "(defvar *db* nil)"
         def macroDef = """
             (defmacro push (item place)
-                `(setf ,place (cons ,item ,place)))
+                `(setq ,place (cons ,item ,place)))
         """
         def push = "(push 1 *db*)"
 
