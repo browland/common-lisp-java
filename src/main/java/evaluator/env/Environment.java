@@ -71,11 +71,9 @@ public class Environment {
     public void setInMostLocalScope(Symbol symbol,
                                     Value<?> value) {
         // walk stack of scopes first
-        Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
-        while(scopeIter.hasNext()) {
-            ScopeEnvironment scope = scopeIter.next();
+        for (ScopeEnvironment scope : scopes) {
             Optional<Value<?>> possibleBinding = scope.getBinding(symbol);
-            if(possibleBinding.isPresent()) {
+            if (possibleBinding.isPresent()) {
                 scope.setBinding(symbol, value);
                 return;
             }
