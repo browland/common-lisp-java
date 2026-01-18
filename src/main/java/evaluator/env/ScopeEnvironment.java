@@ -14,23 +14,23 @@ public class ScopeEnvironment {
         this.globalEnvironment = globalEnvironment;
     }
 
-    private final Map<Symbol, Value<?>> bindings = new HashMap<>();
+    private final Map<Symbol, Value<?>> variables = new HashMap<>();
     private final Map<Symbol, Value<?>> functions = new HashMap<>();
     private final Map<Symbol, Value<?>> blocks = new HashMap<>();
 
-    public Optional<Value<?>> getBinding(Symbol symbol) {
-        if(bindings.containsKey(symbol)) {
-            return Optional.of(bindings.get(symbol));
+    public Optional<Value<?>> getVariable(Symbol symbol) {
+        if(variables.containsKey(symbol)) {
+            return Optional.of(variables.get(symbol));
         }
         return Optional.empty();
     }
 
-    public void setBinding(Symbol symbol, Value<?> value) {
+    public void setVariable(Symbol symbol, Value<?> value) {
         if(globalEnvironment.isReserved(symbol)) {
             throw new RuntimeException("Can't bind, already exists: " + symbol);
         }
 
-        bindings.put(symbol, value);
+        variables.put(symbol, value);
     }
 
     public Optional<Value<?>> getFunction(Symbol symbol) {

@@ -33,7 +33,6 @@ public class Defun implements SpecialForm {
         BindingEvaluator bindingEvaluator = new BindingEvaluator();
         Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, body);
         Symbol symbol = Symbols.internSymbol(name);
-        // todo assuming global
         environment.setGlobal(symbol, new ClosureValue(closure));
 
         return new ClosureValue(closure);

@@ -2,6 +2,7 @@ package evaluator.env;
 
 import value.Symbol;
 import value.Value;
+import value.ValueType;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -23,7 +24,7 @@ public class Environment {
     public Optional<Value<?>> get(Symbol symbol) {
         // first walk stack of lexical scopes
         for (ScopeEnvironment scope : scopes) {
-            Optional<Value<?>> value = scope.getBinding(symbol);
+            Optional<Value<?>> value = scope.getVariable(symbol);
             if (value.isPresent()) {
                 return value;
             }
@@ -49,6 +50,27 @@ public class Environment {
         }
     }
 
+    public void setInScope(Symbol symbol,
+                           Value<?> value,
+                           Namespace namespace) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't set for symbol which already exists in global env " + symbol);
+        }
+
+        ScopeEnvironment thisScopeEnv = scopes.peek();
+        if(thisScopeEnv == null) {
+            throw new RuntimeException("Can't set in scope as no scopes exist!");
+        }
+
+        switch(namespace) {
+            case VARIABLE -> thisScopeEnv.setVariable(symbol, value);
+            case FUNCTION -> thisScopeEnv.setFunction(symbol, value);
+            case BLOCK -> thisScopeEnv.setBlock(symbol, value);
+        }
+    }
+
+    // Should pass a namespace as it depends on the caller, not the type of the value
+    @Deprecated
     public void setInScope(Symbol symbol, Value<?> value) {
         if(globalEnvironment.isReserved(symbol)) {
             throw new RuntimeException("Can't set for symbol which already exists in global env " + symbol);
@@ -59,8 +81,12 @@ public class Environment {
             throw new RuntimeException("Can't set in scope as no scopes exist!");
         }
 
-        // todo should have some kind of protection around this
-        thisScopeEnv.setBinding(symbol, value);
+        if(value.getType() == ValueType.OPERATOR) {
+            thisScopeEnv.setFunction(symbol, value);
+        }
+        else {
+            thisScopeEnv.setVariable(symbol, value);
+        }
     }
 
     /**
@@ -71,9 +97,9 @@ public class Environment {
                                     Value<?> value) {
         // walk stack of scopes first
         for (ScopeEnvironment scope : scopes) {
-            Optional<Value<?>> possibleBinding = scope.getBinding(symbol);
+            Optional<Value<?>> possibleBinding = scope.getVariable(symbol);
             if (possibleBinding.isPresent()) {
-                scope.setBinding(symbol, value);
+                scope.setVariable(symbol, value);
                 return;
             }
         }
