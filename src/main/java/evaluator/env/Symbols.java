@@ -17,6 +17,12 @@ public class Symbols {
     }
 
     public static Symbol internSymbol(String name) {
+        // todo don't allow integers to be symbols.  But this breaks too many tests where
+        //      we're somehow dealing with numbers temporarily as symbols
+//        if(isNumeric(name)) {
+//            throw new IllegalArgumentException("Invalid symbol " + name);
+//        }
+
         Map<String, Symbol> mapToCheck = name.startsWith(":") ? keywords : symbols;
         return mapToCheck.computeIfAbsent(name, Symbol::new);
     }
@@ -27,5 +33,14 @@ public class Symbols {
 
     public static Symbol nil() {
         return symbols.get("nil");
+    }
+
+    private static boolean isNumeric(String symbolName) {
+        try {
+            Integer.parseInt(symbolName);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

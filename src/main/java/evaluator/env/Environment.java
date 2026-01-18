@@ -82,27 +82,15 @@ public class Environment {
         setGlobal(symbol, value);
     }
 
-    /**
-     * todo Bug?  Should look at scopes first and then globals last?
-     */
     public Optional<Value<?>> getFunction(Symbol symbol) {
-        Optional<Value<?>> global = globalEnvironment.getFunction(symbol);
-        if(global.isPresent()) {
-            return global;
-        }
-
-        // otherwise walk stack of scopes
-        // todo probably wrong and should be regular iterator using enhanced for loop
-        Iterator<ScopeEnvironment> scopeIter = scopes.descendingIterator();
-        while(scopeIter.hasNext()) {
-            ScopeEnvironment scope = scopeIter.next();
+        for (ScopeEnvironment scope : scopes) {
             Optional<Value<?>> function = scope.getFunction(symbol);
-            if(function.isPresent()) {
+            if (function.isPresent()) {
                 return function;
             }
         }
 
-        return Optional.empty();
+        return globalEnvironment.getFunction(symbol);
     }
 
     public void enterScope() {

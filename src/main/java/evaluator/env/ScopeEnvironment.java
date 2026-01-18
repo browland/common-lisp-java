@@ -16,6 +16,7 @@ public class ScopeEnvironment {
 
     private final Map<Symbol, Value<?>> bindings = new HashMap<>();
     private final Map<Symbol, Value<?>> functions = new HashMap<>();
+    private final Map<Symbol, Value<?>> blocks = new HashMap<>();
 
     public Optional<Value<?>> getBinding(Symbol symbol) {
         if(bindings.containsKey(symbol)) {
@@ -39,11 +40,26 @@ public class ScopeEnvironment {
         return Optional.empty();
     }
 
+    public Optional<Value<?>> getBlock(Symbol symbol) {
+        if(blocks.containsKey(symbol)) {
+            return Optional.of(blocks.get(symbol));
+        }
+        return Optional.empty();
+    }
+
     public void setFunction(Symbol symbol, Value<?> function) {
         if(globalEnvironment.isReserved(symbol)) {
             throw new RuntimeException("Can't bind, already exists: " + symbol);
         }
 
         functions.put(symbol, function);
+    }
+
+    public void setBlock(Symbol symbol, Value<?> block) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't bind, already exists: " + symbol);
+        }
+
+        blocks.put(symbol, block);
     }
 }

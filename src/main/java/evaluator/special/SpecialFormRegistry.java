@@ -17,6 +17,8 @@ public class SpecialFormRegistry {
         registry.put("quote", new Quote());
         registry.put("let", new Let());
         registry.put("quasiquote", new Quasiquote());
+        registry.put("block", new Block());
+        registry.put("return-from", new ReturnFrom());
     }
 
     public Optional<SpecialForm> findByName(String name) {
