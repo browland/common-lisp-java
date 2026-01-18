@@ -29,7 +29,7 @@ public class Lambda implements SpecialForm {
 
         // todo validate bindings - if &rest is present then there should be exactly 1 more binding
 
-        RList body = (RList) entireList.get(2);
+        Node body = entireList.get(2);
         BindingEvaluator bindingEvaluator = new BindingEvaluator();
         Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, body);
         return new ClosureValue(closure);

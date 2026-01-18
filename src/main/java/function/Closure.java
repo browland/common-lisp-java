@@ -4,9 +4,9 @@ import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import syntaxtree.Atom;
+import syntaxtree.Node;
 import value.Symbol;
 import value.Value;
-import syntaxtree.RList;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ public record Closure(Evaluator evaluator,
                       BindingEvaluator bindingEvaluator,
                       Environment capturedEnvironment,
                       List<Atom> bindings,
-                      RList body) implements Function {
+                      Node body) implements Function {
 
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment noApplyTimeEnv) {

@@ -19,6 +19,7 @@ public class SpecialFormRegistry {
         registry.put("quasiquote", new Quasiquote());
         registry.put("block", new Block());
         registry.put("return-from", new ReturnFrom());
+        registry.put("funcall", new Funcall());
     }
 
     public Optional<SpecialForm> findByName(String name) {

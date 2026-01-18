@@ -1,6 +1,7 @@
 package evaluator
 
 import evaluator.env.Environment
+import evaluator.special.ReturnFromException
 import spock.lang.Specification
 import value.Value
 
@@ -200,5 +201,37 @@ class BlockSpec extends Specification {
         result == Value.nil()
     }
 
+    def "block name can be nil"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+        def program = """
+            (block nil
+                (return-from nil 8))
+        """
+
+        when:
+        def result = interpreter.interpret(program)
+
+        then:
+        result.value == 8
+    }
+
+    def "cannot use block name outside scope even when captured by closure"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+        def program = """
+        (let ((f (block foo
+                (lambda () (return-from foo 9)))))
+            (funcall f))
+        """
+
+        when:
+        interpreter.interpret(program)
+
+        then:
+        thrown ReturnFromException
+    }
 
 }
