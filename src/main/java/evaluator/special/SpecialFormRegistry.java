@@ -21,6 +21,7 @@ public class SpecialFormRegistry {
         registry.put("return-from", new ReturnFrom());
         registry.put("funcall", new Funcall());
         registry.put("progn", new Progn());
+        registry.put("function", new Function());
     }
 
     public Optional<SpecialForm> findByName(String name) {
