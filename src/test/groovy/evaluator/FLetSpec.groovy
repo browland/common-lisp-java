@@ -42,7 +42,7 @@ class FLetSpec extends Specification {
         result.getValue() == 1
     }
 
-    def "self-referencing binding works but stack overlows"() {
+    def "self-referencing binding works but stack overflows"() {
         given:
         def env = new Environment()
         def interpreter = new Interpreter(env)
