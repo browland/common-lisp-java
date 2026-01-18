@@ -20,6 +20,7 @@ public class SpecialFormRegistry {
         registry.put("block", new Block());
         registry.put("return-from", new ReturnFrom());
         registry.put("funcall", new Funcall());
+        registry.put("progn", new Progn());
     }
 
     public Optional<SpecialForm> findByName(String name) {
