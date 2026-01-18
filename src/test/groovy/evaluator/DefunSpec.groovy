@@ -60,4 +60,23 @@ class DefunSpec extends Specification {
         then:
         result.getValue() == 3
     }
+
+    def "function namespace separation"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def functionDef = "(defun f () 1)"
+        def functionInvocation = """
+            (let ((f 10))
+                (f))
+        """
+
+        when:
+        interpreter.interpret(functionDef)
+        Value<?> result = interpreter.interpret(functionInvocation)
+
+        then:
+        result.getValue() == 1
+    }
 }

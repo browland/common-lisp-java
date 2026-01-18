@@ -30,7 +30,7 @@ public class OperatorLookup {
 
         Symbol operatorSymbol = Symbols.internSymbol(operatorName);
 
-        Optional<Value<?>> optionalOperator = environment.get(operatorSymbol);
+        Optional<Value<?>> optionalOperator = environment.getFunction(operatorSymbol);
         if(optionalOperator.isEmpty()) {
             throw new IllegalArgumentException("Unknown operator " + operatorName);
         }
@@ -56,7 +56,7 @@ public class OperatorLookup {
 
         Symbol operatorSymbol = Symbols.internSymbol(name);
 
-        Optional<Value<?>> optionalOperator = environment.get(operatorSymbol);
+        Optional<Value<?>> optionalOperator = environment.getFunction(operatorSymbol);
         if(optionalOperator.isPresent()) {
             Value<?> operatorValue = optionalOperator.get();
             if(operatorValue.getType() == ValueType.OPERATOR) {
