@@ -21,13 +21,14 @@ public class Tagbody implements SpecialForm {
                              Environment environment,
                              Evaluator evaluator) {
         List<Node> nodes = entireList.nodes();
+        List<Node> operandNodes = nodes.subList(1, nodes.size());
 
         // need to do an initial walk of the nodes to collect the tags and indices, so we can jump forward if needed.
-        for (int i = 0; i< nodes.size(); i++) {
-            Node node = nodes.get(i);
+        for (int i = 0; i< operandNodes.size(); i++) {
+            Node node = operandNodes.get(i);
             if(node instanceof Atom atom) {
                 Symbol symbol = Symbols.internSymbol(atom.value());
-                if(i < nodes.size()-1) {
+                if(i < operandNodes.size()-1) {
                     tags.put(symbol, i+1);
                 }
                 else {
@@ -38,8 +39,8 @@ public class Tagbody implements SpecialForm {
         }
 
         Value<?> result = Value.nil();
-        for (int i = 0; i< nodes.size(); i++) {
-            Node node = nodes.get(i);
+        for (int i = 0; i< operandNodes.size(); i++) {
+            Node node = operandNodes.get(i);
 
             // Skip the tags; we already collected them
             if(node instanceof Atom) {
