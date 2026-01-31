@@ -43,4 +43,17 @@ class TagbodySpec extends Specification {
         then:
         result.value == 10
     }
+
+    def "go to end"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+        def program = "(let ((x 0)) (tagbody (if (= x 0) (go :exit)) (setq x (+ x 1)) :exit) x)"
+
+        when:
+        def result = interpreter.interpret(program)
+
+        then:
+        result.value == 0
+    }
 }
