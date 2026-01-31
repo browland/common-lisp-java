@@ -23,6 +23,8 @@ public class SpecialFormRegistry {
         registry.put("progn", new Progn());
         registry.put("function", new Function());
         registry.put("flet", new FLet());
+        registry.put("tagbody", new Tagbody());
+        registry.put("go", new Go());
     }
 
     public Optional<SpecialForm> findByName(String name) {

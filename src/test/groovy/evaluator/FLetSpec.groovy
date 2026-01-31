@@ -57,8 +57,6 @@ class FLetSpec extends Specification {
         print(result)
 
         then:
-        // we expect "Unknown operator f" as the evaluation of the closure shouldn't be able to see
-        // its own binding within its body.
         thrown StackOverflowError
     }
 

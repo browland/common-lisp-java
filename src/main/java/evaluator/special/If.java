@@ -17,7 +17,12 @@ public class If implements SpecialForm {
 
         Value<?> testResult = evaluator.evaluate(testNode, environment);
         if(testResult.equals(Value.nil())) {
-            return evaluator.evaluate(entireList.nodes().get(3), environment);
+            if(entireList.nodes().size() > 3) {
+                return evaluator.evaluate(entireList.nodes().get(3), environment);
+            }
+            else {
+                return Value.nil();
+            }
         }
         else {
             return evaluator.evaluate(entireList.nodes().get(2), environment);

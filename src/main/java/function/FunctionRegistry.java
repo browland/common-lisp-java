@@ -18,6 +18,7 @@ public class FunctionRegistry {
         registry.put("car", new Car());
         registry.put("cdr", new Cdr());
         registry.put("=", new NumsEqual());
+        registry.put("<", new LessThan());
     }
 
     public Optional<Function> findByName(String functionName) {
