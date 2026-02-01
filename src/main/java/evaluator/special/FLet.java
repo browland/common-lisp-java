@@ -71,9 +71,7 @@ public class FLet implements SpecialForm {
                                        Environment environment,
                                        Evaluator evaluator) {
         RList bindingsList = (RList)binding.get(1);
-        List<Atom> bindings = bindingsList.nodes().stream()
-                .map(node -> (Atom)node)
-                .toList();
+        List<Node> bindings = bindingsList.nodes();
 
         // todo validate bindings - if &rest is present then there should be exactly 1 more binding
 

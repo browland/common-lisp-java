@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Tagbody implements SpecialForm {
-    private Map<Symbol,Integer> tags = new HashMap<>();
+    private final Map<Symbol,Integer> tags = new HashMap<>();
 
     @Override
     public Value<?> evaluate(RList entireList,

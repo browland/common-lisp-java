@@ -22,7 +22,7 @@ public class MacroExpander {
                         RList entireList,
                         Evaluator evaluator) {
         Environment localEnv = new Environment();
-        List<Atom> bindings = macro.getBindings();
+        List<Node> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();
 
         // evaluate bindings

@@ -22,9 +22,7 @@ public class Defun implements SpecialForm {
         String name = ((Atom)entireList.get(1)).value();
 
         RList bindingsList = (RList)entireList.get(2);
-        List<Atom> bindings = bindingsList.nodes().stream()
-                .map(node -> (Atom)node)
-                .toList();
+        List<Node> bindings = bindingsList.nodes();
 
         // todo validate bindings - if &rest is present then there should be exactly 1 more binding
 

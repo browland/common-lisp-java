@@ -4,6 +4,7 @@ import evaluator.Evaluator;
 import evaluator.env.Environment;
 import evaluator.env.Symbols;
 import syntaxtree.Atom;
+import syntaxtree.Node;
 import syntaxtree.RList;
 import value.*;
 
@@ -16,9 +17,7 @@ public class DefMacro implements SpecialForm {
                              Evaluator evaluator) {
 
         RList bindingsList = (RList)entireList.get(2);
-        List<Atom> bindings = bindingsList.nodes().stream()
-                .map(node -> (Atom)node)
-                .toList();
+        List<Node> bindings = bindingsList.nodes();
 
         RList body = (RList)entireList.get(3);
 

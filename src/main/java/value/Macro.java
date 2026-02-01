@@ -1,21 +1,23 @@
 package value;
 
-import syntaxtree.Atom;
+import syntaxtree.Node;
 import syntaxtree.RList;
 
 import java.util.List;
 
 public class Macro {
-    private final List<Atom> bindings;
+    // Bindings are Nodes as they can either be plain Atoms, or a list in the case that
+    // we're destructuring.
+    private final List<Node> bindings;
     private final RList body;
 
-    public Macro(List<Atom> bindings,
+    public Macro(List<Node> bindings,
                  RList body) {
         this.bindings = bindings;
         this.body = body;
     }
 
-    public List<Atom> getBindings() {
+    public List<Node> getBindings() {
         return bindings;
     }
 

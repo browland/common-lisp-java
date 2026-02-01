@@ -4,6 +4,7 @@ import evaluator.env.Environment;
 import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.Node;
+import syntaxtree.RList;
 import value.*;
 
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class BindingEvaluator {
     /**
      * For macro expansion - does not evaluate the binding values, but passes them as literal symbols or other values.
      */
-    public Map<Symbol, Value<?>> evaluateWithNodes(List<Atom> bindings,
+    public Map<Symbol, Value<?>> evaluateWithNodes(List<Node> bindings,
                                                    List<Node> operands,
                                                    Environment environment) {
 
@@ -30,35 +31,78 @@ public class BindingEvaluator {
         return evaluateWithValues(bindings, operandValues, environment);
     }
 
-    public Map<Symbol, Value<?>> evaluateWithValues(List<Atom> bindings,
+    public Map<Symbol, Value<?>> evaluateWithValues(List<Node> bindings,
                                                     List<Value<?>> operands,
                                                     Environment environment) {
         Map<Symbol, Value<?>> bindingsMap = new HashMap<>();
         for (int i = 0; i < bindings.size(); i++) {
-            Atom bindingAtom = bindings.get(i);
-            String bindingName = bindingAtom.value();
-            if (bindingName.equals(AMP_REST)) {
-                // 1. get next binding - this is the name of the list representing the remaining args
-                String restArgsBindingName = bindings.get(i + 1).value();
-                Symbol restArgsBindingSymbol = Symbols.internSymbol(restArgsBindingName);
-
-                // 2. get remaining operands - put them all in a list and assign to the symbol
-                List<Value<?>> restOperands = operands.subList(i, operands.size());
-
-                // 3. convert to a cons list
-                ConsCellValue restValuesCons = ConsCellValue.fromJavaList(restOperands);
-
-                // 4. add this binding to the bindingsMap
-                bindingsMap.put(restArgsBindingSymbol, restValuesCons);
-
-                // 5. break out of loop; for now we're treating the &rest binding as the last thing we'd see
-                break;
-            } else {
-                Symbol bindingSymbol = Symbols.internSymbol(bindingName);
-                bindingsMap.put(bindingSymbol, operands.get(i));
+            Node currentBindingNode = bindings.get(i);
+            BindingType bindingType = bindingType(currentBindingNode);
+            if(BindingType.REST == bindingType) {
+                bindingsMap.putAll(collectRestBinding(bindings, operands, i));
+                return bindingsMap;  // no more args expected after e.g. "&rest others"
+            }
+            else if(BindingType.ATOM == bindingType) {
+                bindingsMap.putAll(collectAtomBinding(bindings, operands, i));
+            }
+            else if(BindingType.LIST == bindingType) {
+                throw new UnsupportedOperationException("not ready yet");
             }
         }
         return bindingsMap;
+    }
+
+    private BindingType bindingType(Node currentNode) {
+        if(currentNode instanceof RList) {
+            return BindingType.LIST;
+        }
+        else if(currentNode instanceof Atom atom) {
+            if(AMP_REST.equals(atom.value())) {
+                return BindingType.REST;
+            }
+            return BindingType.ATOM;
+        }
+        throw new UnsupportedOperationException("Unhandled binding type for " + currentNode);
+    }
+
+    private Map<Symbol,Value<?>> collectRestBinding(List<Node> bindings,
+                                                    List<Value<?>> operands,
+                                                    int currentIndex) {
+        Map<Symbol,Value<?>> bindingSubsetMap = new HashMap<>();
+
+        // 0. validation - we expect an atom as the next binding after &rest
+        if(!(bindings.get(currentIndex + 1) instanceof Atom restArgsBindingAtom)) {
+            throw new IllegalArgumentException("must provide atom after &rest in bindings");
+        }
+
+        // 1. get next binding - this is the name of the list representing the remaining args
+        String restArgsBindingName = restArgsBindingAtom.value();
+        Symbol restArgsBindingSymbol = Symbols.internSymbol(restArgsBindingName);
+
+        // 2. get remaining operands - put them all in a list and assign to the symbol
+        List<Value<?>> restOperands = operands.subList(currentIndex, operands.size());
+
+        // 3. convert to a cons list
+        ConsCellValue restValuesCons = ConsCellValue.fromJavaList(restOperands);
+
+        // 4. add this binding to the bindingsMap
+        bindingSubsetMap.put(restArgsBindingSymbol, restValuesCons);
+
+        // 5. break out of loop; for now we're treating the &rest binding as the last thing we'd see
+        return bindingSubsetMap;
+    }
+
+    private Map<Symbol,Value<?>> collectAtomBinding(List<Node> bindings,
+                                                    List<Value<?>> operands,
+                                                    int currentIndex) {
+        Map<Symbol,Value<?>> bindingSubsetMap = new HashMap<>();
+        Atom currentBindingAtom = (Atom)bindings.get(currentIndex);
+
+        String bindingName = currentBindingAtom.value();
+        Symbol bindingSymbol = Symbols.internSymbol(bindingName);
+        bindingSubsetMap.put(bindingSymbol, operands.get(currentIndex));
+
+        return bindingSubsetMap;
     }
 
     Value<?> nodeToValueNoLookup(Node node) {
@@ -68,5 +112,9 @@ public class BindingEvaluator {
         else {
             throw new UnsupportedOperationException("lists not yet supported here");
         }
+    }
+
+    enum BindingType {
+        REST, ATOM, LIST
     }
 }

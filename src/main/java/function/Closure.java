@@ -3,7 +3,6 @@ package function;
 import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
-import syntaxtree.Atom;
 import syntaxtree.Node;
 import value.Symbol;
 import value.Value;
@@ -14,7 +13,7 @@ import java.util.Map;
 public record Closure(Evaluator evaluator,
                       BindingEvaluator bindingEvaluator,
                       Environment capturedEnvironment,
-                      List<Atom> bindings,
+                      List<Node> bindings,
                       Node body) implements Function {
 
     @Override
