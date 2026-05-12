@@ -89,6 +89,35 @@ class MacroSpec extends Specification {
         result.getValue() == 3
     }
 
+    def "macro expansion does not have side effects on global variable"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        // We need to use progn as we don't have a way to interpret multiple forms programmatically yet
+        def setupProgram = """
+            (progn
+                (defvar *x* 0)
+    
+                (defun bump ()
+                    (setq *x* (+ *x* 1))
+                    123)
+    
+                (defmacro noop (x)
+                    `(list 1 2))
+                    
+                (noop (bump))  
+            )
+        """
+
+        when:
+        interpreter.interpret(setupProgram)
+        Value<?> result = interpreter.interpret("(+ *x* 1)")
+
+        then:
+        result.getValue() == 1
+    }
+
     def "destructuring test"() {
         given:
         def env = new Environment()
