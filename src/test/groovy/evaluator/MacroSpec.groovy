@@ -5,6 +5,7 @@ import evaluator.env.Symbols
 import spock.lang.Specification
 import value.ConsCellValue
 import value.Symbol
+import value.SymbolValue
 import value.Value
 import value.ValueType
 
@@ -116,6 +117,32 @@ class MacroSpec extends Specification {
 
         then:
         result.getValue() == 1
+    }
+
+    def "macro expansion does not evaluate quoted list operand"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        // We need to use progn as we don't have a way to interpret multiple forms programmatically yet
+        def program = """
+            (progn
+                (defmacro inspect (x)
+                    (list 'quote x))
+                    
+                (let ((y 42))
+                    (inspect y))
+            )
+        """
+
+        when:
+        Value<?> result = interpreter.interpret(program)
+
+        then:
+        result instanceof SymbolValue
+        def symbolResult = result as SymbolValue
+        def symbol = symbolResult.value as Symbol
+        symbol.name() == "y"
     }
 
     def "destructuring test"() {
