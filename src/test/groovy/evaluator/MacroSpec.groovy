@@ -119,6 +119,28 @@ class MacroSpec extends Specification {
         result.getValue() == 1
     }
 
+    def "macro can inspect syntax shape"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        // We need to use progn as we don't have a way to interpret multiple forms programmatically yet
+        def setupProgram = """
+            (defmacro is-list-call (x)
+                (if (and (consp x)
+                    (eq (car x) 'list))
+                    t
+                    nil))
+        """
+
+        when:
+        interpreter.interpret(setupProgram)
+        Value<?> result = interpreter.interpret("(is-list-call '(1 2))")
+
+        then:
+        result.getValue() instanceof SymbolValue
+    }
+
     def "macro expansion does not evaluate quoted list operand"() {
         given:
         def env = new Environment()

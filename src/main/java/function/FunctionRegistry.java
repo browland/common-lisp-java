@@ -9,12 +9,15 @@ public class FunctionRegistry {
 
     public FunctionRegistry() {
         registry.put("add", new Add());
+        registry.put("and", new And());
+        registry.put("eq", new Eq());
         registry.put("+", new Add());
         registry.put("format", new Format());
         registry.put("load", new Load());
         registry.put("list", new ListFunction());
         registry.put("getf", new GetF());
         registry.put("cons", new Cons());
+        registry.put("consp", new Consp());
         registry.put("car", new Car());
         registry.put("cdr", new Cdr());
         registry.put("=", new NumsEqual());

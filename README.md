@@ -9,7 +9,13 @@ setVariableInScope() etc.  You know which one to call from the context.
 
 ### Macro expansion
 
-What problem was I trying to solve? 
+Where I'm up to - there's a failing test in MacroSpec.  It basically works, but the macro returns a symbol now (t or nil).
+We can't handle this yet, as expansion is assumed to be an RList because the interpreter expects an RList.  We need to be
+able to interpret any Node, and then macro expansion can return a Node and then this should all work.
+This is a good test as this macro is interesting - doesn't actually return code but an atomic value, and its purpose
+is to inspect a code structure like reflection, so using a macro won't evaluate the code structure passed in.
+
+From earlier:
 
 I need to stick to evaluation returning a Value.  But when a macro is expanded, a ConsCellValue is (usually) returned.
 This is then translated back to an RList and evaluated as normal.
