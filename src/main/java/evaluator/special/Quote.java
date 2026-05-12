@@ -20,7 +20,7 @@ public class Quote implements SpecialForm {
             return Value.of(atom.value());
         }
         else if(operand instanceof RList rlist) {
-            return ConsCellValue.fromJavaList(rlist);
+            return ConsCellValue.fromRList(rlist);
         }
         else {
             throw new UnsupportedOperationException("Unhandled type for quote " + operand);

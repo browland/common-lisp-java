@@ -10,7 +10,7 @@ public class ConsCellValue extends Value<ConsCell> {
         super(value, ValueType.CONS_CELL);
     }
 
-    public static ConsCellValue fromJavaList(RList readerList) {
+    public static ConsCellValue fromRList(RList readerList) {
         return fromJavaList(readerList.nodes());
     }
 
@@ -36,7 +36,7 @@ public class ConsCellValue extends Value<ConsCell> {
         return switch (object) {
             case Value<?> value1 -> value1;
             case Atom atom -> Value.of(atom.value());
-            case RList rlist -> fromJavaList(rlist);
+            case RList rlist -> fromRList(rlist);
             case null, default ->
                     throw new UnsupportedOperationException("unsupported type to build cons cell " + object);
         };

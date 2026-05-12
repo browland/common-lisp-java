@@ -9,6 +9,8 @@ setVariableInScope() etc.  You know which one to call from the context.
 
 ### Macro expansion
 
+What problem was I trying to solve? 
+
 I need to stick to evaluation returning a Value.  But when a macro is expanded, a ConsCellValue is (usually) returned.
 This is then translated back to an RList and evaluated as normal.
 This approach is because macro expansion can execute arbitrary code to conditionally return one code 

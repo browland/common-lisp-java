@@ -107,9 +107,11 @@ public class BindingEvaluator {
             return atomEvaluator.atomToValueNoLookup(atom.value());
         }
         else {
-            throw new UnsupportedOperationException("lists not yet supported here");
+            return ConsCellValue.fromRList((RList)node);
+//            throw new UnsupportedOperationException("lists not yet supported here");
         }
     }
+
 
     enum BindingType {
         REST, ATOM, LIST

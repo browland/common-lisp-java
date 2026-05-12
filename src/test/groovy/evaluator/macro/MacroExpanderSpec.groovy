@@ -1,7 +1,6 @@
 package evaluator.macro
 
 import evaluator.Evaluator
-import evaluator.env.Environment
 import reader.CharacterReader
 import spock.lang.Specification
 import syntaxtree.Atom
@@ -21,12 +20,7 @@ class MacroExpanderSpec extends Specification {
             '(+ 1 2))
         """
 
-        // Parse to Macro
-        def macroDefList = programToRList(macroDef)
-        def bindingsList = macroDefList.nodes().get(2) as RList
-        List<Atom> bindings = bindingsList.nodes().collect {it -> (Atom)it}
-        def macroBody = macroDefList.nodes().get(3) as RList
-        def macro = new Macro(bindings, macroBody)
+        def macro = parseMacro(macroDef)
 
         def macroInvocation = "(foo)"
         def macroInvocationList = programToRList(macroInvocation)
@@ -43,6 +37,77 @@ class MacroExpanderSpec extends Specification {
 
         def secondArg = expandedMacroList.nodes().get(2) as Atom
         secondArg.value() == "2"
+    }
+
+    def "does not evaluate operands during macro expansion 1"() {
+        given:
+        def evaluator = new Evaluator()
+        def macroExpander = new MacroExpander()
+
+        def macroDef = """
+            (defmacro inspect (x)
+                (list 'quote x))
+        """
+
+        def macro = parseMacro(macroDef)
+
+        def macroInvocation = "(inspect '(1 2))"
+        def macroInvocationList = programToRList(macroInvocation)
+
+        when:
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator) as RList
+
+        then:
+        def operator = expandedMacroList.nodes().get(0) as Atom
+        operator.value() == "quote"
+
+        def quotedArg = expandedMacroList.nodes().get(1) as RList
+        def firstListElement = quotedArg.nodes().get(0) as Atom
+        firstListElement.value() == "quote"
+        def innerList = quotedArg.nodes().get(1) as RList
+        def innerListElem1 = innerList.nodes().get(0) as Atom
+        innerListElem1.value() == "1"
+        def innerListElem2 = innerList.nodes().get(1) as Atom
+        innerListElem2.value() == "2"
+    }
+
+    def "does not evaluate operands during macro expansion 2"() {
+        given:
+        def evaluator = new Evaluator()
+        def macroExpander = new MacroExpander()
+
+        def macroDef = """
+            (defmacro inspect (x)
+                (list 'quote x))
+        """
+
+        def macro = parseMacro(macroDef)
+
+        def macroInvocation = "(inspect (list 1 2))"
+        def macroInvocationList = programToRList(macroInvocation)
+
+        when:
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator) as RList
+
+        then:
+        def operator = expandedMacroList.nodes().get(0) as Atom
+        operator.value() == "quote"
+
+        def quotedArg = expandedMacroList.nodes().get(1) as RList
+        def firstListElement = quotedArg.nodes().get(0) as Atom
+        firstListElement.value() == "list"
+        def listElem1 = quotedArg.nodes().get(1) as Atom
+        listElem1.value() == "1"
+        def listElem2 = quotedArg.nodes().get(2) as Atom
+        listElem2.value() == "2"
+    }
+
+    def parseMacro(macroDef) {
+        def macroDefList = programToRList(macroDef)
+        def bindingsList = macroDefList.nodes().get(2) as RList
+        List<Atom> bindings = bindingsList.nodes().collect {it -> (Atom)it}
+        def macroBody = macroDefList.nodes().get(3) as RList
+        return new Macro(bindings, macroBody)
     }
 
     def programToRList(program) {
