@@ -3,7 +3,6 @@ package evaluator.macro;
 import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
-import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.ConsCellValue;
@@ -21,13 +20,13 @@ public class MacroExpander {
     public RList expand(Macro macro,
                         RList entireList,
                         Evaluator evaluator) {
-        Environment localEnv = new Environment();
+        Environment localEnv = new Environment();  // Todo I think this should be a ScopeEnvironment, otherwise redefining globals etc
         List<Node> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();
 
-        // evaluate bindings
+        // convert bindings to values (not looking up from environment)
         List<Node> operandNodes = entireList.nodes().subList(1, entireList.size());
-        Map<Symbol, Value<?>> bindingsMap = bindingEvaluator.evaluateWithNodes(bindings, operandNodes, localEnv);
+        Map<Symbol, Value<?>> bindingsMap = bindingEvaluator.assignBindingsFromNodeOperands(bindings, operandNodes);
 
         try {
             localEnv.enterScope();

@@ -1,6 +1,5 @@
 package evaluator;
 
-import evaluator.env.Environment;
 import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -20,20 +19,18 @@ public class BindingEvaluator {
     /**
      * For macro expansion - does not evaluate the binding values, but passes them as literal symbols or other values.
      */
-    public Map<Symbol, Value<?>> evaluateWithNodes(List<Node> bindings,
-                                                   List<Node> operands,
-                                                   Environment environment) {
+    public Map<Symbol, Value<?>> assignBindingsFromNodeOperands(List<Node> bindings,
+                                                                List<Node> operands) {
 
         List<Value<?>> operandValues = operands.stream()
                 .map(this::nodeToValueNoLookup)
                 .collect(Collectors.toUnmodifiableList());
 
-        return evaluateWithValues(bindings, operandValues, environment);
+        return assignBindingsFromValueOperands(bindings, operandValues);
     }
 
-    public Map<Symbol, Value<?>> evaluateWithValues(List<Node> bindings,
-                                                    List<Value<?>> operands,
-                                                    Environment environment) {
+    public Map<Symbol, Value<?>> assignBindingsFromValueOperands(List<Node> bindings,
+                                                                 List<Value<?>> operands) {
         Map<Symbol, Value<?>> bindingsMap = new HashMap<>();
         for (int i = 0; i < bindings.size(); i++) {
             Node currentBindingNode = bindings.get(i);

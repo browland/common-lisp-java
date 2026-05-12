@@ -2,6 +2,31 @@
 
 ## Issues
 
+### Environment stuff
+
+Keep variable and function namespaces separate by having e.g. setVariable() setFunction() getVariable() etc and 
+setVariableInScope() etc.  You know which one to call from the context.
+
+### Macro expansion
+
+I need to stick to evaluation returning a Value.  But when a macro is expanded, a ConsCellValue is (usually) returned.
+This is then translated back to an RList and evaluated as normal.
+This approach is because macro expansion can execute arbitrary code to conditionally return one code 
+structure or another.  So we need to use the evaluator, but just making sure that we don't look up binding values 
+from the environment (we just pass them in as bindings as-is).
+
+### Macro environment capture
+At defmacro time, captured environment needs to be set on the Macro.  This can be used during expansion and not during 
+evaluation of the expanded macro.  So need to ensure we honour this.  Perhaps add the bindings to the captured env as a new scope.
+
+Also consider, it might be easier to keep parse results as a ConsCellValue to avoid starting to have
+to convert back and forth between RList and ConsCellValue as I go further down this path.
+Might even be worth having a branch where I try that approach.
+
+### BindingEvaluator
+
+Why can't you just pass parameters through the regular Evaluator?  I think this is bc of special handling for &rest etc.
+
 ### Loops
 
 How to impl the simplest loop behaviour (not the 'loop' macro)?  So things like do, dolist, dotimes.

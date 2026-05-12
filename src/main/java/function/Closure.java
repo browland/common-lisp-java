@@ -25,7 +25,7 @@ public record Closure(Evaluator evaluator,
         // Order matters - ensure bound arguments shadow (overwrite) variables with the same name from the environment
         // captured at closure creation time
 
-        Map<Symbol, Value<?>> bindingsMap = bindingEvaluator.evaluateWithValues(bindings, operands, capturedEnvironment);
+        Map<Symbol, Value<?>> bindingsMap = bindingEvaluator.assignBindingsFromValueOperands(bindings, operands);
 
         capturedEnvironment.enterScope();
         for(Symbol bindingSymbol : bindingsMap.keySet()) {
