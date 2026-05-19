@@ -21,7 +21,6 @@ public class Environment {
         this.scopes = new LinkedList<>();
     }
 
-    // Todo should be getVariable
     public Optional<Value<?>> getVariable(Symbol symbol) {
         // first walk stack of lexical scopes
         for (ScopeEnvironment scope : scopes) {

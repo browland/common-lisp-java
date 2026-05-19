@@ -7,21 +7,11 @@
 Keep variable and function namespaces separate by having e.g. setVariable() setFunction() getVariable() etc and 
 setVariableInScope() etc.  You know which one to call from the context.
 
-### Macro expansion
+### Macros and destructuring
 
-Where I'm up to - there's a failing test in MacroSpec.  It basically works, but the macro returns a symbol now (t or nil).
-We can't handle this yet, as expansion is assumed to be an RList because the interpreter expects an RList.  We need to be
-able to interpret any Node, and then macro expansion can return a Node and then this should all work.
-This is a good test as this macro is interesting - doesn't actually return code but an atomic value, and its purpose
-is to inspect a code structure like reflection, so using a macro won't evaluate the code structure passed in.
-
-From earlier:
-
-I need to stick to evaluation returning a Value.  But when a macro is expanded, a ConsCellValue is (usually) returned.
-This is then translated back to an RList and evaluated as normal.
-This approach is because macro expansion can execute arbitrary code to conditionally return one code 
-structure or another.  So we need to use the evaluator, but just making sure that we don't look up binding values 
-from the environment (we just pass them in as bindings as-is).
+* We should be able to pass arbitrarily deep nested structures - we'd then need to walk the tree matching bindings up, rather than
+just expecting atoms in a single list.
+* Should also have a test for destructuring followed by an &rest binding.
 
 ### Macro environment capture
 At defmacro time, captured environment needs to be set on the Macro.  This can be used during expansion and not during 
