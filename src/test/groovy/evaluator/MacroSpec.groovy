@@ -191,6 +191,7 @@ class MacroSpec extends Specification {
         symbol.name() == "y"
     }
 
+    // todo we should expect a list of bindings aligns to a list of argument values passed
     def "destructuring test"() {
         given:
         def env = new Environment()
@@ -203,7 +204,7 @@ class MacroSpec extends Specification {
 
         when:
         interpreter.interpret(macroDef)
-        Value<?> result = interpreter.interpret("(testing '(1 2) 3)")
+        Value<?> result = interpreter.interpret("(testing (1 2) 3)")
 
         then:
         result.getValue() == 3

@@ -43,9 +43,44 @@ public class BindingEvaluator {
                 bindingsMap.putAll(collectAtomBinding(bindings, operands, i));
             }
             else if(BindingType.LIST == bindingType) {
-                throw new UnsupportedOperationException("not ready yet");
+                bindingsMap.putAll(collectListBinding((RList)currentBindingNode, (ConsCellValue)operands.get(i)));
+//                throw new UnsupportedOperationException("not ready yet");
             }
         }
+        return bindingsMap;
+    }
+
+    private Map<Symbol,Value<?>> collectListBinding(RList listBindings,
+                                                    ConsCellValue consCellValueOperand) {
+        Map<Symbol, Value<?>> bindingsMap = new HashMap<>();
+
+        ConsCell currentCons = consCellValueOperand.getValue();
+        Value<?> car = currentCons.car();
+        Value<?> cdr = currentCons.cdr();
+
+        // todo for now assuming only atoms in the list (destructuring only one level deep
+
+        for(Node bindingNode : listBindings.nodes()) {
+            Atom currentBindingAtom = (Atom)bindingNode;
+
+            String bindingName = currentBindingAtom.value();
+            Symbol bindingSymbol = Symbols.internSymbol(bindingName);
+
+            bindingsMap.put(bindingSymbol, car);
+
+            if(cdr.getType() == ValueType.CONS_CELL) {
+                currentCons = ((ConsCellValue)cdr).getValue();
+                car = currentCons.car();
+                cdr = currentCons.cdr();
+            }
+            else {
+                // we should have no more iterations and cdr should be nil - check this
+                if(cdr.getValue() != Symbols.nil()) {
+                    throw new IllegalArgumentException("unusual cons with cdr not a ConsCellValue nor nil");
+                }
+            }
+        }
+
         return bindingsMap;
     }
 
@@ -108,7 +143,6 @@ public class BindingEvaluator {
         }
         else {
             return ConsCellValue.fromRList((RList)node);
-//            throw new UnsupportedOperationException("lists not yet supported here");
         }
     }
 
