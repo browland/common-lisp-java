@@ -1,6 +1,5 @@
 package evaluator.macro;
 
-import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.NodeBuilder;
 import syntaxtree.RList;
@@ -40,13 +39,13 @@ public class ConsToRList {
         Value<?> carValue = nextConsCell.car();
         NodeBuilder nodeBuilder;
         if(carValue instanceof StringValue stringValue) {
-            nodeBuilder = translate(stringValue);
+            nodeBuilder = ValueToAtomBuilder.atomBuilder(stringValue);
         }
         else if(carValue instanceof IntegerValue integerValue) {
-            nodeBuilder = translate(integerValue);
+            nodeBuilder = ValueToAtomBuilder.atomBuilder(integerValue);
         }
         else if(carValue instanceof SymbolValue symbolValue) {
-            nodeBuilder = translate(symbolValue);
+            nodeBuilder = ValueToAtomBuilder.atomBuilder(symbolValue);
         }
         else if(carValue instanceof ConsCellValue consCellValue) {
             nodeBuilder = translateI(consCellValue);
@@ -57,19 +56,4 @@ public class ConsToRList {
         return nodeBuilder;
     }
 
-    private Atom.Builder translate(StringValue stringValue) {
-        return new Atom.Builder()
-                .value("\"" + stringValue.getValue() + "\"");
-    }
-
-    private Atom.Builder translate(IntegerValue integerValue) {
-        return new Atom.Builder()
-                .value(Integer.toString(integerValue.getValue()));
-    }
-
-    private Atom.Builder translate(SymbolValue symbolValue) {
-        Symbol symbol = symbolValue.getValue();
-        return new Atom.Builder()
-                .value(symbol.name());
-    }
 }
