@@ -30,22 +30,18 @@ public class OperatorLookup {
 
         Symbol operatorSymbol = Symbols.internSymbol(operatorName);
 
-        Optional<Value<?>> optionalOperator = environment.getFunction(operatorSymbol);
-        if(optionalOperator.isEmpty()) {
-            throw new IllegalArgumentException("Unknown operator " + operatorName);
-        }
-
-        Value<?> operatorValue = optionalOperator.get();
-        if(operatorValue.getType() == ValueType.MACRO) {
-            return OperatorType.MACRO;
-        }
-        else if(operatorValue.getType() == ValueType.OPERATOR) {
-            // todo remaining case ValueType.OPERATOR is a bit iffy - it's a function really
+        Optional<Value<?>> optionalFunction = environment.getFunction(operatorSymbol);
+        if(optionalFunction.isPresent()) {
+            // todo assuming the ValueType is ValueType.OPERATOR - not sure if we need that distinction since we found it in the function namespace?
             return OperatorType.FUNCTION;
         }
-        else {
-            throw new IllegalArgumentException("unhandled operator value type: " + operatorValue.getType());
+
+        Optional<Value<?>> optionalMacro = environment.getMacro(operatorSymbol);
+        if(optionalMacro.isPresent()) {
+            return OperatorType.MACRO;
         }
+
+        throw new IllegalArgumentException("Unknown operator " + operatorName);
     }
 
     public Function lookupFunction(String name, Environment environment) {
@@ -84,7 +80,7 @@ public class OperatorLookup {
     public Macro lookupMacro(String name, Environment environment) {
         Symbol operatorSymbol = Symbols.internSymbol(name);
 
-        Optional<Value<?>> optionalMacro = environment.get(operatorSymbol);
+        Optional<Value<?>> optionalMacro = environment.getMacro(operatorSymbol);
         if(optionalMacro.isPresent()) {
             Value<?> macroValue = optionalMacro.get();
             if(macroValue.getType() == ValueType.MACRO) {

@@ -19,6 +19,6 @@ class DefvarSpec extends Specification {
 
         then:
         result.getValue() == new Symbol("*db*")
-        env.get(result.getValue()).get() == Value.nil()
+        env.getVariable(result.getValue()).get() == Value.nil()
     }
 }

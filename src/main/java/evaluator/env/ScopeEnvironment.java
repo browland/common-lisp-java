@@ -16,6 +16,9 @@ public class ScopeEnvironment {
 
     private final Map<Symbol, Value<?>> variables = new HashMap<>();
     private final Map<Symbol, Value<?>> functions = new HashMap<>();
+    private final Map<Symbol, Value<?>> macros = new HashMap<>();
+
+    // todo not sure if needed - but I think it's a bit of a hack to make blocks work
     private final Map<Symbol, Value<?>> blocks = new HashMap<>();
 
     public Optional<Value<?>> getVariable(Symbol symbol) {
@@ -40,19 +43,34 @@ public class ScopeEnvironment {
         return Optional.empty();
     }
 
-    public Optional<Value<?>> getBlock(Symbol symbol) {
-        if(blocks.containsKey(symbol)) {
-            return Optional.of(blocks.get(symbol));
-        }
-        return Optional.empty();
-    }
-
     public void setFunction(Symbol symbol, Value<?> function) {
         if(globalEnvironment.isReserved(symbol)) {
             throw new RuntimeException("Can't bind, already exists: " + symbol);
         }
 
         functions.put(symbol, function);
+    }
+
+    public Optional<Value<?>> getMacro(Symbol symbol) {
+        if(macros.containsKey(symbol)) {
+            return Optional.of(macros.get(symbol));
+        }
+        return Optional.empty();
+    }
+
+    public void setMacro(Symbol symbol, Value<?> macro) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't bind, already exists: " + symbol);
+        }
+
+        macros.put(symbol, macro);
+    }
+
+    public Optional<Value<?>> getBlock(Symbol symbol) {
+        if(blocks.containsKey(symbol)) {
+            return Optional.of(blocks.get(symbol));
+        }
+        return Optional.empty();
     }
 
     public void setBlock(Symbol symbol, Value<?> block) {

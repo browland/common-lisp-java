@@ -68,7 +68,7 @@ class MacroSpec extends Specification {
         result.getType() == ValueType.CONS_CELL
 
         Symbol dbSymbol = new Symbols().internSymbol("*db*");
-        ConsCellValue updatedConsValue = env.get(dbSymbol).get() as ConsCellValue
+        ConsCellValue updatedConsValue = env.getVariable(dbSymbol).get() as ConsCellValue
         updatedConsValue.value.car().value == 1
     }
 

@@ -23,7 +23,7 @@ public class AtomEvaluator {
         else {
             // could be in the environment; otherwise fall back to int
             Symbol symbol = Symbols.internSymbol(atomStringValue);
-            Optional<Value<?>> possibleValue = environment.get(symbol);
+            Optional<Value<?>> possibleValue = environment.getVariable(symbol);
             if(possibleValue.isPresent()) {
                 return possibleValue.get();
             }

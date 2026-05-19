@@ -24,7 +24,7 @@ class SetqSpec extends Specification {
 
         then:
         result.getType() == ValueType.INTEGER_LITERAL
-        def updatedValue = env.get(Symbols.internSymbol("*x*"))
+        def updatedValue = env.getVariable(Symbols.internSymbol("*x*"))
         updatedValue.get().value == 2
     }
 

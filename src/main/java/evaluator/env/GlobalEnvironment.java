@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class GlobalEnvironment {
-    private final Map<Symbol, Value<?>> builtInGlobals = new HashMap<>();
+    private final Map<Symbol, Value<?>> builtInVariables = new HashMap<>();
     private final Map<Symbol, Value<?>> globalVariables = new HashMap<>();
     private final Map<Symbol, Value<?>> macros = new HashMap<>();
 
@@ -18,27 +18,24 @@ public class GlobalEnvironment {
     public GlobalEnvironment() {
         // Set up built-in symbols
         Symbol t = Symbols.t();
-        builtInGlobals.put(t, Value.t());
+        builtInVariables.put(t, Value.t());
 
         Symbol nil = Symbols.nil();
-        builtInGlobals.put(nil, Value.nil());
+        builtInVariables.put(nil, Value.nil());
     }
 
-    public Optional<Value<?>> getValue(Symbol symbol) {
-        if(builtInGlobals.containsKey(symbol)) {
-            return Optional.of(builtInGlobals.get(symbol));
+    public Optional<Value<?>> getVariable(Symbol symbol) {
+        if(builtInVariables.containsKey(symbol)) {
+            return Optional.of(builtInVariables.get(symbol));
         }
         else if(globalVariables.containsKey(symbol)) {
             return Optional.of(globalVariables.get(symbol));
-        }
-        else if(functions.containsKey(symbol)) {
-            return Optional.of(functions.get(symbol));
         }
         return Optional.empty();
     }
 
     public void setGlobal(Symbol symbol, Value<?> value) {
-        if(builtInGlobals.containsKey(symbol)) {
+        if(builtInVariables.containsKey(symbol)) {
             throw new RuntimeException("Can't set a built-in global " + symbol);
         }
         globalVariables.put(symbol, value);
@@ -74,6 +71,6 @@ public class GlobalEnvironment {
     }
 
     public boolean isReserved(Symbol symbol) {
-        return builtInGlobals.containsKey(symbol) || builtInFunctions.containsKey(symbol);
+        return builtInVariables.containsKey(symbol) || builtInFunctions.containsKey(symbol);
     }
 }

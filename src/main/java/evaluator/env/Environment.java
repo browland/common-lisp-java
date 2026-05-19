@@ -21,7 +21,8 @@ public class Environment {
         this.scopes = new LinkedList<>();
     }
 
-    public Optional<Value<?>> get(Symbol symbol) {
+    // Todo should be getVariable
+    public Optional<Value<?>> getVariable(Symbol symbol) {
         // first walk stack of lexical scopes
         for (ScopeEnvironment scope : scopes) {
             Optional<Value<?>> value = scope.getVariable(symbol);
@@ -31,7 +32,7 @@ public class Environment {
         }
 
         // otherwise try to find a global variable
-        return globalEnvironment.getValue(symbol);
+        return globalEnvironment.getVariable(symbol);
     }
 
     public void setGlobal(Symbol symbol, Value<?> value) {
@@ -42,9 +43,10 @@ public class Environment {
         switch(value.getType()) {
             case MACRO:
                 globalEnvironment.setMacro(symbol, value);
+                break;
             case OPERATOR:
                 globalEnvironment.setFunction(symbol, value);
-            // todo bug!
+                break;
             default:
                 globalEnvironment.setGlobal(symbol, value);
         }
@@ -116,6 +118,17 @@ public class Environment {
         }
 
         return globalEnvironment.getFunction(symbol);
+    }
+
+    public Optional<Value<?>> getMacro(Symbol symbol) {
+        for (ScopeEnvironment scope : scopes) {
+            Optional<Value<?>> macro = scope.getMacro(symbol);
+            if (macro.isPresent()) {
+                return macro;
+            }
+        }
+
+        return globalEnvironment.getMacro(symbol);
     }
 
     public void enterScope() {
