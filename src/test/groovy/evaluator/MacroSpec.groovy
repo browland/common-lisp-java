@@ -3,6 +3,7 @@ package evaluator
 import evaluator.env.Environment
 import evaluator.env.Symbols
 import spock.lang.Specification
+import value.ConsCell
 import value.ConsCellValue
 import value.Symbol
 import value.SymbolValue
@@ -191,7 +192,6 @@ class MacroSpec extends Specification {
         symbol.name() == "y"
     }
 
-    // todo we should expect a list of bindings aligns to a list of argument values passed
     def "destructuring test"() {
         given:
         def env = new Environment()
@@ -208,5 +208,26 @@ class MacroSpec extends Specification {
 
         then:
         result.getValue() == 3
+    }
+
+    def "destructuring with &rest binding"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        // The rest binding is bound as a list of the remaining args.  So within the macro we have rest = ((quote (4 5)))
+        // Then taking the car = (quote (4 5))
+        def macroDef = """
+           (defmacro testing ((x y) z &rest rest)
+             (car rest))
+        """
+
+        when:
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(testing (1 2) 3 '(4 5))")
+
+        then:
+        var consResult = result.getValue() as ConsCell
+        consResult.car().getValue() == 4
     }
 }
