@@ -4,5 +4,11 @@
 (getf (make-cd "Roses" "Kathy Mattea" 7 t) :rating)
 
 (defvar *db* nil)
-(defun add-record (cd) (setq *db* (cons cd *db*)))
+
+(defmacro push (item place)
+  `(setq ,place (cons ,item ,place)))
+
+(defun add-record (cd)
+  (push cd *db*))
+
 (add-record (make-cd "Roses" "Kathy Mattea" 7 t))
