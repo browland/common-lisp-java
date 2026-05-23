@@ -13,7 +13,7 @@
 
 (add-record (make-cd "Roses" "Kathy Mattea" 7 t))
 
-(defmacro dolist (loop_var list &rest loop_form)
+(defmacro dolist ((loop_var list) &rest loop_form)
   `(let ((remaining ,list))
     (block myloop
       (tagbody
@@ -25,11 +25,9 @@
         (go start)))))
 
 (defun dump-db ()
-  (dolist cd *db*
+  (dolist (cd *db*)
     (format t cd)))
 
 *db*
 
 (dump-db)
-
-; v. small issue - the book has args in a separate list but mine are all top level
