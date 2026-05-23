@@ -190,7 +190,7 @@ class CharacterReaderSpec extends Specification {
         def outerList = syntaxTreeBuilder.getResult()
 
         then:
-        // result should be: (quasiquote (add (unquote 1) 2))
+        outerList.toString() == "(quasiquote (add (unquote 1) 2))"
         outerList.depth() == 0
 
         outerList.size() == 2
@@ -207,6 +207,24 @@ class CharacterReaderSpec extends Specification {
         def unquoteList = (RList)innerList.get(1)
         ((Atom)unquoteList.get(0)).value() == "unquote"
         ((Atom)unquoteList.get(1)).value() == "1"
+    }
+
+    def "reads single atom"() {
+        given:
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
+        def characterReader = new CharacterReader(reader)
+        def program = "1"
+
+        when:
+        characterReader.read(program)
+        def nodeResult = syntaxTreeBuilder.getResult()
+
+        then:
+        nodeResult.toString() == "1"
+        nodeResult instanceof Atom
+        def atomResult = nodeResult as Atom
+        atomResult.value() == "1"
     }
 
 }

@@ -38,6 +38,8 @@ public class MacroExpander {
                 return ValueToAtomBuilder.atomBuilder(stringValue).build();
             } else if (expandedValue instanceof SymbolValue symbolValue) {
                 return ValueToAtomBuilder.atomBuilder(symbolValue).build();
+            } else if (expandedValue instanceof IntegerValue integerValue) {
+                return ValueToAtomBuilder.atomBuilder(integerValue).build();
             }
             throw new IllegalArgumentException("not ready yet for other value types");
         } finally {

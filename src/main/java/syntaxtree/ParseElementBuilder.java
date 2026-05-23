@@ -93,7 +93,7 @@ public class ParseElementBuilder {
         }
     }
 
-    public void endList() {
+    private void consumeAtomBuilder() {
         if(!atomStringBuilder.isEmpty()) {
             String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
 
@@ -104,6 +104,10 @@ public class ParseElementBuilder {
 
             atomStringBuilder.delete(0, atomStringBuilder.length());
         }
+    }
+
+    public void endList() {
+        consumeAtomBuilder();
         syntaxTreeBuilder.endList();
     }
 
@@ -123,5 +127,9 @@ public class ParseElementBuilder {
     private void handleQuote(QuoteType quoteType) {
         syntaxTreeBuilder.insertQuote(quoteType);
         prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
+    }
+
+    public void onEndProgram() {
+        consumeAtomBuilder();
     }
 }

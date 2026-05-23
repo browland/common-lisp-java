@@ -4,6 +4,7 @@ import evaluator.Evaluator;
 import evaluator.env.Environment;
 import evaluator.macro.ConsToRList;
 import evaluator.macro.MacroExpander;
+import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.*;
@@ -40,12 +41,17 @@ public class Macroexpand1 implements Function {
 
         // Now pass to MacroExpander to get the syntax tree
         Evaluator evaluator = new Evaluator();  // feels wrong, but Evaluator is stateless
-        // ToDo For now we assume we expand to a list, but it could be just an atom
-        RList expandedTree = (RList)macroExpander.expand(macro, macroInvocationRList, evaluator);
+        Node expandedResult = macroExpander.expand(macro, macroInvocationRList, evaluator);
 
         // Now need to convert to a ConsCellValue as we always return a Value from a function.
-        // This made me hesitate - are we right returning a value, if we can then call (eval (macroexpand-1 ...))?
-        // Yes - eval is a function so expects a quoted form to evaluate anyway (otherwise why would you need eval?)
-        return ConsCellValue.fromRList(expandedTree);
+        if(expandedResult instanceof RList rlistResult) {
+            return ConsCellValue.fromRList(rlistResult);
+        }
+        else if(expandedResult instanceof Atom atomResult) {
+            return Value.of(atomResult.value());
+        }
+        else {
+            throw new IllegalArgumentException("Unsupported macro expansion result");
+        }
     }
 }

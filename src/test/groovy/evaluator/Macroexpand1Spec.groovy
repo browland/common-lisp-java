@@ -6,7 +6,7 @@ import value.Value
 
 class Macroexpand1Spec extends Specification {
 
-    def "first test"() {
+    def "basic test"() {
         given:
         def env = new Environment()
         def interpreter = new Interpreter(env)
@@ -32,5 +32,26 @@ class Macroexpand1Spec extends Specification {
         // expect:
         def resultString = result.toString()
         resultString == "(car (quote (1 2)))"
+    }
+
+    def "expansion to simple atom"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def macroDef = """
+           (defmacro testing (x)
+             `1
+           )
+        """
+
+        when:
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(macroexpand-1 '(testing (1 2)))")
+
+        then:
+        // expect:
+        def resultString = result.toString()
+        resultString == "1"
     }
 }

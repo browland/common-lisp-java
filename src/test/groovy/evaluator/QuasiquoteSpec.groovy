@@ -1,10 +1,7 @@
 package evaluator
 
 import evaluator.env.Environment
-import evaluator.env.Symbols
 import spock.lang.Specification
-import value.ConsCell
-import value.ValueType
 
 class QuasiquoteSpec extends Specification {
     def "basic test with no unquote"() {
@@ -17,16 +14,7 @@ class QuasiquoteSpec extends Specification {
         var result = interpreter.interpret(program)
 
         then:
-        result.type == ValueType.CONS_CELL
-
-        var consCell = result.value as ConsCell
-        consCell.car().value == 1
-
-        var nextConsCell = consCell.cdr().value as ConsCell
-        nextConsCell.car().value == 2
-
-        var lastConsCell = nextConsCell.cdr().value as ConsCell
-        lastConsCell.car().value == 3
+        result.toString() == "(1 2 3)"
     }
 
     def "with unquote"() {
@@ -42,16 +30,7 @@ class QuasiquoteSpec extends Specification {
         var result = interpreter.interpret(program)
 
         then:
-        result.type == ValueType.CONS_CELL
-
-        var consCell = result.value as ConsCell
-        consCell.car().value == 1
-
-        var nextConsCell = consCell.cdr().value as ConsCell
-        nextConsCell.car().value == 2
-
-        var lastConsCell = nextConsCell.cdr().value as ConsCell
-        lastConsCell.car().value == 3
+        result.toString() == "(1 2 3)"
     }
 
     def "embedded unquote"() {
@@ -69,29 +48,20 @@ class QuasiquoteSpec extends Specification {
         var result = interpreter.interpret(program)
 
         then:
-        // Expect result:
-        // (+ 1 (car (quote (2 3))))
-        result.type == ValueType.CONS_CELL
+        result.toString() == "(+ 1 (car (quote (2 3))))"
+    }
 
-        var consCell = result.value as ConsCell
-        consCell.car().value == Symbols.internSymbol("+")
+    def "quasiquoted atom"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
 
-        var nextConsCell = consCell.cdr().value as ConsCell
-        nextConsCell.car().value == 1
+        def program = "`1"
 
-        var outerCarConsCell = nextConsCell.cdr().value as ConsCell
-        var carConsCell = outerCarConsCell.car().value as ConsCell
-        carConsCell.car().value == Symbols.internSymbol("car")
+        when:
+        var result = interpreter.interpret(program)
 
-        var outerQuoteConsCell = carConsCell.cdr().value as ConsCell
-        var quoteConsCell = outerQuoteConsCell.car().value as ConsCell
-        quoteConsCell.car().value == Symbols.internSymbol("quote")
-
-        var outerNumListConsCell = quoteConsCell.cdr().value as ConsCell
-        var numListConsCell = outerNumListConsCell.car().value as ConsCell
-        numListConsCell.car().value == 2
-
-        var lastNumConsCell = numListConsCell.cdr().value as ConsCell
-        lastNumConsCell.car().value == 3
+        then:
+        result.toString() == "1"
     }
 }

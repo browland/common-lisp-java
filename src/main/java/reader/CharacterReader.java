@@ -23,6 +23,9 @@ public class CharacterReader {
         for (char c : program.toCharArray()) {
             consume(c);
         }
+
+        // Handle case for evaluating a single atom (parseElementBuilder.atomStringBuilder is not yet consumed)
+        parseElementBuilder.onEndProgram();
     }
 
     /**

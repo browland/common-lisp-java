@@ -2,17 +2,23 @@ package syntaxtree;
 
 public class SyntaxTreeBuilder {
     private RList.Builder currentListBuilder;  // This is updated to point to the list we're currently building
+    private Atom bareAtom;
     private boolean finished;
     private int depth = -1;  // we start from -1 as the first open-bracket we see will increment it to 0, which is the correct
                              // depth of the top-level list.
     private boolean insertingQuote;
 
     void newAtom(Atom.Builder atomBuilder) {
-        currentListBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
-
-        if(insertingQuote) {
-            this.endList();
-            this.insertingQuote = false;
+        if(currentListBuilder == null) {
+            bareAtom = atomBuilder.build();
+            this.finished = true;
+        }
+        else {
+            currentListBuilder.addNodeBuilder(atomBuilder);  // todo need to collect the prefix into whatever we add here, not just a string
+            if(insertingQuote) {
+                this.endList();
+                this.insertingQuote = false;
+            }
         }
     }
 
@@ -70,6 +76,7 @@ public class SyntaxTreeBuilder {
 
     public void reset() {
         currentListBuilder = null;
+        bareAtom = null;
         finished = false;
     }
 
@@ -77,11 +84,11 @@ public class SyntaxTreeBuilder {
         return finished;
     }
 
-    public RList getResult() {
+    public Node getResult() {
         if(depth != -1) {
             throw new IllegalStateException("Can't get result while not at top level");
         }
-        return currentListBuilder.build();
+        return bareAtom != null ? bareAtom : currentListBuilder.build();
     }
 
     public boolean isEmpty() {

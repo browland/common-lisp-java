@@ -3,7 +3,7 @@ package repl;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import reader.CharacterReader;
-import syntaxtree.RList;
+import syntaxtree.Node;
 import syntaxtree.ParseElementBuilder;
 import syntaxtree.SyntaxTreeBuilder;
 import value.Value;
@@ -41,14 +41,13 @@ public class IncrementalInterpreter {
         if (syntaxTreeBuilder.isFinished()) {
             Value<?> value = evaluateExpression(syntaxTreeBuilder, environment, evaluator);
             replOutput.emitOutput(value.toString());
-        } else {
-            if (c == '\n') {
-                if(syntaxTreeBuilder.isEmpty()) {
-                    replOutput.promptForNewForm();
-                }
-                else {
-                    replOutput.promptForMidForm();
-                }
+        }
+        if (c == '\n') {
+            if(syntaxTreeBuilder.isEmpty()) {
+                replOutput.promptForNewForm();
+            }
+            else {
+                replOutput.promptForMidForm();
             }
         }
     }
@@ -56,8 +55,8 @@ public class IncrementalInterpreter {
     private Value<?> evaluateExpression(SyntaxTreeBuilder syntaxTreeBuilder,
                                     Environment environment,
                                     Evaluator evaluator) {
-        RList topLevelList = syntaxTreeBuilder.getResult();
+        Node result = syntaxTreeBuilder.getResult();
         parseElementBuilder.reset();
-        return evaluator.evaluate(topLevelList, environment);
+        return evaluator.evaluate(result, environment);
     }
 }

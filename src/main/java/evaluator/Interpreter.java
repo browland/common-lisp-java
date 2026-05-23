@@ -2,8 +2,8 @@ package evaluator;
 
 import evaluator.env.Environment;
 import reader.CharacterReader;
+import syntaxtree.Node;
 import syntaxtree.ParseElementBuilder;
-import syntaxtree.RList;
 import syntaxtree.SyntaxTreeBuilder;
 import value.Value;
 
@@ -29,7 +29,7 @@ public class Interpreter {
     public Value<?> interpret(String program) {
         characterReader.read(program);
 
-        RList list = syntaxTreeBuilder.getResult();
+        Node list = syntaxTreeBuilder.getResult();
         Value<?> evaluate = evaluator.evaluate(list, environment);
         syntaxTreeBuilder.reset();
         return evaluate;

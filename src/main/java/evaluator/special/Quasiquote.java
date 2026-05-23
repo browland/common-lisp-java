@@ -22,17 +22,17 @@ public class Quasiquote implements SpecialForm {
         // the single operand is either a list or an atom
         Node operand = entireList.nodes().get(1);
 
-        // todo not handling quasiquoted atom yet
-//        if(operand instanceof Atom atom) {
-//            return Value.of(atom.value());
-//        }
-        // Assume it's an RList arg.  Each node can be either an atom or a list.  We keep
-        // track of whether we're unquoting the next node (and reset state after).
+        // Each node can be either an atom or a list.  We keep track of whether we're unquoting the next node (and reset
+        // state after).
         if(operand instanceof RList rlist) {
             return handleRList(rlist, environment, evaluator);
         }
+        else if(operand instanceof Atom atom) {
+            return Value.of(atom.value());
+        }
         else {
             throw new UnsupportedOperationException("Unhandled type for quasiquote " + operand);
+
         }
     }
 
