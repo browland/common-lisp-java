@@ -25,6 +25,7 @@ public class SpecialFormRegistry {
         registry.put("flet", new FLet());
         registry.put("tagbody", new Tagbody());
         registry.put("go", new Go());
+        registry.put("cond", new Cond());
     }
 
     public Optional<SpecialForm> findByName(String name) {

@@ -23,6 +23,13 @@ public class Eq implements Function {
             return sym1.equals(sym2) ? new SymbolValue(Symbols.t())
                     : new SymbolValue(Symbols.nil());
         }
+        else if(operand1 instanceof IntegerValue && operand2 instanceof IntegerValue) {
+            int int1 = ((IntegerValue)operand1).getValue();
+            int int2 = ((IntegerValue)operand2).getValue();
+
+            return int1 == int2 ? new SymbolValue(Symbols.t())
+                    : new SymbolValue(Symbols.nil());
+        }
         throw new IllegalArgumentException("eq not fully implemented");
     }
 }
