@@ -16,6 +16,10 @@ public class Eq implements Function {
         Value<?> operand1 = operands.get(0);
         Value<?> operand2 = operands.get(1);
 
+        if(operand1.getClass() != operand2.getClass()) {
+            return new SymbolValue(Symbols.nil());
+        }
+
         if(operand1 instanceof SymbolValue && operand2 instanceof SymbolValue) {
             Symbol sym1 = ((SymbolValue)operand1).getValue();
             Symbol sym2 = ((SymbolValue)operand2).getValue();
