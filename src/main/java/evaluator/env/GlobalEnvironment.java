@@ -34,6 +34,14 @@ public class GlobalEnvironment {
         return Optional.empty();
     }
 
+    public void setVariable(Symbol symbol, Value<?> value) {
+        if(builtInVariables.containsKey(symbol)) {
+            throw new RuntimeException("Can't set a built-in global " + symbol);
+        }
+        globalVariables.put(symbol, value);
+    }
+
+    @Deprecated
     public void setGlobal(Symbol symbol, Value<?> value) {
         if(builtInVariables.containsKey(symbol)) {
             throw new RuntimeException("Can't set a built-in global " + symbol);

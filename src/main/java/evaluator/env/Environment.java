@@ -34,6 +34,15 @@ public class Environment {
         return globalEnvironment.getVariable(symbol);
     }
 
+    public void setVariable(Symbol symbol, Value<?> value) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't set for name which already exists in global env " + symbol);
+        }
+
+        globalEnvironment.setVariable(symbol, value);
+    }
+
+    @Deprecated
     public void setGlobal(Symbol symbol, Value<?> value) {
         if(globalEnvironment.isReserved(symbol)) {
             throw new RuntimeException("Can't set for name which already exists in global env " + symbol);
@@ -94,8 +103,8 @@ public class Environment {
      * E.g. for setq we find the binding at the closest lexical level.  We work through lexical
      * scopes from inner to outer, and then consider the globals last.
      */
-    public void setInMostLocalScope(Symbol symbol,
-                                    Value<?> value) {
+    public void setVariableInMostLocalScope(Symbol symbol,
+                                            Value<?> value) {
         // walk stack of scopes first
         for (ScopeEnvironment scope : scopes) {
             Optional<Value<?>> possibleBinding = scope.getVariable(symbol);
@@ -105,7 +114,7 @@ public class Environment {
             }
         }
 
-        setGlobal(symbol, value);
+        setVariable(symbol, value);
     }
 
     public Optional<Value<?>> getFunction(Symbol symbol) {
@@ -117,6 +126,14 @@ public class Environment {
         }
 
         return globalEnvironment.getFunction(symbol);
+    }
+
+    public void setFunction(Symbol symbol, Value<?> functionValue) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't set for symbol which already exists in global env " + symbol);
+        }
+
+        globalEnvironment.setFunction(symbol, functionValue);
     }
 
     public Optional<Value<?>> getMacro(Symbol symbol) {

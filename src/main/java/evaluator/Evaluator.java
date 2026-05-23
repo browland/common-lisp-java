@@ -12,6 +12,7 @@ import value.Macro;
 import value.Value;
 
 import java.util.List;
+import java.util.Optional;
 
 public class Evaluator {
     private final SpecialFormEvaluator specialFormEvaluator = new SpecialFormEvaluator();
@@ -64,8 +65,13 @@ public class Evaluator {
             }
             else {
                 // it's a function - evaluate as normal
-                Function operator = operatorLookup.lookupFunction(operatorAtom.value(), environment);
-                return applyForm(operator, list, environment);
+                Optional<Function> operator = operatorLookup.lookupFunction(operatorAtom.value(), environment);
+                if(operator.isPresent()) {
+                    return applyForm(operator.get(), list, environment);
+                }
+                else {
+                    throw new IllegalStateException("expected operator but couldn't find it: " + operator);
+                }
             }
         }
     }

@@ -19,7 +19,6 @@ public class SpecialFormRegistry {
         registry.put("quasiquote", new Quasiquote());
         registry.put("block", new Block());
         registry.put("return-from", new ReturnFrom());
-        registry.put("funcall", new Funcall());
         registry.put("progn", new Progn());
         registry.put("function", new Function());
         registry.put("flet", new FLet());

@@ -26,8 +26,7 @@ public class Defvar implements SpecialForm {
         Node valueNode = entireList.get(2);
         Value<?> valueValue = evaluator.evaluate(valueNode, environment);
 
-        // todo assuming global
-        environment.setGlobal(symbol, valueValue);
+        environment.setVariable(symbol, valueValue);
 
         // returns the name of the variable
         return new SymbolValue(symbol);

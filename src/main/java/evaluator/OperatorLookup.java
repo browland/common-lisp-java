@@ -44,10 +44,10 @@ public class OperatorLookup {
         throw new IllegalArgumentException("Unknown operator " + operatorName);
     }
 
-    public Function lookupFunction(String name, Environment environment) {
+    public Optional<Function> lookupFunction(String name, Environment environment) {
         Optional<Function> builtInFunction = functionRegistry.findByName(name);
         if(builtInFunction.isPresent()) {
-            return builtInFunction.get();
+            return builtInFunction;
         }
 
         Symbol operatorSymbol = Symbols.internSymbol(name);
@@ -56,14 +56,14 @@ public class OperatorLookup {
         if(optionalOperator.isPresent()) {
             Value<?> operatorValue = optionalOperator.get();
             if(operatorValue.getType() == ValueType.OPERATOR) {
-                return (Function)operatorValue.getValue();
+                return Optional.of((Function)operatorValue.getValue());
             }
             else {
                 throw new IllegalStateException("expected operator " + name + " but has different type: " + operatorValue.getType());
             }
         }
         else {
-            throw new IllegalStateException("expected operator but couldn't find it: " + name);
+            return Optional.empty();
         }
     }
 

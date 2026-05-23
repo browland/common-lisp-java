@@ -28,7 +28,7 @@ public class Setq implements SpecialForm {
         // evaluate the value being set to the symbol
         Value<?> value = evaluator.evaluate(entireList.nodes().get(2), environment);
 
-        environment.setInMostLocalScope(symbol, value);
+        environment.setVariableInMostLocalScope(symbol, value);
 
         return value;
     }

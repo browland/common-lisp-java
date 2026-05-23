@@ -27,6 +27,7 @@ public class FunctionRegistry {
         registry.put("rplaca", new RPlaca());
         registry.put("symbolp", new Symbolp());
         registry.put("listp", new Listp());
+        registry.put("funcall", new Funcall());
     }
 
     public Optional<Function> findByName(String functionName) {

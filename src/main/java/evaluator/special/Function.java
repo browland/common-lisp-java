@@ -1,14 +1,18 @@
 package evaluator.special;
 
 import evaluator.Evaluator;
+import evaluator.OperatorLookup;
 import evaluator.env.Environment;
-import function.Closure;
+import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
+import value.ClosureValue;
+import value.FunctionValue;
 import value.Value;
-import value.ValueType;
 
 public class Function implements SpecialForm {
+    private OperatorLookup operatorLookup = new OperatorLookup();
+
     @Override
     public Value<?> evaluate(RList entireList,
                              Environment environment,
@@ -16,11 +20,28 @@ public class Function implements SpecialForm {
         // expect single arg representing the function - we return it as a value (a closure).
         Node functionNode = entireList.nodes().get(1);
 
-        Value<?> closureValue = evaluator.evaluate(functionNode, environment);
-        if(closureValue.getType() != ValueType.OPERATOR) {
-            throw new IllegalArgumentException("arg to 'function' can't be evaluated as a closure");
+        if(functionNode instanceof Atom atom) {
+            var optionalFunction = operatorLookup.lookupFunction(atom.value(), environment);
+            if(optionalFunction.isPresent()) {
+                return new FunctionValue(optionalFunction.get());
+            }
+            else {
+                throw new UnsupportedOperationException("atom " + atom.value() + " passed to 'function' but not found");
+            }
         }
+        else if(functionNode instanceof RList rList) {
+            // assume it's a lambda
+            Value<?> evaluatedOperator = evaluator.evaluate(functionNode, environment);
+            if(evaluatedOperator instanceof ClosureValue) {
+                return evaluatedOperator;
+            }
+            else {
+                throw new UnsupportedOperationException("form passed to 'function': " + rList + " but not a lambda form");
+            }
+        }
+        else {
+            throw new UnsupportedOperationException("unhandled node passed to 'function': " + functionNode);
 
-        return closureValue;
+        }
     }
 }
