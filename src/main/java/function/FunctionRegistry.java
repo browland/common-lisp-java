@@ -23,6 +23,7 @@ public class FunctionRegistry {
         registry.put("=", new NumsEqual());
         registry.put("<", new LessThan());
         registry.put("macroexpand-1", new Macroexpand1());
+        registry.put("rplaca", new RPlaca());
     }
 
     public Optional<Function> findByName(String functionName) {

@@ -6,8 +6,17 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public record ConsCell(Value<?> car,
-                       Value<?> cdr) implements Iterable<Value<?>> {
+/**
+ * ConsCells are mutable (e.g. via rplaca) so this is not a record, and the fields are mutable.
+ */
+public class ConsCell implements Iterable<Value<?>> {
+    private Value<?> car;
+    private Value<?> cdr;
+
+    public ConsCell(Value<?> car, Value<?> cdr) {
+        this.car = car;
+        this.cdr = cdr;
+    }
 
     public static ConsCell fromValue(Value<?> value) {
         return new ConsCell(value, Value.nil());
@@ -66,5 +75,32 @@ public record ConsCell(Value<?> car,
 
             return savedCons.car();
         }
+    }
+
+    public Value<?> car() {
+        return car;
+    }
+
+    public Value<?> cdr() {
+        return cdr;
+    }
+
+    public void setCar(Value<?> car) {
+        this.car = car;
+    }
+
+    public ConsCellValue wrap() {
+        return new ConsCellValue(this);
+    }
+
+    public boolean equals(ConsCell other) {
+        Iterator<Value<?>> otherIterator = other.iterator();
+        for(Value<?> value : this) {
+            boolean same = otherIterator.hasNext() && otherIterator.next().equals(value);
+            if(!same) {
+                return false;
+            }
+        }
+        return !otherIterator.hasNext();
     }
 }

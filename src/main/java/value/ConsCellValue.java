@@ -45,4 +45,8 @@ public class ConsCellValue extends Value<ConsCell> {
     public String toString() {
         return value.toString();
     }
+
+    public boolean equals(ConsCellValue other) {
+        return this.getValue().equals(other.getValue());
+    }
 }
