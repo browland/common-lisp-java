@@ -20,6 +20,7 @@ public class FunctionRegistry {
         registry.put("consp", new Consp());
         registry.put("car", new Car());
         registry.put("cdr", new Cdr());
+        registry.put("cadr", new Cadr());
         registry.put("=", new NumsEqual());
         registry.put("<", new LessThan());
         registry.put("macroexpand-1", new Macroexpand1());
