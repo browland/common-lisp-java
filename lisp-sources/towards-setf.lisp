@@ -1,0 +1,5 @@
+(defmacro setf (place value)
+  (if (symbolp place)
+    `(setq ,place ,value)
+  )
+)
