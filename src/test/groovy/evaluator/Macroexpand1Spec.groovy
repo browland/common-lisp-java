@@ -1,10 +1,7 @@
 package evaluator
 
 import evaluator.env.Environment
-import evaluator.env.Symbols
 import spock.lang.Specification
-import value.ConsCell
-import value.Symbol
 import value.Value
 
 class Macroexpand1Spec extends Specification {
@@ -33,16 +30,7 @@ class Macroexpand1Spec extends Specification {
 
         then:
         // expect:
-        // (car (quote (1 2))
-        var firstCons = result.getValue() as ConsCell
-        firstCons.car().getValue() == Symbols.internSymbol("car")
-        var secondCons = firstCons.cdr().getValue() as ConsCell
-        var secondConsCell = secondCons.car().getValue() as ConsCell
-        var firstInnerSymbol = secondConsCell.car().getValue() as Symbol
-        firstInnerSymbol == Symbols.internSymbol("quote")
-        var thirdCons = secondConsCell.cdr()
-        1 == 1
-        // todo we really need a better way of walking cons cells - pretty much unmanageable now
-
+        def resultString = result.toString()
+        resultString == "(car (quote (1 2)))"
     }
 }

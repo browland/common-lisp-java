@@ -41,4 +41,8 @@ public class ConsCellValue extends Value<ConsCell> {
                     throw new UnsupportedOperationException("unsupported type to build cons cell " + object);
         };
     }
+
+    public String toString() {
+        return value.toString();
+    }
 }

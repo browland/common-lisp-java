@@ -30,4 +30,8 @@ public record Atom(String value,
             return new Atom(this.value, this.prefix);
         }
     }
+
+    public String toString() {
+        return value;
+    }
 }

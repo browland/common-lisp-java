@@ -2,6 +2,7 @@ package syntaxtree;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public record RList(int depth,
              String prefix,
@@ -9,20 +10,10 @@ public record RList(int depth,
              List<Node> nodes) implements Node {
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < nodes.size(); i++) {
-            Object node = nodes.get(i);
-            for (int j = 0; j < depth; j++) {
-                sb.append(" ");
-            }
-            sb.append(node);
-            // Don't add a newline if we just wrote an RList as it has its own terminating newline, or if this is the
-            // last node in the top-level list.
-            if (!(node instanceof RList) && (!(depth == 0 && i == nodes.size() - 1))) {
-                sb.append("\n");
-            }
-        }
-        return sb.toString();
+        String nodeStrings = nodes.stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(" ", "(", ")"));
+        return nodeStrings;
     }
 
     public Node get(int i) {
@@ -70,8 +61,9 @@ public record RList(int depth,
             return isQuoted;
         }
 
-        public void addNodeBuilder(NodeBuilder nodeBuilder) {
+        public Builder addNodeBuilder(NodeBuilder nodeBuilder) {
             this.nodeBuilders.add(nodeBuilder);
+            return this;
         }
 
         public RList build() {

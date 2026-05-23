@@ -8,7 +8,7 @@ import syntaxtree.SyntaxTreeBuilder
 
 class ConsCellValueSpec extends Specification {
 
-    def "test"() {
+    def "test construction from syntax tree"() {
         given:
         def syntaxTreeBuilder = new SyntaxTreeBuilder()
         def reader = new ParseElementBuilder(syntaxTreeBuilder)
@@ -45,5 +45,23 @@ class ConsCellValueSpec extends Specification {
         def thirdCons = secondCons.cdr().getValue() as ConsCell
         def thirdOuterListValue = thirdCons.car() as IntegerValue // Second element is itself a list
         thirdOuterListValue.getValue() == 2
+    }
+
+    def "to string with single depth list"() {
+
+        given:
+        def atom1 = new SymbolValue(Symbols.internSymbol("+"))
+        def atom2 = new IntegerValue(1)
+        def atom3 = new IntegerValue(2)
+
+        def cons = ConsCell.fromValue(atom3)
+            .push(atom2)
+            .push(atom1)
+
+        when:
+        def consString = cons.toString()
+
+        then:
+        consString == "(+ 1 2)"
     }
 }
