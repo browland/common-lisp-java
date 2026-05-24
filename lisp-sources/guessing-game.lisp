@@ -4,15 +4,13 @@
 ; form is the 'codeword' (in this case "done") and in that case we return-from the block.  Use tagbody to tag the top
 ; of the loop for jumping back to the start of the forms each time.
 (defmacro myloop (arg1 arg2 arg3 &rest body_forms)
-  (block loop_block
+  `(block loop_block
     (tagbody
-
-
-
-  `,body_forms
+      start
+      ,@body_forms
+    )
+  )
 )
-
-; we just want this emitted: (format t "hello")
 
 (macroexpand-1 '(myloop until done do (format t "hello") (format t "hello")))
 

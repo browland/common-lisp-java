@@ -18,6 +18,7 @@ public class ParseElementBuilder {
 
     private boolean inString = false;
     private boolean inComment = false;
+    private boolean unquoting = false;
 
     public ParseElementBuilder(SyntaxTreeBuilder syntaxTreeBuilder) {
         this.syntaxTreeBuilder = syntaxTreeBuilder;
@@ -26,6 +27,11 @@ public class ParseElementBuilder {
     public void inAtom(CharacterReaderEvent event) {
         if(inComment) {
             return;
+        }
+
+        // we have a deferred unquote, and it never ended up being unquote-splicing etc.
+        if(unquoting) {
+            handleQuote(QuoteType.UNQUOTE);
         }
 
         char character = event.character();
@@ -49,7 +55,7 @@ public class ParseElementBuilder {
             String prefix = prefixBuilder.toString();
             // Single quote always results in a (quote ...) form being emitted.
             Optional<QuoteType> optionalQuoteType = QuoteType.ofPrefix(prefix);
-            optionalQuoteType.ifPresent(this::handleQuote);
+            optionalQuoteType.ifPresent(this::handleQuoteDeferringUnquote);
         }
     }
 
@@ -124,6 +130,11 @@ public class ParseElementBuilder {
             return;
         }
 
+        // we have a deferred unquote, and it never ended up being unquote-splicing etc.
+        if(unquoting) {
+            handleQuote(QuoteType.UNQUOTE);
+        }
+
         // Determine the entire prefix - may be null, 1 or 2 characters based on current knowledge
         String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
         syntaxTreeBuilder.startList(prefix);
@@ -136,9 +147,18 @@ public class ParseElementBuilder {
         syntaxTreeBuilder.reset();
     }
 
+    private void handleQuoteDeferringUnquote(QuoteType quoteType) {
+        if(quoteType == QuoteType.UNQUOTE) {
+            unquoting = true;
+            return;
+        }
+        handleQuote(quoteType);
+    }
+
     private void handleQuote(QuoteType quoteType) {
         syntaxTreeBuilder.insertQuote(quoteType);
         prefixBuilder.delete(0, prefixBuilder.length());  // prefix has now been consumed
+        unquoting = false;
     }
 
     public void onEndProgram() {
