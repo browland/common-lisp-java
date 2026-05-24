@@ -3,7 +3,7 @@ package syntaxtree;
 import java.util.Optional;
 
 public enum QuoteType {
-    QUOTE, FUNCTION_QUOTE, QUASIQUOTE, UNQUOTE;
+    QUOTE, FUNCTION_QUOTE, QUASIQUOTE, UNQUOTE, UNQUOTE_SPLICING;
 
     /**
      * Returns Optional.empty() when seeing an incompleted prefix sequence (currently
@@ -21,6 +21,7 @@ public enum QuoteType {
             case QuotePrefix.FUNCTION_QUOTE -> Optional.of(QuoteType.FUNCTION_QUOTE);
             case QuotePrefix.QUASIQUOTE -> Optional.of(QuoteType.QUASIQUOTE);
             case QuotePrefix.UNQUOTE -> Optional.of(QuoteType.UNQUOTE);
+            case QuotePrefix.UNQUOTE_SPLICING -> Optional.of(QuoteType.UNQUOTE_SPLICING);
             default -> Optional.empty();
         };
     }

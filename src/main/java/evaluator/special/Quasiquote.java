@@ -46,7 +46,7 @@ public class Quasiquote implements SpecialForm {
         Node firstNode = rlist.get(0);
         if(firstNode instanceof Atom firstAtom) {
             String value = firstAtom.value();
-            if("unquote".equals(value)) {
+            if("unquote".equals(value) || "unquote-splicing".equals(value)) {
                 // get the enclosed form and return its evaluation
                 Node unquotedForm = rlist.get(1);
                 return evaluator.evaluate(unquotedForm, env);

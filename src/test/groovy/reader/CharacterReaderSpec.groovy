@@ -178,19 +178,19 @@ class CharacterReaderSpec extends Specification {
         ((Atom)innerList.get(2)).value() == "2"
     }
 
-    def "reads quasiquoted list"() {
+    def "reads quasiquoted list with unquote"() {
         given:
         def syntaxTreeBuilder = new SyntaxTreeBuilder()
         def reader = new ParseElementBuilder(syntaxTreeBuilder)
         def characterReader = new CharacterReader(reader)
-        def program = "`(add ,1 2)"
+        def program = "`(add ,x 2)"
 
         when:
         characterReader.read(program)
         def outerList = syntaxTreeBuilder.getResult()
 
         then:
-        outerList.toString() == "(quasiquote (add (unquote 1) 2))"
+        outerList.toString() == "(quasiquote (add (unquote x) 2))"
         outerList.depth() == 0
 
         outerList.size() == 2
@@ -206,7 +206,38 @@ class CharacterReaderSpec extends Specification {
 
         def unquoteList = (RList)innerList.get(1)
         ((Atom)unquoteList.get(0)).value() == "unquote"
-        ((Atom)unquoteList.get(1)).value() == "1"
+        ((Atom)unquoteList.get(1)).value() == "x"
+    }
+
+    def "reads quasiquoted list with unquote-splicing"() {
+        given:
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
+        def characterReader = new CharacterReader(reader)
+        def program = "`(add ,@x 2)"
+
+        when:
+        characterReader.read(program)
+        def outerList = syntaxTreeBuilder.getResult()
+
+        then:
+        outerList.toString() == "(quasiquote (add (unquote-splicing x) 2))"
+        outerList.depth() == 0
+
+        outerList.size() == 2
+        outerList.get(0) instanceof Atom
+        ((Atom)outerList.get(0)).value() == "quasiquote"
+
+        def innerList = (RList)outerList.get(1)
+        innerList.depth() == 1
+
+        innerList.size() == 3
+        ((Atom)innerList.get(0)).value() == "add"
+        ((Atom)innerList.get(2)).value() == "2"
+
+        def unquoteList = (RList)innerList.get(1)
+        ((Atom)unquoteList.get(0)).value() == "unquote-splicing"
+        ((Atom)unquoteList.get(1)).value() == "x"
     }
 
     def "reads single atom"() {

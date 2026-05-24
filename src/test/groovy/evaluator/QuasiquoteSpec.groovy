@@ -64,4 +64,20 @@ class QuasiquoteSpec extends Specification {
         then:
         result.toString() == "1"
     }
+
+    def "unquote splicing"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def defVar = "(defvar x '(1 2 3))"
+        def program = "`(1 ,@x 3)"
+
+        when:
+        interpreter.interpret(defVar)
+        var result = interpreter.interpret(program)
+
+        then:
+        result.toString() == "(1 1 2 3 3)"
+    }
 }

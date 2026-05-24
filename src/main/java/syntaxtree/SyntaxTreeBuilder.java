@@ -64,6 +64,7 @@ public class SyntaxTreeBuilder {
             case FUNCTION_QUOTE -> "function";
             case QUASIQUOTE -> "quasiquote";
             case UNQUOTE -> "unquote";
+            case UNQUOTE_SPLICING -> "unquote-splicing";
         };
 
         Atom.Builder quoteAtomBuilder = new Atom.Builder()
