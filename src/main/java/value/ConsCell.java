@@ -49,7 +49,7 @@ public class ConsCell implements Iterable<Value<?>> {
 
     static class ConsIterator implements Iterator<Value<?>> {
         private ConsCell currentCons;
-
+        private Value<?> lastValue;  // for pairs, or improper lists
 
         public ConsIterator(ConsCell currentCons) {
             this.currentCons = currentCons;
@@ -57,20 +57,28 @@ public class ConsCell implements Iterable<Value<?>> {
 
         @Override
         public boolean hasNext() {
-            return currentCons != null;
+            return currentCons != null || lastValue != null;
         }
 
         @Override
         public Value<?> next() {
-            ConsCell savedCons = currentCons;
-            if(currentCons.cdr() instanceof ConsCellValue nextConsCellValue) {
-                currentCons = nextConsCellValue.getValue();
+            if(lastValue != null) {
+                Value<?> savedLastValue = lastValue;
+                lastValue = null;
+                return savedLastValue;
             }
-            else if(currentCons.cdr().equals(Value.nil())) {
+
+            ConsCell savedCons = currentCons;
+            if(currentCons.cdr().equals(Value.nil())) {
                 currentCons = null;
             }
+            else if(currentCons.cdr() instanceof ConsCellValue nextConsCellValue) {
+                currentCons = nextConsCellValue.getValue();
+            }
             else {
-                throw new IllegalStateException("cdr is not either ConsCellValue or nil");
+                // we're dealing with a pair (improper list)
+                lastValue = currentCons.cdr();
+                currentCons = null;
             }
 
             return savedCons.car();

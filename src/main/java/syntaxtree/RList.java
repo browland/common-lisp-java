@@ -71,6 +71,12 @@ public record RList(int depth,
             return new RList(depth, prefix, isQuoted, nodes);
         }
 
+        public Node popLastNode() {
+            Node lastNodeAdded = nodeBuilders.getFirst().build();
+            nodeBuilders.clear();
+            return lastNodeAdded;
+        }
+
         public Builder getParentListBuilder() {
             return parentListBuilder;
         }

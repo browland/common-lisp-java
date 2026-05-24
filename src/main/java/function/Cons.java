@@ -13,9 +13,10 @@ public class Cons implements Function {
         Value<?> car = operands.get(0);
         Value<?> cdr = operands.get(1);
 
-        // only 2 possibilities:
+        // only 3 possibilities:
         // 1. cdr is nil and car is non-nil: we are constructing the initial (tail) cons cell
         // 2. cdr is a ConsCell and car is non-nil: we are constructing an additional cons cell
+        // 3. cdr is an arbitrary value and car is non-nil: we are constructing a pair (improper list)
 
         ConsCell consCell;
         if(Value.nil().equals(cdr) && !Value.nil().equals(car)) {

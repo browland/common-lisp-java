@@ -147,6 +147,17 @@ public class ParseElementBuilder {
         syntaxTreeBuilder.reset();
     }
 
+    public void handleDot() {
+        // we'll have one atom stashed in the current list; need to recreate the syntaxTreeBuilder.currentListBuilder as (cons <current_atom>
+        if(syntaxTreeBuilder.popLastNode() instanceof Atom carAtom) {
+            syntaxTreeBuilder.newAtom(new Atom.Builder().value("cons"));
+            syntaxTreeBuilder.newAtom(new Atom.Builder().value(carAtom.value()));
+        }
+        else {
+            throw new RuntimeException("problem dealing with dot syntax");
+        }
+    }
+
     private void handleQuoteDeferringUnquote(QuoteType quoteType) {
         if(quoteType == QuoteType.UNQUOTE) {
             unquoting = true;

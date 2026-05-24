@@ -258,4 +258,18 @@ class CharacterReaderSpec extends Specification {
         atomResult.value() == "1"
     }
 
+    def "reads cons dot syntax"() {
+        given:
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
+        def characterReader = new CharacterReader(reader)
+        def program = "(1 . 2)"
+
+        when:
+        characterReader.read(program)
+        def nodeResult = syntaxTreeBuilder.getResult()
+
+        then:
+        nodeResult.toString() == "(cons 1 2)"
+    }
 }

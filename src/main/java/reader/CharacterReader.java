@@ -47,6 +47,8 @@ public class CharacterReader {
             parseElementBuilder.startList();
         } else if (c == ')') {
             parseElementBuilder.endList();
+        } else if (c == '.') {
+            parseElementBuilder.handleDot();
         } else {
             CharacterReaderEvent event = new CharacterReaderEvent(c, CharacterType.IN_ATOM);
             parseElementBuilder.inAtom(event);

@@ -81,6 +81,10 @@ public class SyntaxTreeBuilder {
         finished = false;
     }
 
+    public Node popLastNode() {
+        return currentListBuilder.popLastNode();
+    }
+
     public boolean isFinished() {
         return finished;
     }

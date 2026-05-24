@@ -48,7 +48,6 @@ class ConsCellValueSpec extends Specification {
     }
 
     def "to string with single depth list"() {
-
         given:
         def atom1 = new SymbolValue(Symbols.internSymbol("+"))
         def atom2 = new IntegerValue(1)
