@@ -2,6 +2,7 @@ package evaluator.special;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import exception.EvaluationException;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.Value;
@@ -11,8 +12,7 @@ public class Cond implements SpecialForm {
     public Value<?> evaluate(RList entireList,
                              Environment environment,
                              Evaluator evaluator) {
-        // evaluate test condition.  If nil then we return the evaluation of the second part,
-        // otherwise we return the evaluation of the first part.
+        // Skip the 'cond' atom itself
         boolean atArgs = false;
         for(Node form : entireList.nodes()) {
             if (!atArgs) {
@@ -21,15 +21,18 @@ public class Cond implements SpecialForm {
             }
 
             if(form instanceof RList rList) {
-                Node condition = rList.nodes().get(0);
+                Node condition = rList.nodes().getFirst();
                 Value<?> condResult = evaluator.evaluate(condition, environment);
                 if(condResult.equals(Value.t())) {
-                    Node toEval = rList.nodes().get(1);
-                    return evaluator.evaluate(toEval, environment);
+                    Value<?> resultValue = null;
+                    for(Node toEval : rList.nodes().subList(1, rList.nodes().size())) {
+                        resultValue = evaluator.evaluate(toEval, environment);
+                    }
+                    return resultValue;
                 }
             }
             else {
-                throw new IllegalArgumentException("invalid form supplied to cond " + form);
+                throw new EvaluationException("invalid form supplied to cond " + form);
             }
         }
         return Value.nil();

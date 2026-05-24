@@ -26,7 +26,7 @@
   (let ((target (+ 1 (random 100)))
         (guesses 0)
         (done nil))
-    (format t "Guess a number between 1 and 100.~%")
+    (format t "Guess a number between 1 and 100")
 
     (myloop until done do
       (format t "Your guess: ")
@@ -35,11 +35,13 @@
 
         (cond
           ((< guess target)
-           (format t "Too low.~%"))
+           (format t "Too low"))
 
           ((> guess target)
-           (format t "Too high.~%"))
+           (format t "Too high"))
 
           (t
-           (format t "Correct in ~A guesses!~%" guesses)
-           (setf done t)))))))
+           (format t "Correct!")
+           (setq done t)))))))
+
+(guess-game)

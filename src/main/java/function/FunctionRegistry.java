@@ -23,6 +23,7 @@ public class FunctionRegistry {
         registry.put("cadr", new Cadr());
         registry.put("=", new NumsEqual());
         registry.put("<", new LessThan());
+        registry.put(">", new GreaterThan());
         registry.put("macroexpand-1", new Macroexpand1());
         registry.put("rplaca", new RPlaca());
         registry.put("symbolp", new Symbolp());
