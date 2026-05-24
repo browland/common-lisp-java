@@ -6,15 +6,34 @@ import reader.CharacterReader;
 import syntaxtree.ParseElementBuilder;
 import syntaxtree.SyntaxTreeBuilder;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 public class Repl implements ReplOutput {
     private final IncrementalInterpreter incrementalInterpreter;
 
     public static void main(String[] args) {
         Repl repl = new Repl();
-        repl.run();
+
+        if(args.length == 1) {
+            try {
+                Path initialFormsFile = Path.of("/Users/ben/git/lisp/lisp-sources", args[0]);
+                List<String> lines = Files.readAllLines(initialFormsFile);
+                for(String line : lines) {
+                    System.out.println(line);
+                    repl.run(line);
+                }
+                repl.run();
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            repl.run();
+        }
     }
 
     public Repl() {
@@ -26,6 +45,13 @@ public class Repl implements ReplOutput {
         Evaluator evaluator = new Evaluator();
 
         incrementalInterpreter = new IncrementalInterpreter(syntaxTreeBuilder, parseElementBuilder, characterReader, evaluator, environment, this);
+    }
+
+    public void run(String initialForms) {
+        for(char c : initialForms.toCharArray()) {
+            incrementalInterpreter.consume(c);
+        }
+        incrementalInterpreter.consume('\n');  // signal end of line; required to know when each line is done
     }
 
     public void run() {

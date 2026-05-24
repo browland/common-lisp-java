@@ -28,6 +28,7 @@ public class FunctionRegistry {
         registry.put("symbolp", new Symbolp());
         registry.put("listp", new Listp());
         registry.put("funcall", new Funcall());
+        registry.put("random", new Random());
     }
 
     public Optional<Function> findByName(String functionName) {

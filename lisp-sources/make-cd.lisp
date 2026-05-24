@@ -5,27 +5,27 @@
 
 (defvar *db* nil)
 
-(defmacro push (item place)
+(defmacro mypush (item place)
   `(setq ,place (cons ,item ,place)))
 
 (defun add-record (cd)
-  (push cd *db*))
+  (mypush cd *db*))
 
 (add-record (make-cd "Roses" "Kathy Mattea" 7 t))
 
-(defmacro dolist ((loop_var list) &rest loop_form)
+(defmacro mydolist (loop_var list loop_form)
   `(let ((remaining ,list))
     (block myloop
       (tagbody
         start
         (setq ,loop_var (car remaining))
         (setq remaining (cdr remaining))
-        ,(car loop_form)
+        ,loop_form
         (if (eq remaining nil) (return-from myloop t))
         (go start)))))
 
 (defun dump-db ()
-  (dolist (cd *db*)
+  (mydolist cd *db*
     (format t cd)))
 
 *db*

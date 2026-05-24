@@ -37,6 +37,10 @@ public class ParseElementBuilder {
     }
 
     public void onQuoteChar(CharacterReaderEvent event) {
+        if(inComment) {
+            return;
+        }
+
         // Because the atomStringBuilder is only cleared at the end of a list or on whitespace (or upon reset, which
         // is called externally and is a bit of a code-smell - shouldn't need it?) then we can determine if this quote
         // character is a prefix or suffix by whether there are characters present in the atomStringBuilder.
@@ -107,11 +111,19 @@ public class ParseElementBuilder {
     }
 
     public void endList() {
+        if(inComment) {
+            return;
+        }
+
         consumeAtomBuilder();
         syntaxTreeBuilder.endList();
     }
 
     public void startList() {
+        if(inComment) {
+            return;
+        }
+
         // Determine the entire prefix - may be null, 1 or 2 characters based on current knowledge
         String prefix = !prefixBuilder.isEmpty() ? prefixBuilder.toString() : null;
         syntaxTreeBuilder.startList(prefix);
