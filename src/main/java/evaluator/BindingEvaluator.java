@@ -1,6 +1,7 @@
 package evaluator;
 
 import evaluator.env.Symbols;
+import exception.EvaluationException;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
@@ -31,22 +32,36 @@ public class BindingEvaluator {
 
     public Map<Symbol, Value<?>> assignBindingsFromValueOperands(List<Node> bindings,
                                                                  List<Value<?>> operands) {
+        boolean restMode = false;
+
         Map<Symbol, Value<?>> bindingsMap = new HashMap<>();
         for (int i = 0; i < bindings.size(); i++) {
             Node currentBindingNode = bindings.get(i);
             BindingType bindingType = bindingType(currentBindingNode);
             if(BindingType.REST == bindingType) {
+                restMode = true;
                 bindingsMap.putAll(collectRestBinding(bindings, operands, i));
-                return bindingsMap;  // no more args expected after e.g. "&rest others"
+                break;  // don't consume the last atom; we already handled it along with &rest
             }
             else if(BindingType.ATOM == bindingType) {
                 bindingsMap.putAll(collectAtomBinding(bindings, operands, i));
             }
             else if(BindingType.LIST == bindingType) {
                 bindingsMap.putAll(collectListBinding((RList)currentBindingNode, (ConsCellValue)operands.get(i)));
-//                throw new UnsupportedOperationException("not ready yet");
             }
         }
+
+        if(restMode) {
+            if(operands.size() < bindings.size()-1) {
+                throw new EvaluationException("Expected at least " + (bindings.size() - 1) + " arguments but got " + operands.size());
+            }
+        }
+        else {
+            if (operands.size() != bindings.size()) {
+                throw new EvaluationException("Expected  " + (bindings.size()) + " arguments but got " + operands.size());
+            }
+        }
+
         return bindingsMap;
     }
 
@@ -106,6 +121,7 @@ public class BindingEvaluator {
         if(!(bindings.get(currentIndex + 1) instanceof Atom restArgsBindingAtom)) {
             throw new IllegalArgumentException("must provide atom after &rest in bindings");
         }
+
 
         // 1. get next binding - this is the name of the list representing the remaining args
         String restArgsBindingName = restArgsBindingAtom.value();

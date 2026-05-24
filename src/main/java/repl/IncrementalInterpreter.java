@@ -53,8 +53,8 @@ public class IncrementalInterpreter {
     }
 
     private Value<?> evaluateExpression(SyntaxTreeBuilder syntaxTreeBuilder,
-                                    Environment environment,
-                                    Evaluator evaluator) {
+                                        Environment environment,
+                                        Evaluator evaluator) {
         Node result = syntaxTreeBuilder.getResult();
         parseElementBuilder.reset();
         return evaluator.evaluate(result, environment);

@@ -4,12 +4,14 @@ import evaluator.env.Environment;
 import evaluator.macro.MacroExpander;
 import evaluator.special.SpecialForm;
 import evaluator.special.SpecialFormEvaluator;
+import exception.EvaluationException;
 import function.Function;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.Macro;
 import value.Value;
+import value.ValueType;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +45,9 @@ public class Evaluator {
         // We can then apply it to the remaining arguments as a form.
         if (operatorNode instanceof RList) {
             Value<?> evaluatedOperatorValue = evaluate((RList)operatorNode, environment);
+            if(evaluatedOperatorValue.getType() != ValueType.OPERATOR) {
+                throw new EvaluationException("Illegal function %s".formatted(evaluatedOperatorValue), operatorNode);
+            }
             Function operator = (Function)evaluatedOperatorValue.getValue();
 
             // it's always a regular form when the operator is a list.  Special forms are only legal when the operator

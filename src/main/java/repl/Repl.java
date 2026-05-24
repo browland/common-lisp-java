@@ -2,6 +2,7 @@ package repl;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import exception.EvaluationException;
 import reader.CharacterReader;
 import syntaxtree.ParseElementBuilder;
 import syntaxtree.SyntaxTreeBuilder;
@@ -25,7 +26,6 @@ public class Repl implements ReplOutput {
                     System.out.println(line);
                     repl.run(line);
                 }
-                repl.run();
             }
             catch (Exception e) {
                 throw new RuntimeException(e);
@@ -49,7 +49,12 @@ public class Repl implements ReplOutput {
 
     public void run(String initialForms) {
         for(char c : initialForms.toCharArray()) {
-            incrementalInterpreter.consume(c);
+            try {
+                incrementalInterpreter.consume(c);
+            }
+            catch(EvaluationException e) {
+                System.err.println(e.getMessage() + "\n");
+            }
         }
         incrementalInterpreter.consume('\n');  // signal end of line; required to know when each line is done
     }
@@ -61,7 +66,12 @@ public class Repl implements ReplOutput {
         try {
             while (true) {
                 char c = (char) isr.read();
-                incrementalInterpreter.consume(c);
+                try {
+                    incrementalInterpreter.consume(c);
+                }
+                catch(EvaluationException e) {
+                    System.err.println(e.getMessage() + "\n");
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
