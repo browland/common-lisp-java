@@ -1,6 +1,7 @@
 package syntaxtree;
 
 import reader.CharacterReaderEvent;
+import reader.CharacterType;
 
 import java.util.Optional;
 
@@ -121,12 +122,24 @@ public class ParseElementBuilder {
             return;
         }
 
+        if(inString) {
+            CharacterReaderEvent event = new CharacterReaderEvent(')', CharacterType.IN_ATOM);
+            inAtom(event);
+            return;
+        }
+
         consumeAtomBuilder();
         syntaxTreeBuilder.endList();
     }
 
     public void startList() {
         if(inComment) {
+            return;
+        }
+
+        if(inString) {
+            CharacterReaderEvent event = new CharacterReaderEvent('(', CharacterType.IN_ATOM);
+            inAtom(event);
             return;
         }
 
@@ -148,6 +161,12 @@ public class ParseElementBuilder {
     }
 
     public void handleDot() {
+        if(inString) {
+            CharacterReaderEvent event = new CharacterReaderEvent('.', CharacterType.IN_ATOM);
+            inAtom(event);
+            return;
+        }
+
         // we'll have one atom stashed in the current list; need to recreate the syntaxTreeBuilder.currentListBuilder as (cons <current_atom>
         if(syntaxTreeBuilder.popLastNode() instanceof Atom carAtom) {
             syntaxTreeBuilder.newAtom(new Atom.Builder().value("cons"));

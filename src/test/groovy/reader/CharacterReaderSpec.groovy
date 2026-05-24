@@ -272,4 +272,19 @@ class CharacterReaderSpec extends Specification {
         then:
         nodeResult.toString() == "(cons 1 2)"
     }
+
+    def "reads parentheses and dots within string"() {
+        given:
+        def syntaxTreeBuilder = new SyntaxTreeBuilder()
+        def reader = new ParseElementBuilder(syntaxTreeBuilder)
+        def characterReader = new CharacterReader(reader)
+        def program = "\"A steel door blocks your way. Key? (yes/no)\""
+
+        when:
+        characterReader.read(program)
+        def nodeResult = syntaxTreeBuilder.getResult()
+
+        then:
+        nodeResult.toString() == "\"A steel door blocks your way. Key? (yes/no)\""
+    }
 }
