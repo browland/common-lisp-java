@@ -3,15 +3,21 @@
 ; apart from this, we just need essentially an infinite loop around the body forms, but with checking to see if each
 ; form is the 'codeword' (in this case "done") and in that case we return-from the block.  Use tagbody to tag the top
 ; of the loop for jumping back to the start of the forms each time.
-(defmacro myloop (arg1 arg2 arg3 &rest body_forms)
+(defmacro myloop (arg1 done_var arg3 &rest body_forms)
   `(block loop_block
     (tagbody
       start
       ,@body_forms
+      (if ,done_var (return-from loop_block))
+      (go start)
     )
   )
 )
 
-(macroexpand-1 '(myloop until done do (format t "hello") (format t "hello")))
+(let ((done nil)
+      (i 0))
 
-(myloop until done do (format t "hello") (format t "hello"))
+    (myloop until done do
+      (setq i (+ i 1))
+      (format t i)
+      (if (= i 10) (setq done t))))
