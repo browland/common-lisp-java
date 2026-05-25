@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 public record RList(int depth,
              String prefix,
              boolean isQuoted,
+             boolean improperList,
              List<Node> nodes) implements Node {
 
     public String toString() {
@@ -26,7 +27,7 @@ public record RList(int depth,
 
     public RList fromIndex(int index) {
         List<Node> newNodes = nodes.subList(index, nodes.size());
-        return new RList(depth, prefix, this.isQuoted, newNodes);
+        return new RList(depth, prefix, this.isQuoted, false, newNodes);
     }
 
     public static final class Builder implements NodeBuilder {
@@ -36,6 +37,7 @@ public record RList(int depth,
         private int depth;
         private String prefix;
         private boolean isQuoted;
+        private boolean improperList;
 
         Builder parentListBuilder(RList.Builder parentListBuilder) {
             this.parentListBuilder = parentListBuilder;
@@ -68,13 +70,11 @@ public record RList(int depth,
 
         public RList build() {
             List<Node> nodes = nodeBuilders.stream().map(NodeBuilder::build).toList();
-            return new RList(depth, prefix, isQuoted, nodes);
+            return new RList(depth, prefix, isQuoted, improperList, nodes);
         }
 
-        public Node popLastNode() {
-            Node lastNodeAdded = nodeBuilders.getFirst().build();
-            nodeBuilders.clear();
-            return lastNodeAdded;
+        public void setIsImproperList() {
+            this.improperList = true;
         }
 
         public Builder getParentListBuilder() {

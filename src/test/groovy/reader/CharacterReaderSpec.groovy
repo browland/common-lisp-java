@@ -270,7 +270,7 @@ class CharacterReaderSpec extends Specification {
         def nodeResult = syntaxTreeBuilder.getResult()
 
         then:
-        nodeResult.toString() == "(cons 1 2)"
+        nodeResult.toString() == "(1 2)"
     }
 
     def "reads parentheses and dots within string"() {

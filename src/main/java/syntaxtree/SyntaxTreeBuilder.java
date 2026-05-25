@@ -81,8 +81,8 @@ public class SyntaxTreeBuilder {
         finished = false;
     }
 
-    public Node popLastNode() {
-        return currentListBuilder.popLastNode();
+    public void setIsImproperList() {
+        currentListBuilder.setIsImproperList();
     }
 
     public boolean isFinished() {

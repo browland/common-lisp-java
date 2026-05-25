@@ -167,14 +167,8 @@ public class ParseElementBuilder {
             return;
         }
 
-        // we'll have one atom stashed in the current list; need to recreate the syntaxTreeBuilder.currentListBuilder as (cons <current_atom>
-        if(syntaxTreeBuilder.popLastNode() instanceof Atom carAtom) {
-            syntaxTreeBuilder.newAtom(new Atom.Builder().value("cons"));
-            syntaxTreeBuilder.newAtom(new Atom.Builder().value(carAtom.value()));
-        }
-        else {
-            throw new RuntimeException("problem dealing with dot syntax");
-        }
+        // just set flag on the RList to indicate it's a pair (improper list), otherwise just create list of elements
+        syntaxTreeBuilder.setIsImproperList();
     }
 
     private void handleQuoteDeferringUnquote(QuoteType quoteType) {
