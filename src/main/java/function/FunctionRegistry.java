@@ -33,6 +33,7 @@ public class FunctionRegistry {
         registry.put("assoc", new Assoc());
         registry.put("null", new Null());
         registry.put("mapcar", new Mapcar());
+        registry.put("string=", new StringEqual());
     }
 
     public Optional<Function> findByName(String functionName) {

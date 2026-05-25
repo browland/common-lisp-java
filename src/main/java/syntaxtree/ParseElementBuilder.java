@@ -161,6 +161,10 @@ public class ParseElementBuilder {
     }
 
     public void handleDot() {
+        if(inComment) {
+            return;
+        }
+
         if(inString) {
             CharacterReaderEvent event = new CharacterReaderEvent('.', CharacterType.IN_ATOM);
             inAtom(event);

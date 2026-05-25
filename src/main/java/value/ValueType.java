@@ -6,5 +6,6 @@ public enum ValueType {
     INTEGER_LITERAL,
     CONS_CELL,
     SYMBOL,
-    MACRO
+    MACRO,
+    USER_INPUT
 }

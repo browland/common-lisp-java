@@ -11,8 +11,21 @@ public class ConsCellValue extends Value<ConsCell> {
     }
 
     public static ConsCellValue fromRList(RList readerList) {
-        return fromJavaList(readerList.nodes());
+        return readerList.improperList() ? improperListFromJavaList(readerList.nodes()) : fromJavaList(readerList.nodes());
     }
+
+    public static ConsCellValue improperListFromJavaList(List<?> javaList) {
+        if(javaList.size() != 2) {
+            throw new RuntimeException("Evaluating improper list but != 2 elements; not implemented properly");
+        }
+
+        Value<?> car = toValue(javaList.get(0));
+        Value<?> cdr = toValue(javaList.get(1));
+
+        ConsCell consCell = new ConsCell(car, cdr);
+        return new ConsCellValue(consCell);
+    }
+
 
     public static ConsCellValue fromJavaList(List<?> javaList) {
         // iterate over the list in reverse order, creating cons cells
