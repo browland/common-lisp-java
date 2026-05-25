@@ -21,3 +21,10 @@
    (cons 'trapped
          '(:text "You are trapped. The monster finds you."
            :choices nil))))
+
+(defun get-node (name)
+  (cdr (assoc name *nodes*)))
+
+(setq node (get-node 'start))
+(getf node :choices)
+

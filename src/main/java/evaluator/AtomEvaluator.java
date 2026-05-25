@@ -2,6 +2,7 @@ package evaluator;
 
 import evaluator.env.Environment;
 import evaluator.env.Symbols;
+import exception.EvaluationException;
 import syntaxtree.Atom;
 import value.*;
 
@@ -28,8 +29,12 @@ public class AtomEvaluator {
                 return possibleValue.get();
             }
 
-            int intValue = Integer.parseInt(atomStringValue);
-            return new IntegerValue(intValue);
+            try {
+                int intValue = Integer.parseInt(atomStringValue);
+                return new IntegerValue(intValue);
+            } catch (NumberFormatException e) {
+                throw new EvaluationException("Unbound variable %s".formatted(atomStringValue));
+            }
         }
     }
 

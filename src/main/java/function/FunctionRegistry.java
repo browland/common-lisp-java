@@ -31,6 +31,8 @@ public class FunctionRegistry {
         registry.put("funcall", new Funcall());
         registry.put("random", new Random());
         registry.put("assoc", new Assoc());
+        registry.put("null", new Null());
+        registry.put("mapcar", new Mapcar());
     }
 
     public Optional<Function> findByName(String functionName) {
