@@ -26,7 +26,7 @@ public class Function implements SpecialForm {
                 return new FunctionValue(optionalFunction.get());
             }
             else {
-                throw new UnsupportedOperationException("atom " + atom.value() + " passed to 'function' but not found");
+                throw new UnsupportedOperationException("no function  " + atom.value() + " found - illegal function call");
             }
         }
         else if(functionNode instanceof RList rList) {

@@ -2,15 +2,8 @@
 
 ## Issues
 
-### Assertions on cons cell values
-
-It's really awful as we keep having to unwrap values all the way.  Additionally it's confusing to think about what type 
-we're dealing with at each point.  And hard to come up with consistent names for each intermediate variable and I'm sometimes
-not sure if I'm asserting the right thing.  
-Is there a way to unwrap everything into a nicer structure for testing/printing/debugging?
-E.g. convert to what would be printed in the repl.
-Should getValue() be unwrap()?  As we start with a Value, and calling getValue() returns something which is not a Value
-but some real type.
+### And
+and should be a macro or special operator, otherwise it can't short circuit
 
 ### Environment stuff
 

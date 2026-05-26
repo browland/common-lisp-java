@@ -34,6 +34,7 @@ public class FunctionRegistry {
         registry.put("null", new Null());
         registry.put("mapcar", new Mapcar());
         registry.put("string=", new StringEqual());
+        registry.put("evenp", new Evenp());
     }
 
     public Optional<Function> findByName(String functionName) {
