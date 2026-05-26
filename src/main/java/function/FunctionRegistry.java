@@ -12,6 +12,7 @@ public class FunctionRegistry {
         registry.put("and", new And());
         registry.put("eq", new Eq());
         registry.put("+", new Add());
+        registry.put("*", new Multiply());
         registry.put("format", new Format());
         registry.put("load", new Load());
         registry.put("list", new ListFunction());

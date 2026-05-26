@@ -8,16 +8,16 @@ import value.ValueType;
 
 import java.util.List;
 
-public class Add implements Function {
+public class Multiply implements Function {
 
     @Override
     public Value<Integer> apply(List<Value<?>> operands, Environment environment) {
         // terrible assumption for now that operands are all Atoms and their string values parse as integers ... can overflow ... etc etc.
-        int result = 0;
+        int result = 1;
 
         for(Value<?> operand : operands) {
             if(ValueType.INTEGER_LITERAL != operand.getType()) {
-                throw new EvaluationException("+: require integer operands");
+                throw new EvaluationException("*: require integer operands");
             }
 
             Object value = operand.getValue();
@@ -26,7 +26,7 @@ public class Add implements Function {
             }
 
             int intValue = (Integer)value;
-            result += intValue;
+            result *= intValue;
 
         }
 
