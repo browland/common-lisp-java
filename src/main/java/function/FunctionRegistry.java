@@ -36,6 +36,8 @@ public class FunctionRegistry {
         registry.put("mapcar", new Mapcar());
         registry.put("string=", new StringEqual());
         registry.put("evenp", new Evenp());
+        registry.put("values", new Values());
+        registry.put("floor", new Floor());
     }
 
     public Optional<Function> findByName(String functionName) {

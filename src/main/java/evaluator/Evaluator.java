@@ -61,6 +61,7 @@ public class Evaluator {
 
             if(operatorType == OperatorType.SPECIAL_FORM) {
                 SpecialForm specialForm = operatorLookup.lookupSpecialForm(operatorAtom.value(), environment);
+                // todo check field on specialForm - should we pass values as is?
                 return specialFormEvaluator.evaluate(specialForm, list, environment, this);
             }
             else if(operatorType == OperatorType.MACRO) {
@@ -86,6 +87,13 @@ public class Evaluator {
                                Environment environment) {
         List<? extends Value<?>> operands = fullList.nodes().subList(1, fullList.size()).stream()
                 .map(node -> evaluate(node, environment)).toList();
-        return operator.apply((List<Value<?>>) operands, environment);
+
+        // Pass only primary value of any values sets
+        List<? extends Value<?>> operandsPrimaryValues = operands.stream()
+                .map(atomEvaluator::toPrimaryValue)
+                .toList();
+
+        return operator.apply((List<Value<?>>) operandsPrimaryValues, environment);
     }
+
 }

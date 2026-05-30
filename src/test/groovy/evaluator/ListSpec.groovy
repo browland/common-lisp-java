@@ -7,7 +7,6 @@ import value.Value
 class ListSpec extends Specification {
     def "simple test"() {
         given:
-        def env = new Environment()
         def interpreter = new Interpreter()
 
         def defVar = "(defvar l (list 1 2 3))";
@@ -22,7 +21,6 @@ class ListSpec extends Specification {
 
     def "list elements requiring evaluation test"() {
         given:
-        def env = new Environment()
         def interpreter = new Interpreter()
 
         def defVar = "(defvar l (list (add 1 2) 2 3))";

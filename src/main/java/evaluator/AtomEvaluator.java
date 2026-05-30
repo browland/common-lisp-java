@@ -6,6 +6,7 @@ import exception.EvaluationException;
 import syntaxtree.Atom;
 import value.*;
 
+import java.util.List;
 import java.util.Optional;
 
 public class AtomEvaluator {
@@ -26,7 +27,8 @@ public class AtomEvaluator {
             Symbol symbol = Symbols.internSymbol(atomStringValue);
             Optional<Value<?>> possibleValue = environment.getVariable(symbol);
             if(possibleValue.isPresent()) {
-                return possibleValue.get();
+                Value<?> value = possibleValue.get();
+                return toPrimaryValue(value);
             }
 
             try {
@@ -66,5 +68,12 @@ public class AtomEvaluator {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    Value<?> toPrimaryValue(Value<?> value) {
+        if(value.getType() == ValueType.VALUES) {
+            return ((List<Value<?>>) value.getValue()).getFirst();
+        }
+        return value;
     }
 }

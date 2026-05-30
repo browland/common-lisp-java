@@ -7,5 +7,6 @@ public enum ValueType {
     CONS_CELL,
     SYMBOL,
     MACRO,
-    USER_INPUT
+    USER_INPUT,
+    VALUES
 }
