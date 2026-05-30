@@ -2,6 +2,7 @@ package function;
 
 import evaluator.env.Environment;
 import evaluator.env.Symbols;
+import printing.StringFormatter;
 import value.Symbol;
 import value.SymbolValue;
 import value.Value;
@@ -22,7 +23,8 @@ public class Format implements Function {
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
         // The first operand is the output stream to send the string, which is the second operand.
         Value<?> streamValue = operands.get(0);
-        String value = operands.get(1).getValue().toString();
+        String formatString = operands.get(1).getValue().toString();
+        List<Value<?>> values = operands.subList(2, operands.size());
 
         // t is a built-in symbol for constant logical true.  Correct CL behaviour is to treat t as meaning stdout.
         if(streamValue instanceof SymbolValue streamSymbolValue) {
@@ -33,7 +35,8 @@ public class Format implements Function {
 
             if(T.equals(streamSymbol)) {
                 // print value to standard out; return nil
-                System.out.println(value);
+                String formatted = StringFormatter.format(formatString, values);
+                System.out.println(formatted);
                 return Value.nil();
             }
             else if(NIL.equals(streamSymbol)) {

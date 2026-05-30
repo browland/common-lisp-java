@@ -15,7 +15,7 @@
         (go start)))))
 
 (defvar mylist '(1 2 3))
-(format t (myfilter mylist #'evenp))
+(format t "~S" (myfilter mylist #'evenp))
 
 ; Just playing with most for now
 (defvar x #'(lambda (x y) (> (* x x) (* y y))))

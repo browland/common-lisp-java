@@ -24,11 +24,11 @@
 
 (defun play (node-name)
   (let ((node (get-node node-name)))
-    (format t (getf node :text))
+    (format t "~S" (getf node :text))
 
     (let ((choices (getf node :choices)))
       (if (null choices)
-          (format t "End")
+          (format t "~S" "End")
           (progn
             (mapcar #'car choices)
 
@@ -37,7 +37,7 @@
                 (if next
                     (play (cdr next))
                     (progn
-                      (format t "Invalid choice")
+                      (format t "~S" "Invalid choice")
                       (play node-name))))))))))
 
 (play 'start)

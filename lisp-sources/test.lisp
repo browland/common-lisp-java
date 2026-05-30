@@ -1,4 +1,4 @@
 (defun hello-world ()
-  (format t "Hello, world!"))
+  (format t "~S" "Hello, world!"))
 
 (hello-world)

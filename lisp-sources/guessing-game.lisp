@@ -14,14 +14,14 @@
 
     (myloop until done do
       (setq i (+ i 1))
-      (format t i)
+      (format t "~S" i)
       (if (= i 10) (setq done t))))
 
 (defun guess-game ()
   (let ((target (+ 1 (random 100)))
         (guesses 0)
         (done nil))
-    (format t "Guess a number between 1 and 100")
+    (format t "~S" "Guess a number between 1 and 100")
 
     (myloop until done do
       (format t "Your guess: ")
@@ -30,13 +30,13 @@
 
         (cond
           ((< guess target)
-           (format t "Too low"))
+           (format t "~S" "Too low"))
 
           ((> guess target)
-           (format t "Too high"))
+           (format t "~S" "Too high"))
 
           (t
-           (format t "Correct!")
+           (format t "~S" "Correct!")
            (setq done t)))))))
 
 (guess-game)

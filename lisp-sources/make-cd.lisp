@@ -26,7 +26,7 @@
 
 (defun dump-db ()
   (mydolist cd *db*
-    (format t cd)))
+    (format t "~S" cd)))
 
 *db*
 

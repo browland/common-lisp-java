@@ -41,4 +41,4 @@
         (if (eq remaining nil) (return-from myloop t))
         (go start)))))
 
-(dolist (myvar *x*) (format t (add 1 myvar)))
+(dolist (myvar *x*) (format t "~S" (add 1 myvar)))

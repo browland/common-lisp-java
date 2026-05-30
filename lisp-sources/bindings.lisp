@@ -1,5 +1,5 @@
 (defun print (x)
-  (format t x))
+  (format t "~S" x))
 
 (let ((x 1))
   (print x)  ; should print 1
