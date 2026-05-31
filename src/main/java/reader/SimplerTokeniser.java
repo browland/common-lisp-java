@@ -36,6 +36,17 @@ public class SimplerTokeniser {
                 tokens.add(")");
                 pos++;
             }
+            else if(firstChar == '"') {
+                Optional<TokenResult> optionalTokenResult = handleString(program, pos);
+                if(optionalTokenResult.isPresent()) {
+                    TokenResult tokenResult = optionalTokenResult.get();
+                    tokens.add(tokenResult.token);
+                    pos+=tokenResult.charsConsumed;
+                }
+                else {
+                    throw new RuntimeException("not seen end of string in " + program);
+                }
+            }
             else if(firstChar == '#') {
                 // only an optional token here as it may be a block comment
                 Optional<TokenResult> optionalToken = handleHash(program, pos);
@@ -66,6 +77,26 @@ public class SimplerTokeniser {
             }
         }
         return tokens;
+    }
+
+    private Optional<TokenResult> handleString(String program, int pos) {
+        StringBuilder stringBuilder = new StringBuilder();
+        // Have already checked first char above
+        stringBuilder.append('"');
+        pos++;
+        while(pos < program.length()) {
+            char c = program.charAt(pos);
+            if(c == '"') {
+                stringBuilder.append(c);
+                return Optional.of(new TokenResult(stringBuilder.toString(), stringBuilder.length(), stringBuilder.length(), true));
+            }
+            else {
+                stringBuilder.append(c);
+                pos++;
+            }
+        }
+        // problem as we've not seen end of string
+        return Optional.empty();
     }
 
     private TokenResult handleDigits(String program, int pos) {

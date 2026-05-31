@@ -106,4 +106,18 @@ class SimplerTokeniserSpec extends Specification {
         result.get(0) == "1"
         result.get(1) == "1.23"
     }
+
+    def "string types"() {
+        given:
+        def program = "\"hello\" \"world\""
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 2
+        result.get(0) == "\"hello\""
+        result.get(1) == "\"world\""
+    }
 }
