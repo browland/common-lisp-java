@@ -28,7 +28,9 @@ public class NewReader {
             if(optionalAttachedEndNode.isPresent()) {
                 stringBuilder.append(currentChar);
                 EndNode endNode = optionalAttachedEndNode.get();
-                return Optional.of(new ParseElement(endNode.parseElementType, stringBuilder.toString()));
+                Optional<ParseElement> result = Optional.of(new ParseElement(endNode.parseElementType, stringBuilder.toString()));
+                reset();
+                return result;
             }
 
             currentNode = matchedNode;
@@ -40,6 +42,11 @@ public class NewReader {
             stringBuilder.deleteCharAt(pos);
         }
         return Optional.empty();
+    }
+
+    private void reset() {
+        currentNode = start;
+        stringBuilder.delete(0, stringBuilder.length());
     }
 
     enum StackAction {
