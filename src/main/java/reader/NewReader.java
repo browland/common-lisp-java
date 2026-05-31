@@ -9,10 +9,22 @@ public class NewReader {
     private final StringBuilder stringBuilder = new StringBuilder();
     private ParseNode currentNode;
 
-    public Optional<ParseElement> nextParseElement(String program) {
+    public List<ParseElement> parse(String program) {
+        int pos = 0;
         this.currentNode = start;
-        Optional<ParseElement> parseElement = nextParseElement(program, 0);
-        return parseElement;
+
+        List<ParseElement> parseElements = new ArrayList<>();
+
+        while(pos < program.length()) {
+            Optional<ParseElement> optionalNextElement = nextParseElement(program, pos);
+            if(optionalNextElement.isPresent()) {
+                ParseElement parseElement = optionalNextElement.get();
+                parseElements.add(parseElement);
+                pos = pos + parseElement.matchedChars.length();
+            }
+        }
+
+        return parseElements;
     }
 
     public Optional<ParseElement> nextParseElement(String program, int pos) {
@@ -22,15 +34,19 @@ public class NewReader {
 
         char currentChar = program.charAt(pos);
         List<ParseNode> nextNodes = currentNode.getNextNodes(currentChar);
-        for (ParseNode matchedNode : nextNodes) {
-            // check if this matched node has EndNode attached; if so we're done
-            Optional<EndNode> optionalAttachedEndNode = matchedNode.attachedEndNode();
-            if(optionalAttachedEndNode.isPresent()) {
-                stringBuilder.append(currentChar);
-                EndNode endNode = optionalAttachedEndNode.get();
-                Optional<ParseElement> result = Optional.of(new ParseElement(endNode.parseElementType, stringBuilder.toString()));
-                reset();
-                return result;
+        List<ParseNode> nextNodesPreferringTransitions = sortPreferringIncreasingDepth(currentNode, nextNodes);
+        System.out.println("current char %s next nodes %s".formatted(currentChar, nextNodesPreferringTransitions));
+        for (ParseNode matchedNode : nextNodesPreferringTransitions) {
+            // Avoid reading off the end of the string on next recursion by checking if this matched node has EndNode attached; if so we're done
+            if(pos == program.length()-1) {
+                Optional<EndNode> optionalAttachedEndNode = matchedNode.attachedEndNode();
+                if(optionalAttachedEndNode.isPresent()) {
+                    stringBuilder.append(currentChar);
+                    EndNode endNode = optionalAttachedEndNode.get();
+                    Optional<ParseElement> result = Optional.of(new ParseElement(endNode.parseElementType, stringBuilder.toString()));
+                    reset();
+                    return result;
+                }
             }
 
             currentNode = matchedNode;
@@ -42,6 +58,32 @@ public class NewReader {
             stringBuilder.deleteCharAt(pos);
         }
         return Optional.empty();
+    }
+
+    private List<ParseNode> sortPreferringIncreasingDepth(ParseNode currentNode, List<ParseNode> nextNodes) {
+        ParseNode savedEndNode = null;
+        ParseNode savedSelfNode = null;
+
+        List<ParseNode>  result = new ArrayList<>();
+        for(ParseNode parseNode : nextNodes) {
+            if(parseNode == currentNode) {
+                savedSelfNode = parseNode;
+            }
+            else if(parseNode instanceof EndNode) {
+                savedEndNode = parseNode;
+            }
+            else {
+                result.add(parseNode);
+            }
+        }
+
+        if(savedSelfNode != null) {
+            result.add(savedSelfNode);
+        }
+        if(savedEndNode != null) {
+            result.add(savedEndNode);
+        }
+        return result;
     }
 
     private void reset() {
@@ -146,6 +188,10 @@ public class NewReader {
             }
             return Optional.empty();
         }
+
+        public String toString() {
+            return "MatchNode: matchChar: %s, stackAction: %s".formatted(matchChar, stackAction);
+        }
     }
 
     public record ParseElement(ParseElementType parseElementType,
@@ -154,26 +200,35 @@ public class NewReader {
     }
 
     enum ParseElementType {
-        BLOCK_COMMENT,
+        BLOCK_COMMENT, BARE_WHITESPACE
     }
 
     // Block comment nodes
     private StartNode start = new StartNode();
-    private MatchNode openHash = new MatchNode("#", null);
-    private MatchNode openPipe = new MatchNode("|", StackAction.PUSH);
-    private MatchNode commentChar = new MatchNode("(*)", null);
-    private MatchNode closePipe = new MatchNode("|", null);
-    private MatchNode closeHash = new MatchNode("#", StackAction.POP);
-    private ParseNode end = new EndNode(ParseElementType.BLOCK_COMMENT);
+        private MatchNode openHash = new MatchNode("#", null);
+        private MatchNode openPipe = new MatchNode("|", StackAction.PUSH);
+        private MatchNode commentChar = new MatchNode("(*)", null);
+        private MatchNode closePipe = new MatchNode("|", null);
+        private MatchNode closeHash = new MatchNode("#", StackAction.POP);
+        private ParseNode endBlockComment = new EndNode(ParseElementType.BLOCK_COMMENT);
+
+        private MatchNode bareWhitespace = new MatchNode(" ", null);
+        private ParseNode endBareWhitespace = new EndNode(ParseElementType.BARE_WHITESPACE);
 
     // Block comment links
     {
-        start.setNextNodes(Set.of(openHash));
+        // All transitions from start
+        start.setNextNodes(Set.of(openHash, bareWhitespace));
+
+        // Block comment
         openHash.setNextNodes(Set.of(openPipe));
         openPipe.setNextNodes(Set.of(commentChar));
         commentChar.setNextNodes(Set.of(openHash, commentChar, closePipe));
         closePipe.setNextNodes(Set.of(closeHash));
-        closeHash.setNextNodes(Set.of(commentChar, end));
+        closeHash.setNextNodes(Set.of(commentChar, endBlockComment));
+
+        // Bare whitespace
+        bareWhitespace.setNextNodes(Set.of(bareWhitespace, endBareWhitespace));
     }
 
 }
