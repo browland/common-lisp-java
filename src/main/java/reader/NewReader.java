@@ -15,9 +15,9 @@ public class NewReader {
 
         List<ParseElement> parseElements = new ArrayList<>();
 
-        while(pos < program.length()) {
+        while (pos < program.length()) {
             Optional<ParseElement> optionalNextElement = nextParseElement(program, pos);
-            if(optionalNextElement.isPresent()) {
+            if (optionalNextElement.isPresent()) {
                 ParseElement parseElement = optionalNextElement.get();
                 parseElements.add(parseElement);
                 pos = pos + parseElement.matchedChars.length();
@@ -28,7 +28,7 @@ public class NewReader {
     }
 
     public Optional<ParseElement> nextParseElement(String program, int pos) {
-        if(pos > program.length()-1) {
+        if (pos > program.length() - 1) {
             return Optional.empty();
         }
 
@@ -39,9 +39,9 @@ public class NewReader {
         for (ParseNode matchedNode : nextNodesPreferringTransitions) {
             // If we're now on the last char, avoid reading off the end of the string on next recursion by checking if
             // this matched node has EndNode attached; if so we're done
-            if(pos == program.length()-1) {
+            if (pos == program.length() - 1) {
                 Optional<EndNode> optionalAttachedEndNode = matchedNode.attachedEndNode();
-                if(optionalAttachedEndNode.isPresent()) {
+                if (optionalAttachedEndNode.isPresent()) {
                     stringBuilder.append(currentChar);
                     EndNode endNode = optionalAttachedEndNode.get();
                     Optional<ParseElement> result = Optional.of(new ParseElement(endNode.parseElementType, stringBuilder.toString()));
@@ -52,11 +52,22 @@ public class NewReader {
 
             currentNode = matchedNode;
             stringBuilder.append(currentChar);
+
+            // Lookahead to see if next character matches the same node we're on and if so, instead of recursing, iterate to avoid stack overflow
+            char nextChar = program.charAt(pos + 1);
+            List<ParseNode> nextNodesLookahead = currentNode.getNextNodes(currentChar);
+            ParseNode nextNode = nextNodesLookahead.getFirst();
+            while(nextNode == matchedNode) {
+
+                pos++; // commit the pos increment as we had a successful match
+            }
+
+            // recurse as we're doing a state transition
             Optional<ParseElement> parseElement = nextParseElement(program, pos + 1);
-            if(parseElement.isPresent()) {
+            if (parseElement.isPresent()) {
                 return parseElement;
             }
-            stringBuilder.deleteCharAt(pos);
+            stringBuilder.deleteCharAt(pos);  // why do we do this
         }
         return Optional.empty();
     }
@@ -65,23 +76,21 @@ public class NewReader {
         ParseNode savedEndNode = null;
         ParseNode savedSelfNode = null;
 
-        List<ParseNode>  result = new ArrayList<>();
-        for(ParseNode parseNode : nextNodes) {
-            if(parseNode == currentNode) {
+        List<ParseNode> result = new ArrayList<>();
+        for (ParseNode parseNode : nextNodes) {
+            if (parseNode == currentNode) {
                 savedSelfNode = parseNode;
-            }
-            else if(parseNode instanceof EndNode) {
+            } else if (parseNode instanceof EndNode) {
                 savedEndNode = parseNode;
-            }
-            else {
+            } else {
                 result.add(parseNode);
             }
         }
 
-        if(savedSelfNode != null) {
+        if (savedSelfNode != null) {
             result.add(savedSelfNode);
         }
-        if(savedEndNode != null) {
+        if (savedEndNode != null) {
             result.add(savedEndNode);
         }
         return result;
@@ -98,7 +107,9 @@ public class NewReader {
 
     interface ParseNode {
         List<ParseNode> getNextNodes(char c);
+
         boolean matches(char c);
+
         Optional<EndNode> attachedEndNode();
     }
 
@@ -130,6 +141,7 @@ public class NewReader {
 
     static class EndNode implements ParseNode {
         private ParseElementType parseElementType;
+
         public EndNode(ParseElementType parseElementType) {
             this.parseElementType = parseElementType;
         }
@@ -182,9 +194,9 @@ public class NewReader {
         }
 
         public Optional<EndNode> attachedEndNode() {
-            for(ParseNode parseNode : nextNodes) {
-                if(parseNode instanceof EndNode) {
-                    return Optional.of((EndNode)parseNode);
+            for (ParseNode parseNode : nextNodes) {
+                if (parseNode instanceof EndNode) {
+                    return Optional.of((EndNode) parseNode);
                 }
             }
             return Optional.empty();
@@ -206,15 +218,15 @@ public class NewReader {
 
     // Block comment nodes
     private StartNode start = new StartNode();
-        private MatchNode openHash = new MatchNode("#", null);
-        private MatchNode openPipe = new MatchNode("|", StackAction.PUSH);
-        private MatchNode commentChar = new MatchNode("(*)", null);
-        private MatchNode closePipe = new MatchNode("|", null);
-        private MatchNode closeHash = new MatchNode("#", StackAction.POP);
-        private ParseNode endBlockComment = new EndNode(ParseElementType.BLOCK_COMMENT);
+    private MatchNode openHash = new MatchNode("#", null);
+    private MatchNode openPipe = new MatchNode("|", StackAction.PUSH);
+    private MatchNode commentChar = new MatchNode("(*)", null);
+    private MatchNode closePipe = new MatchNode("|", null);
+    private MatchNode closeHash = new MatchNode("#", StackAction.POP);
+    private ParseNode endBlockComment = new EndNode(ParseElementType.BLOCK_COMMENT);
 
-        private MatchNode bareWhitespace = new MatchNode(" ", null);
-        private ParseNode endBareWhitespace = new EndNode(ParseElementType.BARE_WHITESPACE);
+    private MatchNode bareWhitespace = new MatchNode(" ", null);
+    private ParseNode endBareWhitespace = new EndNode(ParseElementType.BARE_WHITESPACE);
 
     // Block comment links
     {
