@@ -35,9 +35,10 @@ public class NewReader {
         char currentChar = program.charAt(pos);
         List<ParseNode> nextNodes = currentNode.getNextNodes(currentChar);
         List<ParseNode> nextNodesPreferringTransitions = sortPreferringIncreasingDepth(currentNode, nextNodes);
-        System.out.println("current char %s next nodes %s".formatted(currentChar, nextNodesPreferringTransitions));
+//        System.out.println("current char %s next nodes %s".formatted(currentChar, nextNodesPreferringTransitions));
         for (ParseNode matchedNode : nextNodesPreferringTransitions) {
-            // Avoid reading off the end of the string on next recursion by checking if this matched node has EndNode attached; if so we're done
+            // If we're now on the last char, avoid reading off the end of the string on next recursion by checking if
+            // this matched node has EndNode attached; if so we're done
             if(pos == program.length()-1) {
                 Optional<EndNode> optionalAttachedEndNode = matchedNode.attachedEndNode();
                 if(optionalAttachedEndNode.isPresent()) {
