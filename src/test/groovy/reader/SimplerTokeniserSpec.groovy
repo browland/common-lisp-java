@@ -76,4 +76,34 @@ class SimplerTokeniserSpec extends Specification {
         then:
         result.isEmpty()
     }
+
+    def "open close list"() {
+        given:
+        def program = "(())"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 4
+        result.get(0) == "("
+        result.get(1) == "("
+        result.get(2) == ")"
+        result.get(3) == ")"
+    }
+
+    def "numeric types"() {
+        given:
+        def program = "1 1.23"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 2
+        result.get(0) == "1"
+        result.get(1) == "1.23"
+    }
 }

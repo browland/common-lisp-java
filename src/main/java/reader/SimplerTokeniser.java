@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class SimplerTokeniser {
-    private boolean withinBlockComment = false;
+    private State state;
     private int blockCommentDepth = 0;
 
     /**
@@ -16,11 +16,24 @@ public class SimplerTokeniser {
     public List<String> tokenise(String program) {
         int pos = 0;
         List<String> tokens = new ArrayList<>();
-        while(pos < program.length()-1) {
+        while(pos < program.length()) {
             // peek next char as it helps narrow down the next datum
             char firstChar = program.charAt(pos);
 
-            if(withinBlockComment) {
+            if(state == State.IN_BLOCK_COMMENT) {
+                pos++;
+            }
+            else if(Character.isDigit(firstChar)) {
+                TokenResult tokenResult = handleDigits(program, pos);
+                tokens.add(tokenResult.token);
+                pos+=tokenResult.charsConsumed;
+            }
+            else if(firstChar == '(') {
+                tokens.add("(");
+                pos++;
+            }
+            else if(firstChar == ')') {
+                tokens.add(")");
                 pos++;
             }
             else if(firstChar == '#') {
@@ -46,6 +59,7 @@ public class SimplerTokeniser {
             else if(Character.isWhitespace(firstChar)) {
                 int charsConsumed = consumeWhitespace(program, pos);
                 pos+=charsConsumed;
+                state = null;  // Clear any
             }
             else {
                 throw new UnsupportedOperationException("not yet handled");
@@ -54,10 +68,26 @@ public class SimplerTokeniser {
         return tokens;
     }
 
+    private TokenResult handleDigits(String program, int pos) {
+        StringBuilder stringBuilder = new StringBuilder();
+        char c = program.charAt(pos);
+        while(Character.isDigit(c) || c == '.') {
+            stringBuilder.append(c);
+            pos++;
+            if(pos < program.length()) {
+                c = program.charAt(pos);
+            }
+            else {
+                break;
+            }
+        }
+        return new TokenResult(stringBuilder.toString(), stringBuilder.length(), stringBuilder.length(), true);
+    }
+
     private void handleCloseBlockComment() {
         blockCommentDepth--;
         if(blockCommentDepth == 0) {
-            withinBlockComment = false;
+            state = null;
         }
     }
 
@@ -86,7 +116,7 @@ public class SimplerTokeniser {
     }
 
     private Optional<TokenResult> openBlockComment(String program, int pos) {
-        withinBlockComment = true;
+        state = State.IN_BLOCK_COMMENT;
         blockCommentDepth++;
         return Optional.of(new TokenResult(null, 2, 2, false));
     }
@@ -108,4 +138,8 @@ public class SimplerTokeniser {
     }
 
     record TokenResult(String token, int charsConsumed, int charsConsumedThisTime, boolean emit) {}
+
+    enum State {
+        IN_BLOCK_COMMENT
+    }
 }
