@@ -120,4 +120,70 @@ class SimplerTokeniserSpec extends Specification {
         result.get(0) == "\"hello\""
         result.get(1) == "\"world\""
     }
+
+    def "complex number"() {
+        given:
+        def program = "#C(1 2)"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "#C(1 2)"
+    }
+
+    def "simple atom"() {
+        given:
+        def program = "hello"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "hello"
+    }
+
+    def "simple list"() {
+        given:
+        def program = "(1 2 3)"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 5
+        result.get(0) == "("
+        result.get(1) == "1"
+        result.get(2) == "2"
+        result.get(3) == "3"
+        result.get(4) == ")"
+    }
+
+    def "more complex test"() {
+        given:
+        def program = "(1 (2 3) #\\a #C(1 2) ())"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 11
+        result.get(0) == "("
+        result.get(1) == "1"
+        result.get(2) == "("
+        result.get(3) == "2"
+        result.get(4) == "3"
+        result.get(5) == ")"
+        result.get(6) == "#\\a"
+        result.get(7) == "#C(1 2)"
+        result.get(8) == "("
+        result.get(9) == ")"
+        result.get(10) == ")"
+    }
 }

@@ -73,10 +73,35 @@ public class SimplerTokeniser {
                 state = null;  // Clear any
             }
             else {
-                throw new UnsupportedOperationException("not yet handled");
+                // only possibility left is a simple atomic value - read up to the first whitespace char (not including it)
+                Optional<TokenResult> optionalToken = handleAtom(program, pos);
+                if(optionalToken.isPresent()) {
+                    TokenResult tokenResult = optionalToken.get();
+                    String token = tokenResult.token;
+                    tokens.add(token);
+                    pos += tokenResult.charsConsumed();
+                }
             }
         }
         return tokens;
+    }
+
+    private Optional<TokenResult> handleAtom(String program, int pos) {
+        StringBuilder stringBuilder = new StringBuilder();
+        char c = program.charAt(pos);
+
+        while(!(Character.isWhitespace(c) || c == ')')) {
+            stringBuilder.append(c);
+
+            if(pos == program.length()-1) {
+                break;
+            }
+            pos++;
+            c = program.charAt(pos);
+        }
+
+        String atomString = stringBuilder.toString();
+        return Optional.of(new TokenResult(atomString, atomString.length(), atomString.length(), true));
     }
 
     private Optional<TokenResult> handleString(String program, int pos) {
@@ -141,9 +166,25 @@ public class SimplerTokeniser {
         else if(program.substring(pos, pos+2).equals("#|")) {
             return openBlockComment(program, pos);
         }
+        else if(program.substring(pos, pos+2).equals("#C")) {
+            return readComplexNumber(program, pos);
+        }
         else {
             return Optional.empty();
         }
+    }
+
+    private Optional<TokenResult> readComplexNumber(String program, int pos) {
+        // read up to (and including) the close bracket
+        StringBuilder complexLiteral = new StringBuilder();
+        for(char c : program.substring(pos).toCharArray()) {
+            complexLiteral.append(c);
+            if(c == ')') {
+                break;
+            }
+        }
+        String complexLiteralString = complexLiteral.toString();
+        return Optional.of(new TokenResult(complexLiteralString, complexLiteralString.length(), complexLiteralString.length(), true));
     }
 
     private Optional<TokenResult> openBlockComment(String program, int pos) {
