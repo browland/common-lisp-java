@@ -127,7 +127,7 @@ public class SimplerTokeniser {
     private TokenResult handleDigits(String program, int pos) {
         StringBuilder stringBuilder = new StringBuilder();
         char c = program.charAt(pos);
-        while(Character.isDigit(c) || c == '.') {
+        while(Character.isDigit(c) || c == '.' || c == '/') {
             stringBuilder.append(c);
             pos++;
             if(pos < program.length()) {
@@ -161,7 +161,7 @@ public class SimplerTokeniser {
     private Optional<TokenResult> handleHash(String program, int pos) {
         // Character literal
         if(program.substring(pos, pos+2).equals("#\\")) {
-            return readCharacterLiteral(program, pos);
+            return handleAtom(program, pos);
         }
         else if(program.substring(pos, pos+2).equals("#|")) {
             return openBlockComment(program, pos);
@@ -170,7 +170,8 @@ public class SimplerTokeniser {
             return readComplexNumber(program, pos);
         }
         else {
-            return Optional.empty();
+            // treat it like a regular atom e.g. #b0101
+            return handleAtom(program, pos);
         }
     }
 
@@ -191,22 +192,6 @@ public class SimplerTokeniser {
         state = State.IN_BLOCK_COMMENT;
         blockCommentDepth++;
         return Optional.of(new TokenResult(null, 2, 2, false));
-    }
-
-    private static Optional<TokenResult> readCharacterLiteral(String remainingProgram, int pos) {
-        // read up to next whitespace or close bracket to get full character literal.  If the char literal is the last
-        // thing on the line that'll still work as the loop will correctly terminate at end of string.
-        StringBuilder charLiteral = new StringBuilder();
-        for(char c : remainingProgram.substring(pos).toCharArray()) {
-            if(! (Character.isWhitespace(c) || c == ')')) {
-                charLiteral.append(c);
-            }
-            else {
-                break;
-            }
-        }
-        String charLiteralString = charLiteral.toString();
-        return Optional.of(new TokenResult(charLiteralString, charLiteralString.length(), charLiteralString.length(), true));
     }
 
     record TokenResult(String token, int charsConsumed, int charsConsumedThisTime, boolean emit) {}

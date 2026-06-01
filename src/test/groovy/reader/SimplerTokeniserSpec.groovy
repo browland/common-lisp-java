@@ -134,6 +134,58 @@ class SimplerTokeniserSpec extends Specification {
         result.get(0) == "#C(1 2)"
     }
 
+    def "binary value"() {
+        given:
+        def program = "#b0010"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "#b0010"
+    }
+
+    def "octal value"() {
+        given:
+        def program = "#o111"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "#o111"
+    }
+
+    def "hex value"() {
+        given:
+        def program = "#xa0d"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "#xa0d"
+    }
+
+    def "ratio value"() {
+        given:
+        def program = "1/2"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "1/2"
+    }
+
     def "simple atom"() {
         given:
         def program = "hello"
