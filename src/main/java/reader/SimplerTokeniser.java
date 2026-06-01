@@ -36,6 +36,14 @@ public class SimplerTokeniser {
                 tokens.add(")");
                 pos++;
             }
+            else if(firstChar == '\'') {
+                tokens.add("'");
+                pos++;
+            }
+            else if(firstChar == '`') {
+                tokens.add("`");
+                pos++;
+            }
             else if(firstChar == '"') {
                 Optional<TokenResult> optionalTokenResult = handleString(program, pos);
                 if(optionalTokenResult.isPresent()) {
@@ -63,7 +71,7 @@ public class SimplerTokeniser {
                     // received part of it so far.  We retain state so on the next call we can pick up from where we left off.
                 }
             }
-            else if(program.substring(pos, pos+2).equals("|#")) {
+            else if(program.length() > 2 && program.substring(pos, pos+2).equals("|#")) {
                 handleCloseBlockComment();
                 pos+=2;
             }
@@ -127,7 +135,7 @@ public class SimplerTokeniser {
     private TokenResult handleDigits(String program, int pos) {
         StringBuilder stringBuilder = new StringBuilder();
         char c = program.charAt(pos);
-        while(Character.isDigit(c) || c == '.' || c == '/') {
+        while(Character.isDigit(c) || c == '.' || c == '/' || c == 's' || c == 'd') {
             stringBuilder.append(c);
             pos++;
             if(pos < program.length()) {

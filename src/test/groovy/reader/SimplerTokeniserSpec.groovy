@@ -18,7 +18,7 @@ class SimplerTokeniserSpec extends Specification {
         result.get(1) == "#\\x"
     }
 
-    def "block quote, single line"() {
+    def "block comment, single line"() {
         given:
         def program = "#| testing testing |#"
         SimplerTokeniser tokeniser = new SimplerTokeniser()
@@ -30,7 +30,7 @@ class SimplerTokeniserSpec extends Specification {
         result.isEmpty()
     }
 
-    def "block quote, two calls over two lines"() {
+    def "block comment, two calls over two lines"() {
         given:
         def program1 = "#| testing "
         def program2 = "  testing |#"
@@ -45,7 +45,7 @@ class SimplerTokeniserSpec extends Specification {
         result2.isEmpty()
     }
 
-    def "block quote, two calls over two lines, followed by char literal"() {
+    def "block comment, two calls over two lines, followed by char literal"() {
         given:
         def program1 = "#| testing "
         def program2 = "  testing |# #\\x"
@@ -60,7 +60,7 @@ class SimplerTokeniserSpec extends Specification {
         result2.isEmpty()
     }
 
-    def "nested block quote"() {
+    def "nested block comment"() {
         given:
         def program = """#| This is a block comment which
                    can span multiple lines and
@@ -95,16 +95,17 @@ class SimplerTokeniserSpec extends Specification {
 
     def "numeric types"() {
         given:
-        def program = "1 1.23"
+        def program = "1 3.14159s0 3.14159d0"
         SimplerTokeniser tokeniser = new SimplerTokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
 
         then:
-        result.size() == 2
+        result.size() == 3
         result.get(0) == "1"
-        result.get(1) == "1.23"
+        result.get(1) == "3.14159s0"
+        result.get(2) == "3.14159d0"
     }
 
     def "string types"() {
@@ -199,6 +200,42 @@ class SimplerTokeniserSpec extends Specification {
         result.get(0) == "hello"
     }
 
+    def "quoted value"() {
+        given:
+        def program = "'a"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 2
+        result.get(0) == "'"
+        result.get(1) == "a"
+    }
+
+    def "function quote usage"() {
+        given:
+        def program = "(mapcar #'foo '(1 2 3))"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 10
+        result.get(0) == "("
+        result.get(1) == "mapcar"
+        result.get(2) == "#'foo"
+        result.get(3) == "'"
+        result.get(4) == "("
+        result.get(5) == "1"
+        result.get(6) == "2"
+        result.get(7) == "3"
+        result.get(8) == ")"
+        result.get(9) == ")"
+    }
+
     def "simple list"() {
         given:
         def program = "(1 2 3)"
@@ -214,6 +251,42 @@ class SimplerTokeniserSpec extends Specification {
         result.get(2) == "2"
         result.get(3) == "3"
         result.get(4) == ")"
+    }
+
+    def "quoted list"() {
+        given:
+        def program = "'(1 2 3)"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 6
+        result.get(0) == "'"
+        result.get(1) == "("
+        result.get(2) == "1"
+        result.get(3) == "2"
+        result.get(4) == "3"
+        result.get(5) == ")"
+    }
+
+    def "quasi-quoted list"() {
+        given:
+        def program = "`(1 2 3)"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 6
+        result.get(0) == "`"
+        result.get(1) == "("
+        result.get(2) == "1"
+        result.get(3) == "2"
+        result.get(4) == "3"
+        result.get(5) == ")"
     }
 
     def "more complex test"() {
