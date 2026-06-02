@@ -108,18 +108,17 @@ class SimplerTokeniserSpec extends Specification {
         result.get(2) == "3.14159d0"
     }
 
-    def "string types"() {
+    def "string and double-quote escaping"() {
         given:
-        def program = "\"hello\" \"world\""
+        def program = "\"hello\\\" \\\"world\""
         SimplerTokeniser tokeniser = new SimplerTokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
 
         then:
-        result.size() == 2
-        result.get(0) == "\"hello\""
-        result.get(1) == "\"world\""
+        result.size() == 1
+        result.get(0) == "\"hello\\\" \\\"world\""
     }
 
     def "complex number"() {
@@ -198,6 +197,19 @@ class SimplerTokeniserSpec extends Specification {
         then:
         result.size() == 1
         result.get(0) == "hello"
+    }
+
+    def "vector value"() {
+        given:
+        def program = "#(1 2 3)"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "#(1 2 3)"
     }
 
     def "quoted value"() {

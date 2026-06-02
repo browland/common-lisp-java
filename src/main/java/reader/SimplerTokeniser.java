@@ -113,6 +113,7 @@ public class SimplerTokeniser {
     }
 
     private Optional<TokenResult> handleString(String program, int pos) {
+        boolean escaping = false;
         StringBuilder stringBuilder = new StringBuilder();
         // Have already checked first char above
         stringBuilder.append('"');
@@ -120,10 +121,20 @@ public class SimplerTokeniser {
         while(pos < program.length()) {
             char c = program.charAt(pos);
             if(c == '"') {
-                stringBuilder.append(c);
-                return Optional.of(new TokenResult(stringBuilder.toString(), stringBuilder.length(), stringBuilder.length(), true));
+                if(escaping) {
+                    escaping = false;
+                    stringBuilder.append(c);
+                    pos++;
+                }
+                else {
+                    stringBuilder.append(c);
+                    return Optional.of(new TokenResult(stringBuilder.toString(), stringBuilder.length(), stringBuilder.length(), true));
+                }
             }
             else {
+                if(c == '\\') {
+                    escaping = true;
+                }
                 stringBuilder.append(c);
                 pos++;
             }
@@ -175,7 +186,10 @@ public class SimplerTokeniser {
             return openBlockComment(program, pos);
         }
         else if(program.substring(pos, pos+2).equals("#C")) {
-            return readComplexNumber(program, pos);
+            return readLiteralTerminatedByCloseBracket(program, pos);
+        }
+        else if(program.substring(pos, pos+2).equals("#(")) {
+            return readLiteralTerminatedByCloseBracket(program, pos);
         }
         else {
             // treat it like a regular atom e.g. #b0101
@@ -183,7 +197,7 @@ public class SimplerTokeniser {
         }
     }
 
-    private Optional<TokenResult> readComplexNumber(String program, int pos) {
+    private Optional<TokenResult> readLiteralTerminatedByCloseBracket(String program, int pos) {
         // read up to (and including) the close bracket
         StringBuilder complexLiteral = new StringBuilder();
         for(char c : program.substring(pos).toCharArray()) {
