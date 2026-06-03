@@ -11,7 +11,7 @@ class NewListBuilderSpec extends Specification {
         var program = """(+ 1 2)"""
 
         when:
-        var list = builder.build(program) as RList
+        var list = builder.build(program)[0] as RList
 
         then:
         list.size() == 3
@@ -29,16 +29,14 @@ class NewListBuilderSpec extends Specification {
         var program = """(1 . 2)"""
 
         when:
-        var list = builder.build(program) as RList
+        var list = builder.build(program)[0] as RList
 
         then:
-        list.size() == 3
+        list.size() == 2
         var atom1 = list.get(0) as Atom
-        atom1.value() == "cons"
+        atom1.value() == "1"
         var atom2 = list.get(1) as Atom
-        atom2.value() == "1"
-        var atom3 = list.get(2) as Atom
-        atom3.value() == "2"
+        atom2.value() == "2"
     }
 
     def "quoted atom"() {
@@ -47,7 +45,7 @@ class NewListBuilderSpec extends Specification {
         var program = "'foo"
 
         when:
-        var list = builder.build(program) as RList
+        var list = builder.build(program)[0] as RList
 
         then:
         list.size() == 2
@@ -63,7 +61,7 @@ class NewListBuilderSpec extends Specification {
         var program = "#'foo"
 
         when:
-        var list = builder.build(program) as RList
+        var list = builder.build(program)[0] as RList
 
         then:
         list.size() == 2
@@ -79,7 +77,7 @@ class NewListBuilderSpec extends Specification {
         var program = "'(1 2)"
 
         when:
-        var list = builder.build(program) as RList
+        var list = builder.build(program)[0] as RList
 
         then:
         list.size() == 2

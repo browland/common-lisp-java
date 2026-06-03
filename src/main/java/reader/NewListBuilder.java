@@ -19,13 +19,19 @@ public class NewListBuilder {
     public static void main(String[] args) throws IOException {
         String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/adventure.lisp"));
         NewListBuilder builder = new NewListBuilder();
-        Node rootNode = builder.build(program);
+        List<Node> forms = builder.build(program);
 
         Evaluator evaluator = new Evaluator();
-        evaluator.evaluate(rootNode, new Environment());
+        Environment env = new Environment();
+        for(Node form : forms) {
+            evaluator.evaluate(form, env);
+        }
     }
 
-    public Node build(String program) {
+    // Returns list of top level forms
+    public List<Node> build(String program) {
+        List<Node> result = new ArrayList<>();
+
         List<String> tokens = tokeniser.tokenise(program);
         for(int i = 0; i<tokens.size(); i++) {
             String token = tokens.get(i);
@@ -40,7 +46,11 @@ public class NewListBuilder {
                 newList(improperList);
             }
             else if(token.equals(")")) {
-                closeList();
+                RList closedList = closeList();
+                // if we're now at root level then add the list we just closed to the resulting forms
+                if(currentList == null) {
+                    result.add(closedList);
+                }
             }
             else if(token.equals("'")){
                 handleQuote();
@@ -50,15 +60,19 @@ public class NewListBuilder {
             }
             else {
                 if(currentList != null) {
-                    addAtom(token);
+                    RList possibleTopLevelForm = addAtom(token);
+                    if(possibleTopLevelForm != null) {
+                        result.add(possibleTopLevelForm);
+                    }
                 }
                 else {
                     // bare atom only
-                    return new Atom(token, null);
+                    Atom bareAtom = new Atom(token, null);
+                    result.add(bareAtom);
                 }
             }
         }
-        return currentList;
+        return result;
     }
 
     private void handleFunctionQuote() {
@@ -71,34 +85,40 @@ public class NewListBuilder {
         currentList.add(new Atom("quote", null));
     }
 
-    private void addAtom(String token) {
+    // returns list if we're closing the top level form
+    private RList addAtom(String token) {
         // if we're just about to add the third element of the list and it's dot and it's an improper list then
         // no-op
         if(currentList.improperList() && token.equals(".")) {
-            if(currentList.nodes().size() == 2) {
-                return;
+            if(currentList.nodes().size() == 1) {
+                return null;
             }
         }
         currentList.add(new Atom(token, null));
 
         if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
-            if(possibleQuoteAtom.value().equals("quote")) {
-                closeList();
+            if(possibleQuoteAtom.value().equals("quote") || possibleQuoteAtom.value().equals("function")) {
+                return closeList();
             }
         }
+        return null;
     }
 
-    private void closeList() {
+    // Returns list being closed
+    private RList closeList() {
+        RList result = currentList;
         RList parent = currentList.getParent();
         // Don't come up out of the top-level list, otherwise we have nothing left!
+        currentList = parent;
         if(parent != null) {
-            currentList = parent;
             if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
                 if(possibleQuoteAtom.value().equals("quote")) {
-                    closeList();
+                    RList quoteCloseResult = closeList();
+                    return quoteCloseResult != null && quoteCloseResult.getParent() == null ? quoteCloseResult : null;
                 }
             }
         }
+        return result.getParent() == null ? result : null;
     }
 
     private void newList(boolean improperList) {
@@ -113,8 +133,8 @@ public class NewListBuilder {
 
         }
 
-        if(improperList) {
-            addAtom("cons");
-        }
+//        if(improperList) {
+//            addAtom("cons");
+//        }
     }
 }
