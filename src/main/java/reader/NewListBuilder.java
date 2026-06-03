@@ -10,7 +10,6 @@ import java.util.List;
 public class NewListBuilder {
     private SimplerTokeniser tokeniser = new SimplerTokeniser();
     private RList currentList;
-    private boolean quoting;
 
     public Node build(String program) {
         List<String> tokens = tokeniser.tokenise(program);
@@ -32,6 +31,9 @@ public class NewListBuilder {
             else if(token.equals("'")){
                 handleQuote();
             }
+            else if(token.startsWith("#'")){
+                handleFunctionQuote();
+            }
             else {
                 if(currentList != null) {
                     addAtom(token);
@@ -45,8 +47,12 @@ public class NewListBuilder {
         return currentList;
     }
 
+    private void handleFunctionQuote() {
+        newList(false);
+        currentList.add(new Atom("function", null));
+    }
+
     private void handleQuote() {
-        quoting = true;
         newList(false);
         currentList.add(new Atom("quote", null));
     }
@@ -61,9 +67,10 @@ public class NewListBuilder {
         }
         currentList.add(new Atom(token, null));
 
-        if(quoting) {
-            closeList();
-            quoting = false;
+        if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
+            if(possibleQuoteAtom.value().equals("quote")) {
+                closeList();
+            }
         }
     }
 
@@ -72,26 +79,25 @@ public class NewListBuilder {
         // Don't come up out of the top-level list, otherwise we have nothing left!
         if(parent != null) {
             currentList = parent;
-        }
-
-        if(quoting) {
-            quoting = false;
-            closeList();
+            if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
+                if(possibleQuoteAtom.value().equals("quote")) {
+                    closeList();
+                }
+            }
         }
     }
 
     private void newList(boolean improperList) {
         if(currentList == null) {
-            currentList = new RList(0, null, quoting, improperList, new ArrayList<>());
+            currentList = new RList(0, null, false, improperList, new ArrayList<>());
         }
         else {
-            RList newList = new RList(0, null, quoting, improperList, new ArrayList<>());
+            RList newList = new RList(0, null, false, improperList, new ArrayList<>());
             newList.setParent(currentList);
             currentList.add(newList);
             currentList = newList;
 
         }
-        quoting = false;
 
         if(improperList) {
             addAtom("cons");

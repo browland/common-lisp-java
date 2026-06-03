@@ -194,10 +194,17 @@ public class SimplerTokeniser {
         else if(program.substring(pos, pos+2).equals("#(")) {
             return readLiteralTerminatedByCloseBracket(program, pos);
         }
+        else if(program.substring(pos, pos+2).equals("#'")) {
+            return readFunctionQuote(program, pos);
+        }
         else {
             // treat it like a regular atom e.g. #b0101
             return handleAtom(program, pos);
         }
+    }
+
+    private Optional<TokenResult> readFunctionQuote(String program, int pos) {
+        return Optional.of(new TokenResult("#'", 2, 2, true));
     }
 
     private Optional<TokenResult> readLiteralTerminatedByCloseBracket(String program, int pos) {

@@ -235,17 +235,18 @@ class SimplerTokeniserSpec extends Specification {
         def result = tokeniser.tokenise(program)
 
         then:
-        result.size() == 10
+        result.size() == 11
         result.get(0) == "("
         result.get(1) == "mapcar"
-        result.get(2) == "#'foo"
-        result.get(3) == "'"
-        result.get(4) == "("
-        result.get(5) == "1"
-        result.get(6) == "2"
-        result.get(7) == "3"
-        result.get(8) == ")"
+        result.get(2) == "#'"
+        result.get(3) == "foo"
+        result.get(4) == "'"
+        result.get(5) == "("
+        result.get(6) == "1"
+        result.get(7) == "2"
+        result.get(8) == "3"
         result.get(9) == ")"
+        result.get(10) == ")"
     }
 
     def "simple list"() {

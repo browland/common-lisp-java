@@ -57,6 +57,22 @@ class NewListBuilderSpec extends Specification {
         atom2.value() == "foo"
     }
 
+    def "quoted function"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "#'foo"
+
+        when:
+        var list = builder.build(program) as RList
+
+        then:
+        list.size() == 2
+        var atom1 = list.get(0) as Atom
+        atom1.value() == "function"
+        var atom2 = list.get(1) as Atom
+        atom2.value() == "foo"
+    }
+
     def "quoted list"() {
         given:
         var builder = new NewListBuilder()
