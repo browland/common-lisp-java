@@ -10,6 +10,7 @@ import java.util.List;
 public class NewListBuilder {
     private SimplerTokeniser tokeniser = new SimplerTokeniser();
     private RList currentList;
+    private boolean quoting;
 
     public Node build(String program) {
         List<String> tokens = tokeniser.tokenise(program);
@@ -28,6 +29,9 @@ public class NewListBuilder {
             else if(token.equals(")")) {
                 closeList();
             }
+            else if(token.equals("'")){
+                handleQuote();
+            }
             else {
                 if(currentList != null) {
                     addAtom(token);
@@ -41,6 +45,12 @@ public class NewListBuilder {
         return currentList;
     }
 
+    private void handleQuote() {
+        quoting = true;
+        newList(false);
+        currentList.add(new Atom("quote", null));
+    }
+
     private void addAtom(String token) {
         // if we're just about to add the third element of the list and it's dot and it's an improper list then
         // no-op
@@ -50,6 +60,11 @@ public class NewListBuilder {
             }
         }
         currentList.add(new Atom(token, null));
+
+        if(quoting) {
+            closeList();
+            quoting = false;
+        }
     }
 
     private void closeList() {
@@ -58,19 +73,25 @@ public class NewListBuilder {
         if(parent != null) {
             currentList = parent;
         }
+
+        if(quoting) {
+            quoting = false;
+            closeList();
+        }
     }
 
     private void newList(boolean improperList) {
         if(currentList == null) {
-            currentList = new RList(0, null, false, improperList, new ArrayList<>());
+            currentList = new RList(0, null, quoting, improperList, new ArrayList<>());
         }
         else {
-            RList newList = new RList(0, null, false, improperList, new ArrayList<>());
+            RList newList = new RList(0, null, quoting, improperList, new ArrayList<>());
             newList.setParent(currentList);
             currentList.add(newList);
             currentList = newList;
 
         }
+        quoting = false;
 
         if(improperList) {
             addAtom("cons");

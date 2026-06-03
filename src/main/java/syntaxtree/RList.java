@@ -48,6 +48,10 @@ public final class RList implements Node {
         return depth;
     }
 
+    public boolean isQuoted() {
+        return isQuoted;
+    }
+
     public RList fromIndex(int index) {
         List<Node> newNodes = nodes.subList(index, nodes.size());
         return new RList(depth, prefix, this.isQuoted, false, newNodes);
