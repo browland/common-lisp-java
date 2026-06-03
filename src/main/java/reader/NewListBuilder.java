@@ -13,16 +13,24 @@ public class NewListBuilder {
 
     public Node build(String program) {
         List<String> tokens = tokeniser.tokenise(program);
-        for(String token : tokens) {
+        for(int i = 0; i<tokens.size(); i++) {
+            String token = tokens.get(i);
+            boolean improperList = false;
             if(token.equals("(")) {
-                newList();
+                // determine if the second element in this list is a single dot - if so then this is an improper list
+                // and we should handle it differently
+                if(tokens.size() >= i+2+1) {
+                    String possibleDot = tokens.get(i+2);
+                    improperList = possibleDot.equals(".");
+                }
+                newList(improperList);
             }
             else if(token.equals(")")) {
                 closeList();
             }
             else {
                 if(currentList != null) {
-                    currentList.add(new Atom(token, null));
+                    addAtom(token);
                 }
                 else {
                     // bare atom only
@@ -33,6 +41,17 @@ public class NewListBuilder {
         return currentList;
     }
 
+    private void addAtom(String token) {
+        // if we're just about to add the third element of the list and it's dot and it's an improper list then
+        // no-op
+        if(currentList.improperList() && token.equals(".")) {
+            if(currentList.nodes().size() == 2) {
+                return;
+            }
+        }
+        currentList.add(new Atom(token, null));
+    }
+
     private void closeList() {
         RList parent = currentList.getParent();
         // Don't come up out of the top-level list, otherwise we have nothing left!
@@ -41,16 +60,20 @@ public class NewListBuilder {
         }
     }
 
-    private void newList() {
+    private void newList(boolean improperList) {
         if(currentList == null) {
-            currentList = new RList(0, null, false, false, new ArrayList<>());
+            currentList = new RList(0, null, false, improperList, new ArrayList<>());
         }
         else {
-            RList newList = new RList(0, null, false, false, new ArrayList<>());
+            RList newList = new RList(0, null, false, improperList, new ArrayList<>());
             newList.setParent(currentList);
             currentList.add(newList);
             currentList = newList;
 
+        }
+
+        if(improperList) {
+            addAtom("cons");
         }
     }
 }
