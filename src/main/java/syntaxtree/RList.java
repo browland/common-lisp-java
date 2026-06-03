@@ -4,11 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record RList(int depth,
-             String prefix,
-             boolean isQuoted,
-             boolean improperList,
-             List<Node> nodes) implements Node {
+public final class RList implements Node {
+    private int depth;
+    private String prefix;
+    private boolean isQuoted;
+    private boolean improperList;
+    private List<Node> nodes;
+    private RList parent;
+
+    public RList(int depth, String prefix, boolean isQuoted, boolean improperList, List<Node> nodes) {
+        this.depth = depth;
+        this.prefix = prefix;
+        this.isQuoted = isQuoted;
+        this.improperList = improperList;
+        this.nodes = nodes;
+    }
 
     public String toString() {
         String nodeStrings = nodes.stream()
@@ -25,9 +35,34 @@ public record RList(int depth,
         return nodes.size();
     }
 
+    // adding methods to stop breakage after migrating from record
+    public List<Node> nodes() {
+        return nodes;
+    }
+
+    public boolean improperList() {
+        return improperList;
+    }
+
+    public int depth() {
+        return depth;
+    }
+
     public RList fromIndex(int index) {
         List<Node> newNodes = nodes.subList(index, nodes.size());
         return new RList(depth, prefix, this.isQuoted, false, newNodes);
+    }
+
+    public void add(Node node) {
+        nodes.add(node);
+    }
+
+    public RList getParent() {
+        return parent;
+    }
+
+    public void setParent(RList parent) {
+        this.parent = parent;
     }
 
     public static final class Builder implements NodeBuilder {

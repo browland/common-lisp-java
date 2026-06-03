@@ -78,7 +78,7 @@ public class SimplerTokeniser {
             else if(Character.isWhitespace(firstChar)) {
                 int charsConsumed = consumeWhitespace(program, pos);
                 pos+=charsConsumed;
-                state = null;  // Clear any
+                state = null;
             }
             else {
                 // only possibility left is a simple atomic value - read up to the first whitespace char (not including it)
@@ -172,6 +172,9 @@ public class SimplerTokeniser {
         while(Character.isWhitespace(c)) {
             charsConsumed++;
             pos++;
+            if(pos > program.length()-1) {
+                break;
+            }
             c = program.charAt(pos);
         }
         return charsConsumed;

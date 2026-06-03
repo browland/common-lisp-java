@@ -323,4 +323,19 @@ class SimplerTokeniserSpec extends Specification {
         result.get(9) == ")"
         result.get(10) == ")"
     }
+
+    def "preceding whitespace"() {
+        given:
+        def program = """
+        (+ 1 2)
+        """
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 5
+        result.get(0) == "("
+    }
 }
