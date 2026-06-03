@@ -71,7 +71,7 @@ public class SimplerTokeniser {
                     // received part of it so far.  We retain state so on the next call we can pick up from where we left off.
                 }
             }
-            else if(program.length() > 2 && program.substring(pos, pos+2).equals("|#")) {
+            else if(program.length() > pos+2 && program.substring(pos, pos+2).equals("|#")) {
                 handleCloseBlockComment();
                 pos+=2;
             }

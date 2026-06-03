@@ -1,15 +1,29 @@
 package reader;
 
+import evaluator.Evaluator;
+import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NewListBuilder {
     private SimplerTokeniser tokeniser = new SimplerTokeniser();
     private RList currentList;
+
+    public static void main(String[] args) throws IOException {
+        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/adventure.lisp"));
+        NewListBuilder builder = new NewListBuilder();
+        Node rootNode = builder.build(program);
+
+        Evaluator evaluator = new Evaluator();
+        evaluator.evaluate(rootNode, new Environment());
+    }
 
     public Node build(String program) {
         List<String> tokens = tokeniser.tokenise(program);
