@@ -86,7 +86,7 @@ public class SimplerTokeniser {
                 }
             }
             else if(firstChar == ';') {
-                int charsConsumed = consumeComment(program, pos);
+                int charsConsumed = consumeLineComment(program, pos);
                 pos+=charsConsumed;
             }
             else if(program.length() > pos+2 && program.substring(pos, pos+2).equals("|#")) {
@@ -112,12 +112,15 @@ public class SimplerTokeniser {
         return tokens;
     }
 
-    private int consumeComment(String program, int pos) {
+    private int consumeLineComment(String program, int pos) {
         int charsConsumed = 0;
         char c = program.charAt(pos);
         while(c != '\n') {
             charsConsumed++;
             pos++;
+            if(pos == program.length()) {
+                break;
+            }
             c = program.charAt(pos);
         }
         return charsConsumed;

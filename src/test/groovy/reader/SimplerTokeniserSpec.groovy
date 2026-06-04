@@ -388,4 +388,26 @@ class SimplerTokeniserSpec extends Specification {
         result.get(4) == "z"
         result.get(5) == ")"
     }
+
+    def "test breakage"() {
+        given:
+        def program = """
+        (defvar x (function add))
+        """
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 8
+        result.get(0) == "("
+        result.get(1) == "defvar"
+        result.get(2) == "x"
+        result.get(3) == "("
+        result.get(4) == "function"
+        result.get(5) == "add"
+        result.get(6) == ")"
+        result.get(7) == ")"
+    }
 }

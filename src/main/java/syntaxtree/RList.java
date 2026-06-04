@@ -11,13 +11,15 @@ public final class RList implements Node {
     private boolean improperList;
     private List<Node> nodes;
     private RList parent;
+    private boolean synthetic;  // inserted by the reader from syntactic sugar for quoting
 
-    public RList(int depth, String prefix, boolean isQuoted, boolean improperList, List<Node> nodes) {
+    public RList(int depth, String prefix, boolean isQuoted, boolean improperList, List<Node> nodes, boolean synthetic) {
         this.depth = depth;
         this.prefix = prefix;
         this.isQuoted = isQuoted;
         this.improperList = improperList;
         this.nodes = nodes;
+        this.synthetic = synthetic;
     }
 
     public String toString() {
@@ -52,9 +54,13 @@ public final class RList implements Node {
         return isQuoted;
     }
 
+    public boolean isSynthetic() {
+        return synthetic;
+    }
+
     public RList fromIndex(int index) {
         List<Node> newNodes = nodes.subList(index, nodes.size());
-        return new RList(depth, prefix, this.isQuoted, false, newNodes);
+        return new RList(depth, prefix, this.isQuoted, false, newNodes, synthetic);
     }
 
     public void add(Node node) {
@@ -109,7 +115,7 @@ public final class RList implements Node {
 
         public RList build() {
             List<Node> nodes = nodeBuilders.stream().map(NodeBuilder::build).toList();
-            return new RList(depth, prefix, isQuoted, improperList, nodes);
+            return new RList(depth, prefix, isQuoted, improperList, nodes, false);
         }
 
         public void setIsImproperList() {

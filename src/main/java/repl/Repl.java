@@ -4,8 +4,12 @@ import evaluator.Evaluator;
 import evaluator.env.Environment;
 import exception.EvaluationException;
 import reader.CharacterReader;
+import reader.NewListBuilder;
+import reader.SimplerTokeniser;
+import syntaxtree.Node;
 import syntaxtree.ParseElementBuilder;
 import syntaxtree.SyntaxTreeBuilder;
+import value.Value;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -14,8 +18,10 @@ import java.util.List;
 
 public class Repl implements ReplOutput {
     private final IncrementalInterpreter incrementalInterpreter;
+    private final NewListBuilder newListBuilder = new NewListBuilder();
+    private final Evaluator evaluator = new Evaluator();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Repl repl = new Repl();
 
         if(args.length == 1) {
@@ -59,23 +65,36 @@ public class Repl implements ReplOutput {
         incrementalInterpreter.consume('\n');  // signal end of line; required to know when each line is done
     }
 
-    public void run() {
+    public void run() throws IOException{
         promptForNewForm();
-        InputStreamReader isr = new InputStreamReader(System.in);
-
-        try {
-            while (true) {
-                char c = (char) isr.read();
-                try {
-                    incrementalInterpreter.consume(c);
-                }
-                catch(EvaluationException e) {
-                    System.err.println(e.getMessage() + "\n");
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        Environment env = new Environment();
+        while(true) {
+            String line = br.readLine();
+            List<Node> forms = newListBuilder.build(line);
+            if(forms != null) {
+                for(Node form : forms) {
+                    Value<?> result = evaluator.evaluate(form, env);
+                    System.out.println(result);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            promptForNewForm();
         }
+//        InputStreamReader isr = new InputStreamReader(System.in);
+//
+//        try {
+//            while (true) {
+//                char c = (char) isr.read();
+//                try {
+//                    incrementalInterpreter.consume(c);
+//                }
+//                catch(EvaluationException e) {
+//                    System.err.println(e.getMessage() + "\n");
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override

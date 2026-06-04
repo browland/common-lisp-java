@@ -21,7 +21,7 @@ public class NewListBuilder {
 
     public static void main(String[] args) throws IOException {
         // todo need to handle quasiquote and unquote and unquote-unsplicing
-        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/dolist.lisp"));
+        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/adventure.lisp"));
         NewListBuilder builder = new NewListBuilder();
         List<Node> forms = builder.build(program);
 
@@ -47,7 +47,7 @@ public class NewListBuilder {
                     String possibleDot = tokens.get(i+2);
                     improperList = possibleDot.equals(".");
                 }
-                newList(improperList);
+                newList(improperList, false);
             }
             else if(token.equals(")")) {
                 RList closedList = closeList();
@@ -60,7 +60,7 @@ public class NewListBuilder {
                 handleQuote();
             }
             else if(token.equals("`")) {
-                newList(false);
+                newList(false, true);
                 currentList.add(new Atom("quasiquote", null));
             }
             else if(token.startsWith("#'")){
@@ -68,11 +68,11 @@ public class NewListBuilder {
             }
             else if(token.startsWith(",")) {
                 if(token.equals(",")) {
-                    newList(false);
+                    newList(false, true);
                     currentList.add(new Atom("unquote", null));
                 }
                 else if(token.equals(",@")) {
-                    newList(false);
+                    newList(false, true);
                     currentList.add(new Atom("unquote-splicing", null));
                 }
             }
@@ -90,16 +90,36 @@ public class NewListBuilder {
                 }
             }
         }
-        return result;
+
+        // Check the last form is finished
+        if(!result.isEmpty()) {
+            Node lastForm = result.getLast();
+            if(lastForm instanceof Atom) {
+                return result;
+            }
+            else {
+                RList lastFormList = (RList)lastForm;
+                if(lastFormList.getParent() == null) {
+                    return result;
+                }
+                else {
+                    // not finished yet
+                    return null;
+                }
+            }
+        }
+        else {
+            return null;
+        }
     }
 
     private void handleFunctionQuote() {
-        newList(false);
+        newList(false, true);
         currentList.add(new Atom("function", null));
     }
 
     private void handleQuote() {
-        newList(false);
+        newList(false, true);
         currentList.add(new Atom("quote", null));
     }
 
@@ -115,8 +135,10 @@ public class NewListBuilder {
         currentList.add(new Atom(token, null));
 
         if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
-            if(TOKENS_WHICH_INSERT_AS_LIST.contains(possibleQuoteAtom.value())) {
-                return closeList();
+            if(currentList.isSynthetic()) {
+                if(TOKENS_WHICH_INSERT_AS_LIST.contains(possibleQuoteAtom.value())) {
+                    return closeList();
+                }
             }
         }
         return null;
@@ -130,7 +152,7 @@ public class NewListBuilder {
         currentList = parent;
         if(parent != null) {
             if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
-                if(TOKENS_WHICH_INSERT_AS_LIST.contains(possibleQuoteAtom.value())) {
+                if(currentList.isSynthetic() && TOKENS_WHICH_INSERT_AS_LIST.contains(possibleQuoteAtom.value())) {
                     RList quoteCloseResult = closeList();
                     return quoteCloseResult != null && quoteCloseResult.getParent() == null ? quoteCloseResult : null;
                 }
@@ -139,12 +161,12 @@ public class NewListBuilder {
         return result.getParent() == null ? result : null;
     }
 
-    private void newList(boolean improperList) {
+    private void newList(boolean improperList, boolean synthetic) {
         if(currentList == null) {
-            currentList = new RList(0, null, false, improperList, new ArrayList<>());
+            currentList = new RList(0, null, false, improperList, new ArrayList<>(), synthetic);
         }
         else {
-            RList newList = new RList(0, null, false, improperList, new ArrayList<>());
+            RList newList = new RList(0, null, false, improperList, new ArrayList<>(), synthetic);
             newList.setParent(currentList);
             currentList.add(newList);
             currentList = newList;

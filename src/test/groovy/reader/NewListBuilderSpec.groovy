@@ -150,4 +150,29 @@ class NewListBuilderSpec extends Specification {
         def innerAtom2 = innerList.get(1) as Atom
         innerAtom2.value() == "2"
     }
+
+    // we auto-close the function list too early as we thought we'd created the list ourselves via function quote :-/
+    def "test breakage due to explicit use of function which we might accidentally auto close"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(defvar x (function add))"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 3
+    }
+
+    def "test breakage due to with null returned"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(defvar z #'add)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 3
+    }
 }
