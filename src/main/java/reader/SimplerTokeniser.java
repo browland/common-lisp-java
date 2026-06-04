@@ -71,6 +71,20 @@ public class SimplerTokeniser {
                     // received part of it so far.  We retain state so on the next call we can pick up from where we left off.
                 }
             }
+            else if(firstChar == ',') {
+                Optional<TokenResult> optionalToken = handleUnquote(program, pos);
+                if(optionalToken.isPresent()) {
+                    TokenResult tokenResult = optionalToken.get();
+                    if (tokenResult.emit) {
+                        String token = tokenResult.token;
+                        tokens.add(token);
+                    }
+                    pos += tokenResult.charsConsumed();
+                }
+                else {
+                    throw new IllegalStateException("unhandled unquote case");
+                }
+            }
             else if(program.length() > pos+2 && program.substring(pos, pos+2).equals("|#")) {
                 handleCloseBlockComment();
                 pos+=2;
@@ -92,6 +106,16 @@ public class SimplerTokeniser {
             }
         }
         return tokens;
+    }
+
+    private Optional<TokenResult> handleUnquote(String program, int pos) {
+        // see if it's unquote-splicing or just plain unquote
+        if(program.length() > pos + 2 && program.charAt(pos+1) == '@') {
+            return Optional.of(new TokenResult(",@", 2, 2, true));
+        }
+        else {
+            return Optional.of(new TokenResult(",", 1, 1, true));
+        }
     }
 
     private Optional<TokenResult> handleAtom(String program, int pos) {

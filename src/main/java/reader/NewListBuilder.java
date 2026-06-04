@@ -11,13 +11,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class NewListBuilder {
+    private static final Set<String> TOKENS_WHICH_INSERT_AS_LIST = Set.of("quote", "unquote", "quasiquote", "unquote-splicing", "function");
+
     private SimplerTokeniser tokeniser = new SimplerTokeniser();
     private RList currentList;
 
     public static void main(String[] args) throws IOException {
-        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/adventure.lisp"));
+        // todo need to handle quasiquote and unquote and unquote-unsplicing
+        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/fibonacci.lisp"));
         NewListBuilder builder = new NewListBuilder();
         List<Node> forms = builder.build(program);
 
@@ -55,8 +59,22 @@ public class NewListBuilder {
             else if(token.equals("'")){
                 handleQuote();
             }
+            else if(token.equals("`")) {
+                newList(false);
+                currentList.add(new Atom("quasiquote", null));
+            }
             else if(token.startsWith("#'")){
                 handleFunctionQuote();
+            }
+            else if(token.startsWith(",")) {
+                if(token.equals(",")) {
+                    newList(false);
+                    currentList.add(new Atom("unquote", null));
+                }
+                else if(token.equals(",@")) {
+                    newList(false);
+                    currentList.add(new Atom("unquote-splicing", null));
+                }
             }
             else {
                 if(currentList != null) {
@@ -97,7 +115,7 @@ public class NewListBuilder {
         currentList.add(new Atom(token, null));
 
         if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
-            if(possibleQuoteAtom.value().equals("quote") || possibleQuoteAtom.value().equals("function")) {
+            if(TOKENS_WHICH_INSERT_AS_LIST.contains(possibleQuoteAtom.value())) {
                 return closeList();
             }
         }
@@ -112,7 +130,7 @@ public class NewListBuilder {
         currentList = parent;
         if(parent != null) {
             if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
-                if(possibleQuoteAtom.value().equals("quote")) {
+                if(TOKENS_WHICH_INSERT_AS_LIST.contains(possibleQuoteAtom.value())) {
                     RList quoteCloseResult = closeList();
                     return quoteCloseResult != null && quoteCloseResult.getParent() == null ? quoteCloseResult : null;
                 }
@@ -132,9 +150,5 @@ public class NewListBuilder {
             currentList = newList;
 
         }
-
-//        if(improperList) {
-//            addAtom("cons");
-//        }
     }
 }

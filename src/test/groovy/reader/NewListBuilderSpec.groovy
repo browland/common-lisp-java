@@ -90,4 +90,64 @@ class NewListBuilderSpec extends Specification {
         def innerAtom2 = innerList.get(1) as Atom
         innerAtom2.value() == "2"
     }
+
+    def "quasiquoted list"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "`(1 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+        var atom1 = list.get(0) as Atom
+        atom1.value() == "quasiquote"
+        var innerList = list.get(1) as RList
+        innerList.size() == 2
+        def innerAtom1 = innerList.get(0) as Atom
+        innerAtom1.value() == "1"
+        def innerAtom2 = innerList.get(1) as Atom
+        innerAtom2.value() == "2"
+    }
+
+    def "unquoted list"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = ",(1 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+        var atom1 = list.get(0) as Atom
+        atom1.value() == "unquote"
+        var innerList = list.get(1) as RList
+        innerList.size() == 2
+        def innerAtom1 = innerList.get(0) as Atom
+        innerAtom1.value() == "1"
+        def innerAtom2 = innerList.get(1) as Atom
+        innerAtom2.value() == "2"
+    }
+
+    def "unquote splicing list"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = ",@(1 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+        var atom1 = list.get(0) as Atom
+        atom1.value() == "unquote-splicing"
+        var innerList = list.get(1) as RList
+        innerList.size() == 2
+        def innerAtom1 = innerList.get(0) as Atom
+        innerAtom1.value() == "1"
+        def innerAtom2 = innerList.get(1) as Atom
+        innerAtom2.value() == "2"
+    }
 }

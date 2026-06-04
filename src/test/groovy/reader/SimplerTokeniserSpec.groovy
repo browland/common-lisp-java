@@ -339,4 +339,40 @@ class SimplerTokeniserSpec extends Specification {
         result.size() == 5
         result.get(0) == "("
     }
+
+    def "unquote symbol"() {
+        given:
+        def program = """
+        ,x
+        """
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 2
+        result.get(0) == ","
+        result.get(1) == "x"
+    }
+
+    def "unquote list"() {
+        given:
+        def program = """
+        ,(x y z)
+        """
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 6
+        result.get(0) == ","
+        result.get(1) == "("
+        result.get(2) == "x"
+        result.get(3) == "y"
+        result.get(4) == "z"
+        result.get(5) == ")"
+    }
 }
