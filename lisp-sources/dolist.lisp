@@ -41,4 +41,5 @@
         (if (eq remaining nil) (return-from myloop t))
         (go start)))))
 
+(defvar *x* '(1 2 3))
 (dolist (myvar *x*) (format t "~S" (add 1 myvar)))
