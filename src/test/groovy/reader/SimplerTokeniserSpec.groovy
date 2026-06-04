@@ -77,6 +77,19 @@ class SimplerTokeniserSpec extends Specification {
         result.isEmpty()
     }
 
+    def "comment"() {
+        given:
+        def program = """; this is a test
+            """
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.isEmpty()
+    }
+
     def "open close list"() {
         given:
         def program = "(())"

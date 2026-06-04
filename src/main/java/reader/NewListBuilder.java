@@ -21,7 +21,7 @@ public class NewListBuilder {
 
     public static void main(String[] args) throws IOException {
         // todo need to handle quasiquote and unquote and unquote-unsplicing
-        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/fibonacci.lisp"));
+        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/dolist.lisp"));
         NewListBuilder builder = new NewListBuilder();
         List<Node> forms = builder.build(program);
 
