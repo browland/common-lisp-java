@@ -135,10 +135,11 @@ class MacroExpanderSpec extends Specification {
 
     def parseMacro(macroDef) {
         def macroDefList = programToRList(macroDef)
+        def name = macroDefList.nodes().get(1) as Atom
         def bindingsList = macroDefList.nodes().get(2) as RList
         List<Atom> bindings = bindingsList.nodes().collect {it -> (Atom)it}
         def macroBody = macroDefList.nodes().get(3) as RList
-        return new Macro(bindings, macroBody)
+        return new Macro(bindings, macroBody, name.value())
     }
 
     def programToRList(program) {
