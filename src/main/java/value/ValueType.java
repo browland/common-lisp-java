@@ -8,5 +8,7 @@ public enum ValueType {
     SYMBOL,
     MACRO,
     USER_INPUT,
-    VALUES
+    VALUES,
+    CHAR_IN_STREAM,
+    CHARACTER,
 }

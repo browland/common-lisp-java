@@ -9,3 +9,6 @@
         (setq rest (cdr rest))
         (if (eq rest nil) (return-from myloop (funcall ,func curr)))
         (go start)))))
+
+(defmacro push (item place)
+  `(setq ,place (cons ,item ,place)))

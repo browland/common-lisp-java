@@ -38,6 +38,9 @@ public class FunctionRegistry {
         registry.put("evenp", new Evenp());
         registry.put("values", new Values());
         registry.put("floor", new Floor());
+        registry.put("open", new Open());
+        registry.put("close", new Close());
+        registry.put("read-char", new ReadChar());
     }
 
     public Optional<Function> findByName(String functionName) {
