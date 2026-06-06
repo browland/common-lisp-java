@@ -3,16 +3,14 @@ package repl;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import exception.EvaluationException;
-import reader.CharacterReader;
 import reader.NewListBuilder;
 import syntaxtree.Node;
-import syntaxtree.ParseElementBuilder;
-import syntaxtree.SyntaxTreeBuilder;
 import value.Value;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -21,9 +19,9 @@ import java.util.stream.Stream;
 public class Repl implements ReplOutput {
     private static final Repl repl = new Repl();
 
-    private final IncrementalInterpreter incrementalInterpreter;
     private final NewListBuilder newListBuilder = new NewListBuilder();
     private final Evaluator evaluator = new Evaluator();
+    private final Environment env = new Environment();
 
     public static void main(String[] args) throws IOException {
         loadLibrary();
@@ -66,33 +64,29 @@ public class Repl implements ReplOutput {
         }
     }
 
-    public Repl() {
-        SyntaxTreeBuilder syntaxTreeBuilder = new SyntaxTreeBuilder();
-        ParseElementBuilder parseElementBuilder = new ParseElementBuilder(syntaxTreeBuilder);
-        CharacterReader characterReader = new CharacterReader(parseElementBuilder);
-
-        Environment environment = new Environment();
-        Evaluator evaluator = new Evaluator();
-
-        incrementalInterpreter = new IncrementalInterpreter(syntaxTreeBuilder, parseElementBuilder, characterReader, evaluator, environment, this);
-    }
-
-    public void run(String initialForms) {
-        for(char c : initialForms.toCharArray()) {
-            try {
-                incrementalInterpreter.consume(c);
+    public void run(String initialForms) throws IOException {
+        BufferedReader br = new BufferedReader(new StringReader(initialForms));
+        String line = br.readLine();
+        while(line != null) {
+            List<Node> forms = newListBuilder.build(line);
+            if (forms != null) {
+                for (Node form : forms) {
+                    try {
+                        Value<?> result = evaluator.evaluate(form, env);
+                        System.out.println(result);
+                    } catch (EvaluationException e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
             }
-            catch(EvaluationException e) {
-                System.err.println(e.getMessage() + "\n");
-            }
+            line = br.readLine();
         }
-        incrementalInterpreter.consume('\n');  // signal end of line; required to know when each line is done
     }
 
     public void run() throws IOException{
+        // here
         promptForNewForm();
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        Environment env = new Environment();
         while(true) {
             String line = br.readLine();
             List<Node> forms = newListBuilder.build(line);

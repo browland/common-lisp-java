@@ -148,6 +148,10 @@ public class BindingEvaluator {
 
         String bindingName = currentBindingAtom.value();
         Symbol bindingSymbol = Symbols.internSymbol(bindingName);
+
+        if(operands.size() < currentIndex+1) {
+            throw new EvaluationException(String.format("Expected %d bindings, got only %d", bindings.size(), operands.size()));
+        }
         bindingSubsetMap.put(bindingSymbol, operands.get(currentIndex));
 
         return bindingSubsetMap;

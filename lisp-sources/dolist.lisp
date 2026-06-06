@@ -43,3 +43,19 @@
 
 (defvar *x* '(1 2 3))
 (dolist (myvar *x*) (format t "~S" (add 1 myvar)))
+
+; the library one
+(defmacro dolist (mylist func)
+  `(let ((curr (car ,mylist))
+        (rest (cdr ,mylist)))
+    (block myloop
+      (tagbody
+        start
+        (funcall ,func curr)
+        (setq curr (car rest))
+        (setq rest (cdr rest))
+        (if (eq rest nil) (return-from myloop (funcall ,func curr)))
+        (go start)))))
+
+(defvar res nil)
+(dolist '(1 2 3) #'(lambda (x) (setq res (cons x res))))

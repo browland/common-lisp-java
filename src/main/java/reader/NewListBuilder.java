@@ -16,11 +16,10 @@ import java.util.Set;
 public class NewListBuilder {
     private static final Set<String> TOKENS_WHICH_INSERT_AS_LIST = Set.of("quote", "unquote", "quasiquote", "unquote-splicing", "function");
 
-    private SimplerTokeniser tokeniser = new SimplerTokeniser();
+    private final SimplerTokeniser tokeniser = new SimplerTokeniser();
     private RList currentList;
 
     public static void main(String[] args) throws IOException {
-        // todo need to handle quasiquote and unquote and unquote-unsplicing
         String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/adventure.lisp"));
         NewListBuilder builder = new NewListBuilder();
         List<Node> forms = builder.build(program);

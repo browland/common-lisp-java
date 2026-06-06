@@ -1,12 +1,11 @@
-(defmacro dolist (mylist, func)
-  `(let ((curr 0)
-        (rest ,mylist)
-        (result 0))
+(defmacro dolist (mylist func)
+  `(let ((curr (car ,mylist))
+        (rest (cdr ,mylist)))
     (block myloop
       (tagbody
         start
-        (setq result (funcall ,func curr result))
+        (funcall ,func curr)
         (setq curr (car rest))
         (setq rest (cdr rest))
-        (if (eq rest nil) (return-from myloop (funcall ,func curr result)))
+        (if (eq rest nil) (return-from myloop (funcall ,func curr)))
         (go start)))))
