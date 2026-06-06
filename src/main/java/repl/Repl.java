@@ -74,8 +74,13 @@ public class Repl implements ReplOutput {
             List<Node> forms = newListBuilder.build(line);
             if(forms != null) {
                 for(Node form : forms) {
-                    Value<?> result = evaluator.evaluate(form, env);
-                    System.out.println(result);
+                    try {
+                        Value<?> result = evaluator.evaluate(form, env);
+                        System.out.println(result);
+                    }
+                    catch(EvaluationException e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
             }
             promptForNewForm();

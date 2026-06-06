@@ -4,6 +4,7 @@ import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import evaluator.env.Symbols;
+import exception.EvaluationException;
 import function.Closure;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -24,7 +25,9 @@ public class Defun implements SpecialForm {
         RList bindingsList = (RList)entireList.get(2);
         List<Node> bindings = bindingsList.nodes();
 
-        // todo validate bindings - if &rest is present then there should be exactly 1 more binding
+        if(entireList.size() < 4) {
+            throw new EvaluationException("defun: expect defun name bindings_list body_form");
+        }
 
         Node body = entireList.get(3);
 

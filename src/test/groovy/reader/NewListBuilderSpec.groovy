@@ -23,6 +23,20 @@ class NewListBuilderSpec extends Specification {
         atom3.value() == "2"
     }
 
+    def "apply form with no space before open paren"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = """'(1 2 3(3 2 1))"""
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+        list.get(1).size() == 4
+        list.get(1).get(3).size() == 3
+    }
+
     def "cons pair (improper list)"() {
         given:
         var builder = new NewListBuilder()
