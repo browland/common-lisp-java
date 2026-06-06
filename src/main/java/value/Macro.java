@@ -10,11 +10,14 @@ public class Macro {
     // we're destructuring.
     private final List<Node> bindings;
     private final RList body;
+    private final String name;
 
     public Macro(List<Node> bindings,
-                 RList body) {
+                 RList body,
+                 String name) {
         this.bindings = bindings;
         this.body = body;
+        this.name = name;
     }
 
     public List<Node> getBindings() {
@@ -23,5 +26,14 @@ public class Macro {
 
     public RList getBody() {
         return body;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("macro %s", name);
     }
 }

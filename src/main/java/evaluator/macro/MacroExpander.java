@@ -3,6 +3,7 @@ package evaluator.macro;
 import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import exception.EvaluationException;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.*;
@@ -23,7 +24,13 @@ public class MacroExpander {
 
         // convert bindings to values (not looking up from environment)
         List<Node> operandNodes = entireList.nodes().subList(1, entireList.size());
-        Map<Symbol, Value<?>> bindingsMap = bindingEvaluator.assignBindingsFromNodeOperands(bindings, operandNodes);
+        Map<Symbol, Value<?>> bindingsMap;
+        try {
+            bindingsMap = bindingEvaluator.assignBindingsFromNodeOperands(bindings, operandNodes);
+        }
+        catch(EvaluationException e) {
+            throw new EvaluationException(String.format("While expanding %s: %s", macro, e));
+        }
 
         try {
             localEnv.enterScope();

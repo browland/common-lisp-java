@@ -26,12 +26,14 @@ public class DefMacro implements SpecialForm {
 
         RList body = (RList)entireList.get(3);
 
-        Macro macro = new Macro(bindings, body);
-        MacroValue macroValue = new MacroValue(macro);
 
         Atom nameAtom = (Atom)entireList.get(1);
         String name = nameAtom.value();
         Symbol symbol = Symbols.internSymbol(name);
+
+        Macro macro = new Macro(bindings, body, name);
+        MacroValue macroValue = new MacroValue(macro);
+
         environment.setGlobal(symbol, macroValue);
 
         return new StringValue(name);
