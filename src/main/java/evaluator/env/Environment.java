@@ -35,6 +35,14 @@ public class Environment {
     }
 
     public void setVariable(Symbol symbol, Value<?> value) {
+        // first walk stack of lexical scopes
+        for (ScopeEnvironment scope : scopes) {
+            if(scope.getVariable(symbol).isPresent()) {
+                scope.setVariable(symbol, value);
+                return;
+            }
+        }
+
         if(globalEnvironment.isReserved(symbol)) {
             throw new RuntimeException("Can't set for name which already exists in global env " + symbol);
         }

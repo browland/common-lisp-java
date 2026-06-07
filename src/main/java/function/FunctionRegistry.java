@@ -9,9 +9,11 @@ public class FunctionRegistry {
 
     public FunctionRegistry() {
         registry.put("add", new Add());
+        registry.put("+", new Add());
+        registry.put("subtract", new Subtract());
+        registry.put("-", new Subtract());
         registry.put("and", new And());
         registry.put("eq", new Eq());
-        registry.put("+", new Add());
         registry.put("*", new Multiply());
         registry.put("format", new Format());
         registry.put("load", new Load());
