@@ -17,8 +17,8 @@ public class MacroExpander {
 
     public Node expand(Macro macro,
                        RList entireList,
-                       Evaluator evaluator) {
-        Environment localEnv = new Environment();  // Todo I think this should be a ScopeEnvironment, otherwise redefining globals etc
+                       Evaluator evaluator,
+                       Environment environment) {
         List<Node> bindings = macro.getBindings();
         RList bodyTemplate = macro.getBody();
 
@@ -33,12 +33,12 @@ public class MacroExpander {
         }
 
         try {
-            localEnv.enterScope();
+            environment.enterScope();
             for (Symbol bindingSymbol : bindingsMap.keySet()) {
-                localEnv.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
+                environment.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
             }
 
-            Value<?> expandedValue = evaluator.evaluate(bodyTemplate, localEnv);
+            Value<?> expandedValue = evaluator.evaluate(bodyTemplate, environment);
             if (expandedValue instanceof ConsCellValue consCellValue) {
                 return consToRList.translate(consCellValue);
             } else if (expandedValue instanceof StringValue stringValue) {
@@ -50,7 +50,7 @@ public class MacroExpander {
             }
             throw new IllegalArgumentException("not ready yet for other value types");
         } finally {
-            localEnv.leaveScope();
+            environment.leaveScope();
         }
     }
 }

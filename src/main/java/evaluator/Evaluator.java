@@ -66,7 +66,7 @@ public class Evaluator {
             }
             else if(operatorType == OperatorType.MACRO) {
                 Macro macro = operatorLookup.lookupMacro(operatorAtom.value(), environment);
-                Node expandedMacro = macroExpander.expand(macro, list, this);
+                Node expandedMacro = macroExpander.expand(macro, list, this, environment);
                 return evaluate(expandedMacro, environment);
             }
             else {

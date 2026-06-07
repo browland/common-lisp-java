@@ -1,6 +1,7 @@
 package evaluator.macro
 
 import evaluator.Evaluator
+import evaluator.env.Environment
 import reader.CharacterReader
 import spock.lang.Specification
 import syntaxtree.Atom
@@ -14,6 +15,7 @@ class MacroExpanderSpec extends Specification {
         given:
         def evaluator = new Evaluator()
         def macroExpander = new MacroExpander()
+        def environment = new Environment()
 
         def macroDef = """
           (defmacro foo () 
@@ -26,7 +28,7 @@ class MacroExpanderSpec extends Specification {
         def macroInvocationList = programToRList(macroInvocation)
 
         when:
-        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator) as RList
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator, environment) as RList
 
         then:
         def firstSymbol = expandedMacroList.nodes().get(0) as Atom
@@ -43,6 +45,7 @@ class MacroExpanderSpec extends Specification {
         given:
         def evaluator = new Evaluator()
         def macroExpander = new MacroExpander()
+        def environment = new Environment()
 
         def macroDef = """
             (defmacro inspect (x)
@@ -55,7 +58,7 @@ class MacroExpanderSpec extends Specification {
         def macroInvocationList = programToRList(macroInvocation)
 
         when:
-        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator) as RList
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator, environment) as RList
 
         then:
         def operator = expandedMacroList.nodes().get(0) as Atom
@@ -75,6 +78,7 @@ class MacroExpanderSpec extends Specification {
         given:
         def evaluator = new Evaluator()
         def macroExpander = new MacroExpander()
+        def environment = new Environment()
 
         def macroDef = """
             (defmacro inspect (x)
@@ -87,7 +91,7 @@ class MacroExpanderSpec extends Specification {
         def macroInvocationList = programToRList(macroInvocation)
 
         when:
-        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator) as RList
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator, environment) as RList
 
         then:
         def operator = expandedMacroList.nodes().get(0) as Atom
@@ -106,6 +110,7 @@ class MacroExpanderSpec extends Specification {
         given:
         def evaluator = new Evaluator()
         def macroExpander = new MacroExpander()
+        def environment = new Environment()
 
         def macroDef = """
             (defmacro inspect (x)
@@ -118,7 +123,7 @@ class MacroExpanderSpec extends Specification {
         def macroInvocationList = programToRList(macroInvocation)
 
         when:
-        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator) as RList
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator, environment) as RList
 
         then:
         def operator = expandedMacroList.nodes().get(0) as Atom

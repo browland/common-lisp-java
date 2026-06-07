@@ -40,7 +40,19 @@
 |#
 
 (defmacro letter (var-forms)
-    `(let ,@var-forms
+    `(let (,@var-forms)
         (format t "~S" foo)))
 
-(macroexpand-1 '(letter ((foo 0))))
+(macroexpand-1 '(letter ((foo 0) (bar 1))))
+
+(defun let-var-extractor (elem)
+    (list (car elem) (cadr elem)))
+
+(defvar *thing* '((foo 1 unused) (bar 2 unusedtoo)))
+(mapcar #'let-var-extractor *thing*)
+
+(defmacro letter2 (var-forms)
+    `(let ,(mapcar #'let-var-extractor var-forms)
+        (format t "~S" extracted-var-forms)))
+
+(macroexpand-1 '(letter2 ((foo 1 unused) (bar 2 unusedtoo))))

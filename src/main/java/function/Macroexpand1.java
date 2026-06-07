@@ -41,7 +41,7 @@ public class Macroexpand1 implements Function {
 
         // Now pass to MacroExpander to get the syntax tree
         Evaluator evaluator = new Evaluator();  // feels wrong, but Evaluator is stateless
-        Node expandedResult = macroExpander.expand(macro, macroInvocationRList, evaluator);
+        Node expandedResult = macroExpander.expand(macro, macroInvocationRList, evaluator, environment);
 
         // Now need to convert to a ConsCellValue as we always return a Value from a function.
         if(expandedResult instanceof RList rlistResult) {
