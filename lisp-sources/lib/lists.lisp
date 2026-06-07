@@ -27,3 +27,20 @@
                     ,@forms
                     (incf ,var)
                     (go start)))))
+
+; trying to do 'do' - not ready yet
+#|
+(defmacro do (var-defs (end-test-form result-forms) &rest body)
+    `(let ,(mapcar #'(lambda (x) ((car x) (cadr x))) var-defs)
+        (format t "~S" foo)))
+
+; test
+(macroexpand-1 '(do ((foo 0)) ((eq foo 10) t) t))
+(do ((foo 0)) ((eq foo 10) t) t)
+|#
+
+(defmacro letter (var-forms)
+    `(let ,@var-forms
+        (format t "~S" foo)))
+
+(macroexpand-1 '(letter ((foo 0))))

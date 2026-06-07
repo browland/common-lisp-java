@@ -47,6 +47,9 @@ public class BindingEvaluator {
                 bindingsMap.putAll(collectAtomBinding(bindings, operands, i));
             }
             else if(BindingType.LIST == bindingType) {
+                if(operands.size() < i+1) {
+                    throw new EvaluationException("Expecting list parameter in position " + (i+1));
+                }
                 bindingsMap.putAll(collectListBinding((RList)currentBindingNode, (ConsCellValue)operands.get(i)));
             }
         }
@@ -131,6 +134,9 @@ public class BindingEvaluator {
         List<Value<?>> restOperands = operands.subList(currentIndex, operands.size());
 
         // 3. convert to a cons list
+        if(restOperands.isEmpty()) {
+            throw new EvaluationException("Expected at least one argument for &rest binding");
+        }
         ConsCellValue restValuesCons = ConsCellValue.fromJavaList(restOperands);
 
         // 4. add this binding to the bindingsMap

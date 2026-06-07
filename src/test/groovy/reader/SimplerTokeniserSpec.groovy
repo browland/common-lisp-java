@@ -57,7 +57,7 @@ class SimplerTokeniserSpec extends Specification {
 
         then:
         result1.isEmpty()
-        result2.isEmpty()
+        result2.get(0) == "#\\x"
     }
 
     def "nested block comment"() {

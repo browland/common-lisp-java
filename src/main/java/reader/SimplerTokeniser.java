@@ -20,7 +20,11 @@ public class SimplerTokeniser {
             // peek next char as it helps narrow down the next datum
             char firstChar = program.charAt(pos);
 
-            if(state == State.IN_BLOCK_COMMENT) {
+            if(program.length() >= pos+2 && program.substring(pos, pos+2).equals("|#")) {
+                handleCloseBlockComment();
+                pos+=2;
+            }
+            else if(state == State.IN_BLOCK_COMMENT) {
                 pos++;
             }
             else if(Character.isDigit(firstChar)) {
@@ -88,10 +92,6 @@ public class SimplerTokeniser {
             else if(firstChar == ';') {
                 int charsConsumed = consumeLineComment(program, pos);
                 pos+=charsConsumed;
-            }
-            else if(program.length() > pos+2 && program.substring(pos, pos+2).equals("|#")) {
-                handleCloseBlockComment();
-                pos+=2;
             }
             else if(Character.isWhitespace(firstChar)) {
                 int charsConsumed = consumeWhitespace(program, pos);
