@@ -83,4 +83,4 @@
 (do ((n 0 (1+ n))                          ; var declarations
      (cur 0 next)
      (next 1 (+ cur next)))
-    ((= 10 n) cur))                        ; end form and result form
+    ((= 10 n) cur) (format t "~S ~S ~S" n cur next))                        ; end form and result form
