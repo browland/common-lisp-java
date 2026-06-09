@@ -4,6 +4,7 @@ import evaluator.env.Environment;
 import evaluator.env.Symbols;
 import evaluator.special.SpecialForm;
 import evaluator.special.SpecialFormRegistry;
+import exception.EvaluationException;
 import function.Function;
 import function.FunctionRegistry;
 import syntaxtree.Atom;
@@ -41,7 +42,7 @@ public class OperatorLookup {
             return OperatorType.MACRO;
         }
 
-        throw new IllegalArgumentException("Unknown operator " + operatorName);
+        throw new EvaluationException("Unknown operator " + operatorName);
     }
 
     public Optional<Function> lookupFunction(String name, Environment environment) {

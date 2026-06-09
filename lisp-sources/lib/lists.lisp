@@ -51,8 +51,79 @@
 (defvar *thing* '((foo 1 unused) (bar 2 unusedtoo)))
 (mapcar #'let-var-extractor *thing*)
 
+; this extracts out the let form from the var forms, and ignores the step function
 (defmacro letter2 (var-forms)
     `(let ,(mapcar #'let-var-extractor var-forms)
-        (format t "~S" extracted-var-forms)))
+        (format t "~S" foo)))
 
 (macroexpand-1 '(letter2 ((foo 1 unused) (bar 2 unusedtoo))))
+
+; this goes one step further and adds tagbody/block for looping
+(defmacro letter3 (var-forms)
+    `(let ,(mapcar #'let-var-extractor var-forms)
+        (block myloop
+            (tagbody
+                start
+                (format t "~S" foo)))))
+
+(letter3 ((foo 1 unused) (bar 2 unusedtoo)))
+
+; this goes one step further and passes in the statements
+(defmacro letter4 (var-forms end-test-and-result-form statements)
+    `(let ,(mapcar #'let-var-extractor var-forms)
+        (block myloop
+            (tagbody
+                start
+                (,@statements)))))
+
+(macroexpand-1 '(letter4
+    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((eq foo 10))                        ; end test form with no result form provided
+    (format t "~S" foo)))                 ; statement(s) for each loop
+
+(letter4
+    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((eq foo 10))                        ; end test form with no result form provided
+    (format t "~S" foo))                 ; statement(s) for each loop
+
+; this goes one step further and does looping as we don't have the step forms
+(defmacro letter5 (var-forms end-test-and-result-form statements)
+    `(let ,(mapcar #'let-var-extractor var-forms)
+        (block myloop
+            (tagbody
+                start
+                (if ,(car end-test-and-result-form)
+                    (return-from myloop)
+                    (go start))
+                (,@statements)))))
+
+(macroexpand-1 '(letter5
+    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((eq foo 10))                        ; end test form with no result form provided
+    (format t "~S" foo)))                 ; statement(s) for each loop
+
+(letter5
+    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((eq foo 10))                        ; end test form with no result form provided
+    (format t "~S" foo))                 ; statement(s) for each loop
+
+; this goes one step further and extracts the step forms
+(defmacro letter6 (var-forms end-test-and-result-form statements)
+    `(let ,(mapcar #'let-var-extractor var-forms)
+        (block myloop
+            (tagbody
+                start
+                (if ,(car end-test-and-result-form)
+                    (return-from myloop)
+                    (go start))
+                (,@statements)))))
+
+(macroexpand-1 '(letter6
+    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((eq foo 10))                        ; end test form with no result form provided
+    (format t "~S" foo)))                 ; statement(s) for each loop
+
+(letter6
+    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((eq foo 10))                        ; end test form with no result form provided
+    (format t "~S" foo))                 ; statement(s) for each loop
