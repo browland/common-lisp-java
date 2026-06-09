@@ -49,6 +49,13 @@
                 ,@(step-forms-extractor var-forms)
                 (go start)))))
 
-(do ((foo 1 (+ 1 foo)) (bar 2 (- 1 bar)))  ; var definitions
+; do invocation with all possible parameters
+(do ((foo 1 (+ 1 foo)) (bar 2 (- 1 bar)))  ; var declarations
     ((eq foo 10) (t))                      ; end test form with no result form provided
     (format t "~S" foo))                   ; statement(s) for each loop
+
+; do invocation with no body (we just have a result form)
+(do ((n 0 (1+ n))                          ; var declarations
+     (cur 0 next)
+     (next 1 (+ cur next)))
+    ((= 10 n) cur))                        ; end form and result form
