@@ -86,6 +86,7 @@
     ((eq foo 10))                        ; end test form with no result form provided
     (format t "~S" foo))                 ; statement(s) for each loop
 
+
 ; this goes one step further and does looping as we don't have the step forms
 (defmacro letter5 (var-forms end-test-and-result-form statements)
     `(let ,(mapcar #'let-var-extractor var-forms)
@@ -102,28 +103,35 @@
     ((eq foo 10))                        ; end test form with no result form provided
     (format t "~S" foo)))                 ; statement(s) for each loop
 
-(letter5
-    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
-    ((eq foo 10))                        ; end test form with no result form provided
-    (format t "~S" foo))                 ; statement(s) for each loop
+;(letter5
+;    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+;    ((eq foo 10))                        ; end test form with no result form provided
+;    (format t "~S" foo))                 ; statement(s) for each loop
 
 ; this goes one step further and extracts the step forms
+(defun step-forms-extractor (elem)
+    (car (cdr (cdr elem))))
+
+(defun step-forms-extractor-new (var-decls)
+    (mapcar #'(lambda (decl) (list 'setq (car decl) (car (cdr (cdr decl))))) var-decls))
+
 (defmacro letter6 (var-forms end-test-and-result-form statements)
-    `(let ,(mapcar #'let-var-extractor var-forms)
+    `(let (,@(mapcar #'let-var-extractor var-forms))
         (block myloop
             (tagbody
                 start
                 (if ,(car end-test-and-result-form)
-                    (return-from myloop)
-                    (go start))
-                (,@statements)))))
+                    (return-from myloop))
+                (,@statements)
+                ,@(step-forms-extractor-new var-forms)
+                (go start)))))
 
 (macroexpand-1 '(letter6
-    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((foo 1 (+ 1 foo)) (bar 2 (- 1 bar)))   ; var definitions
     ((eq foo 10))                        ; end test form with no result form provided
     (format t "~S" foo)))                 ; statement(s) for each loop
 
 (letter6
-    ((foo 1 unused) (bar 2 unusedtoo))   ; var definitions
+    ((foo 1 (+ 1 foo)) (bar 2 (- 1 bar)))   ; var definitions
     ((eq foo 10))                        ; end test form with no result form provided
     (format t "~S" foo))                 ; statement(s) for each loop
