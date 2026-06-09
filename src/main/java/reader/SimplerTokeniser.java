@@ -188,7 +188,7 @@ public class SimplerTokeniser {
     private TokenResult handleDigits(String program, int pos) {
         StringBuilder stringBuilder = new StringBuilder();
         char c = program.charAt(pos);
-        while(Character.isDigit(c) || c == '.' || c == '/' || c == 's' || c == 'd') {
+        while(Character.isDigit(c) || c == '.' || c == '/' || c == 's' || c == 'd' || c == '+' || c == '-') {  // + and - included just so we can handle functions 1+ and 1-
             stringBuilder.append(c);
             pos++;
             if(pos < program.length()) {

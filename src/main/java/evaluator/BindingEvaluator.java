@@ -56,7 +56,8 @@ public class BindingEvaluator {
 
         if(restMode) {
             if(operands.size() < bindings.size()-1) {
-                throw new EvaluationException("Expected at least " + (bindings.size() - 1) + " arguments but got " + operands.size());
+//                throw new EvaluationException("Expected at least " + (bindings.size() - 1) + " arguments but got " + operands.size());
+                // Do nothing as we inserted an empty list for the missing &rest binding
             }
         }
         else {
@@ -134,10 +135,10 @@ public class BindingEvaluator {
         List<Value<?>> restOperands = operands.subList(currentIndex, operands.size());
 
         // 3. convert to a cons list
-        if(restOperands.isEmpty()) {
-            throw new EvaluationException("Expected at least one argument for &rest binding");
-        }
-        ConsCellValue restValuesCons = ConsCellValue.fromJavaList(restOperands);
+        // TODO But if restOperands is empty list, then handle that case explicitly (otherwise we'll try to access an element)
+        // TODO double check this empty list semantics and if ok make static method
+        ConsCell emptyCons = new ConsCell(Value.nil(), Value.nil());
+        ConsCellValue restValuesCons = restOperands.isEmpty() ? new ConsCellValue(emptyCons) : ConsCellValue.fromJavaList(restOperands);
 
         // 4. add this binding to the bindingsMap
         bindingSubsetMap.put(restArgsBindingSymbol, restValuesCons);

@@ -410,4 +410,17 @@ class SimplerTokeniserSpec extends Specification {
         result.get(6) == ")"
         result.get(7) == ")"
     }
+
+    def "test 1+"() {
+        given:
+        def program = "1+"
+        SimplerTokeniser tokeniser = new SimplerTokeniser()
+
+        when:
+        def result = tokeniser.tokenise(program)
+
+        then:
+        result.size() == 1
+        result.get(0) == "1+"
+    }
 }
