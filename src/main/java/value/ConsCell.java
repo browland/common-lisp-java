@@ -27,6 +27,10 @@ public class ConsCell implements Iterable<Value<?>> {
     }
 
     public String toString() {
+        if((Value.nil().equals(car) && Value.nil().equals(cdr)) || (SymbolValue.nil().equals(car) && SymbolValue.nil().equals(cdr))) {
+            return "()";
+        }
+
         List<Value<?>> valueList = new ArrayList<>();
         for(Value<?> nextValue : this) {
             valueList.add(nextValue);

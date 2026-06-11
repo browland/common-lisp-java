@@ -11,6 +11,9 @@ public class ConsCellValue extends Value<ConsCell> {
     }
 
     public static ConsCellValue fromRList(RList readerList) {
+        if(readerList.nodes().isEmpty()) {
+            return new ConsCellValue(new ConsCell(Value.nil(), Value.nil()));
+        }
         return readerList.improperList() ? improperListFromJavaList(readerList.nodes()) : fromJavaList(readerList.nodes());
     }
 

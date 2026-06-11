@@ -12,8 +12,11 @@ public class Cdr implements Function {
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
         // single operand - if it's not a ConsCell then error
         Value<?> operand = operands.getFirst();
-        if(operand.getType() != ValueType.CONS_CELL) {
-            throw new IllegalArgumentException("Can only invoke car on a list");
+        if(operand.equals(Value.nil())) {
+            return Value.nil();
+        }
+        else if(operand.getType() != ValueType.CONS_CELL) {
+            throw new IllegalArgumentException("Can only invoke cdr on nil or a list");
         }
 
         ConsCell consCell = (ConsCell) operand.getValue();

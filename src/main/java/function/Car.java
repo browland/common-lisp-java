@@ -10,9 +10,12 @@ import java.util.List;
 public class Car implements Function {
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
-        // single operand - if it's not a ConsCell then error
+        // single operand - if it's not nil or a ConsCell then error
         Value<?> operand = operands.getFirst();
-        if(operand.getType() != ValueType.CONS_CELL) {
+        if(operand.equals(Value.nil())) {
+            return Value.nil();
+        }
+        else if(operand.getType() != ValueType.CONS_CELL) {
             throw new IllegalArgumentException("Can only invoke car on a list");
         }
 
