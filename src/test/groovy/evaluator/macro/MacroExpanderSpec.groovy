@@ -138,6 +138,37 @@ class MacroExpanderSpec extends Specification {
         listElem2.value() == "2"
     }
 
+    def "allows multiple body forms"() {
+        given:
+        def evaluator = new Evaluator()
+        def macroExpander = new MacroExpander()
+        def environment = new Environment()
+
+        def macroDef = """
+          (defmacro foo () 
+            (defvar *x* 1)
+            '(+ *x* 2))
+        """
+
+        def macro = parseMacro(macroDef)
+
+        def macroInvocation = "(foo)"
+        def macroInvocationList = programToRList(macroInvocation)
+
+        when:
+        def expandedMacroList = macroExpander.expand(macro, macroInvocationList, evaluator, environment)
+
+        then:
+        def firstSymbol = expandedMacroList.nodes().get(0) as Atom
+        firstSymbol.value() == "+"
+
+        def firstArg = expandedMacroList.nodes().get(1) as Atom
+        firstArg.value() == "1"
+
+        def secondArg = expandedMacroList.nodes().get(2) as Atom
+        secondArg.value() == "2"
+    }
+
     def parseMacro(macroDef) {
         def macroDefList = programToRList(macroDef)
         def name = macroDefList.nodes().get(1) as Atom

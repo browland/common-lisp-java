@@ -48,7 +48,7 @@ public class Quasiquote implements SpecialForm {
                                          Evaluator evaluator) {
         // Handle case of empty list first
         if(rlist.nodes().isEmpty()) {
-            return new QuasiquoteResult(new ConsCellValue(new ConsCell(Value.nil(), Value.nil())), false);
+            return new QuasiquoteResult(new ConsCellValue(ConsCell.empty()), false);
         }
 
         Node firstNode = rlist.get(0);
@@ -69,7 +69,7 @@ public class Quasiquote implements SpecialForm {
 
         // We walk the nodes in reverse order so that the cons structure has a 'car' of the first element in the list.
         // We'd have to reverse at some point; may as well do it at the outset so the source of truth is correct
-        for (Node node : rlist.nodes().reversed()) {
+        for (Node node : rlist.nodes()) {
             if(node instanceof Atom atom) {
                 Value<?> result = atomToValueNoEvaluation(atom);
                 currentCons = pushToCons(result, currentCons);
@@ -90,8 +90,9 @@ public class Quasiquote implements SpecialForm {
                             tempList.add(currentVal);
                         }
 
+                        // No longer ...
                         // We need the temp list reversed, as otherwise copying one cons directly to another will end up reversing the order!
-                        for(Value<?> currentVal : tempList.reversed()) {
+                        for(Value<?> currentVal : tempList) {
                             currentCons = pushToCons(currentVal, currentCons);
                         }
                     }
@@ -102,6 +103,8 @@ public class Quasiquote implements SpecialForm {
             }
         }
 
+        // reverse, as we were pushing to cons cells, so normal iteration order would be backward
+        currentCons = ConsCell.reverse(currentCons);
         return new QuasiquoteResult(new ConsCellValue(currentCons), false);
     }
 

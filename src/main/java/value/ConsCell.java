@@ -22,12 +22,31 @@ public class ConsCell implements Iterable<Value<?>> {
         return new ConsCell(value, Value.nil());
     }
 
+    public static ConsCell empty() {
+        return new ConsCell(null, null);
+    }
+
+    public static ConsCell reverse(ConsCell consCell) {
+        ConsCell newCons = empty();
+        for (Value<?> value : consCell) {
+            newCons = newCons.push(value);
+        }
+        return newCons;
+    }
+
+    public boolean isEmpty() {
+        return car == null && cdr == null;
+    }
+
     public ConsCell push(Value<?> newHead) {
+        if(isEmpty()) {
+            return new ConsCell(newHead, Value.nil());
+        }
         return new ConsCell(newHead, new ConsCellValue(this));
     }
 
     public String toString() {
-        if((Value.nil().equals(car) && Value.nil().equals(cdr)) || (SymbolValue.nil().equals(car) && SymbolValue.nil().equals(cdr))) {
+        if(isEmpty()) {
             return "()";
         }
 
@@ -90,10 +109,16 @@ public class ConsCell implements Iterable<Value<?>> {
     }
 
     public Value<?> car() {
+        if(isEmpty()) {
+            return Value.nil();
+        }
         return car;
     }
 
     public Value<?> cdr() {
+        if(isEmpty()) {
+            return Value.nil();
+        }
         return cdr;
     }
 

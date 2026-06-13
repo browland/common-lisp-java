@@ -23,8 +23,7 @@ public class Cons implements Function {
         // single cons cell with our new car and a cdr of nil.
         if(cdr instanceof ConsCellValue cdrConsValue) {
             ConsCell cdrCons = cdrConsValue.getValue();
-            if((Value.nil().equals(cdrCons.car()) && Value.nil().equals(cdrCons.cdr()))
-                    || (SymbolValue.nil().equals(cdrCons.car()) && SymbolValue.nil().equals(cdrCons.cdr()))) {
+            if(cdrCons.isEmpty()) {
                 return new ConsCellValue(new ConsCell(car, Value.nil()));
             }
         }

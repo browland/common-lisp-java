@@ -16,6 +16,7 @@ class QuasiquoteSpec extends Specification {
         then:
         result.toString() == "(quote ())"
     }
+
     def "basic test with no unquote"() {
         given:
         def interpreter = new Interpreter()
