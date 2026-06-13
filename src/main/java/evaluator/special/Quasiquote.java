@@ -46,6 +46,11 @@ public class Quasiquote implements SpecialForm {
     private QuasiquoteResult handleRList(RList rlist,
                                          Environment env,
                                          Evaluator evaluator) {
+        // Handle case of empty list first
+        if(rlist.nodes().isEmpty()) {
+            return new QuasiquoteResult(new ConsCellValue(new ConsCell(Value.nil(), Value.nil())), false);
+        }
+
         Node firstNode = rlist.get(0);
         if(firstNode instanceof Atom firstAtom) {
             String value = firstAtom.value();

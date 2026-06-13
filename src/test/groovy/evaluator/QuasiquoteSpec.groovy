@@ -4,6 +4,18 @@ import evaluator.env.Environment
 import spock.lang.Specification
 
 class QuasiquoteSpec extends Specification {
+    def "test with empty list"() {
+        given:
+        def interpreter = new Interpreter()
+
+        def program = "`'()"
+
+        when:
+        var result = interpreter.interpret(program)
+
+        then:
+        result.toString() == "(quote ())"
+    }
     def "basic test with no unquote"() {
         given:
         def interpreter = new Interpreter()
