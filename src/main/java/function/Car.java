@@ -1,6 +1,7 @@
 package function;
 
 import evaluator.env.Environment;
+import exception.EvaluationException;
 import value.ConsCell;
 import value.Value;
 import value.ValueType;
@@ -16,7 +17,8 @@ public class Car implements Function {
             return Value.nil();
         }
         else if(operand.getType() != ValueType.CONS_CELL) {
-            throw new IllegalArgumentException("Can only invoke car on a list");
+            throw new EvaluationException("car expects argument of type list (received "
+                    + operands.getFirst().getClass() + ")");
         }
 
         ConsCell consCell = (ConsCell) operand.getValue();

@@ -28,17 +28,21 @@ public class Mapcar implements Function {
                 Value<?> result = function.apply(List.of(car), environment);
                 resultTemp.add(result);
             }
-        }
 
-        resultTemp = resultTemp.reversed();
-        ConsCell cons = null;
-        for (Value<?> toPush : resultTemp) {
-            if (cons == null) {
-                cons = ConsCell.fromValue(toPush);
-            } else {
-                cons = cons.push(toPush);
+            resultTemp = resultTemp.reversed();
+            ConsCell cons = null;
+            for (Value<?> toPush : resultTemp) {
+                if (cons == null) {
+                    cons = ConsCell.fromValue(toPush);
+                } else {
+                    cons = cons.push(toPush);
+                }
             }
+            return new ConsCellValue(cons);
         }
-        return new ConsCellValue(cons);
+        else {
+            throw new EvaluationException("mapcar expects arguments of type function, list (received "
+                    + operands.getFirst().getClass() + ", " + operands.get(1).getClass() + ")");
+        }
     }
 }

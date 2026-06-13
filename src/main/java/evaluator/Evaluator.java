@@ -31,7 +31,13 @@ public class Evaluator {
             return atomEvaluator.atomToValueWithLookup(atom, environment);
         }
         else if (node instanceof RList rlist) {
-            return evaluate(rlist, environment);
+            try {
+                return evaluate(rlist, environment);
+            }
+            catch(EvaluationException e) {
+                System.out.println("while evaluating " + node);
+                throw e;
+            }
         }
         else {
             throw new UnsupportedOperationException("Unhandled node type");
@@ -39,6 +45,9 @@ public class Evaluator {
     }
 
     public Value<?> evaluate(RList list, Environment environment) {
+        if(list.size() == 0) {
+            throw new EvaluationException("Trying to evaluate form of length zero");
+        }
         Node operatorNode = list.get(0);
 
         // If the operator is itself a list, then we need to evaluate it to get a closure.
@@ -61,13 +70,24 @@ public class Evaluator {
 
             if(operatorType == OperatorType.SPECIAL_FORM) {
                 SpecialForm specialForm = operatorLookup.lookupSpecialForm(operatorAtom.value(), environment);
-                // todo check field on specialForm - should we pass values as is?
-                return specialFormEvaluator.evaluate(specialForm, list, environment, this);
+                try {
+                    return specialFormEvaluator.evaluate(specialForm, list, environment, this);
+                }
+                catch(EvaluationException e) {
+                    System.out.println("while evaluating " + list);
+                    throw e;
+                }
             }
             else if(operatorType == OperatorType.MACRO) {
                 Macro macro = operatorLookup.lookupMacro(operatorAtom.value(), environment);
                 Node expandedMacro = macroExpander.expand(macro, list, this, environment);
-                return evaluate(expandedMacro, environment);
+                try {
+                    return evaluate(expandedMacro, environment);
+                }
+                catch(EvaluationException e) {
+                    System.out.println("while evaluating " + list);
+                    throw e;
+                }
             }
             else {
                 // it's a function - evaluate as normal

@@ -51,8 +51,7 @@
         (list 'setq (car decl) (car (cdr (cdr decl))))) var-decls))
 
 (defmacro do (var-decls end-test-and-result-forms &rest statements)
-    (let ((temp-let-bindings (let-var-extractor var-decls))
-          (temp-step-forms (step-forms-extractor var-decls)))
+    (let ((temp-let-bindings (let-var-extractor var-decls)))
         (push '(temp-results nil) temp-let-bindings)
 
         `(let ,temp-let-bindings
