@@ -59,7 +59,7 @@ public class Repl implements ReplOutput {
             throw new RuntimeException("does not exist");
         }
 
-        try(Stream<Path> initialFormsStream = Files.list(initialFormsDir)) {
+        try(Stream<Path> initialFormsStream = Files.list(initialFormsDir).sorted()) {
             initialFormsStream.forEach(Repl::loadFile);
         }
     }

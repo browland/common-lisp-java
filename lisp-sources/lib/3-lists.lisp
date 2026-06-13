@@ -15,6 +15,12 @@
 (defmacro push (item place)
   `(setq ,place (cons ,item ,place)))
 
+(defmacro pop (place)
+    `(progn
+        (defvar pop-temp (car ,place))
+        (setq ,place (cdr ,place))
+        pop-temp))
+
 (defun reverse (list)
     (let ((newlist '()))
         (dolist list #'(lambda (x)
@@ -43,15 +49,6 @@
     (mapcar #'(lambda (decl)
         (list 'setq (car decl) (car (cdr (cdr decl))))) var-decls))
 
-(defmacro 1+ (sym)
-    `(setq ,sym (+ ,sym 1)))
-
-(defmacro pop (place)
-    `(progn
-        (defvar pop-temp (car ,place))
-        (setq ,place (cdr ,place))
-        pop-temp))
-
 (defmacro do (var-decls end-test-and-result-forms &rest statements)
     (defvar *temp-let-bindings* (mapcar #'let-var-extractor var-decls))
     (push '(temp-results nil) *temp-let-bindings*)
@@ -61,12 +58,12 @@
                 start
                 ; run statements if present
 
-                ; evaluate step forms and push results into temp-results
+                ; evaluate step forms and push results into temp-results so there are no side effects between step forms
                 (push (1+ i) temp-results)
                 (push next temp-results)
                 (push (+ cur next) temp-results)
 
-                ; now set vars to results
+                ; now set vars to temp-results
                 (setq temp-results (reverse temp-results))
                 (setq i (pop temp-results))
                 (setq cur (pop temp-results))
