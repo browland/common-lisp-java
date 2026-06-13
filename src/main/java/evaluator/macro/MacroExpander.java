@@ -20,7 +20,7 @@ public class MacroExpander {
                        Evaluator evaluator,
                        Environment environment) {
         List<Node> bindings = macro.getBindings();
-        RList bodyTemplate = macro.getBody();
+        List<Node> bodyNodes = macro.getBodyNodes();
 
         // convert bindings to values (not looking up from environment)
         List<Node> operandNodes = entireList.nodes().subList(1, entireList.size());
@@ -38,7 +38,10 @@ public class MacroExpander {
                 environment.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
             }
 
-            Value<?> expandedValue = evaluator.evaluate(bodyTemplate, environment);
+            Value<?> expandedValue = null;
+            for(Node bodyNode : bodyNodes) {
+                expandedValue = evaluator.evaluate(bodyNode, environment);
+            }
             if (expandedValue instanceof ConsCellValue consCellValue) {
                 return consToRList.translate(consCellValue);
             } else if (expandedValue instanceof StringValue stringValue) {

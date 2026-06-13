@@ -9,14 +9,14 @@ public class Macro {
     // Bindings are Nodes as they can either be plain Atoms, or a list in the case that
     // we're destructuring.
     private final List<Node> bindings;
-    private final RList body;
+    private final List<Node> bodyNodes;
     private final String name;
 
     public Macro(List<Node> bindings,
-                 RList body,
+                 List<Node> bodyNodes,
                  String name) {
         this.bindings = bindings;
-        this.body = body;
+        this.bodyNodes = bodyNodes;
         this.name = name;
     }
 
@@ -24,8 +24,8 @@ public class Macro {
         return bindings;
     }
 
-    public RList getBody() {
-        return body;
+    public List<Node> getBodyNodes() {
+        return bodyNodes;
     }
 
     public String getName() {

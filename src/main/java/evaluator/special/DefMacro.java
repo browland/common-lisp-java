@@ -24,14 +24,14 @@ public class DefMacro implements SpecialForm {
         RList bindingsList = (RList)entireList.get(2);
         List<Node> bindings = bindingsList.nodes();
 
-        RList body = (RList)entireList.get(3);
-
+        List<Node> allNodes = entireList.nodes();
+        List<Node> bodyNodes = allNodes.subList(3, allNodes.size());
 
         Atom nameAtom = (Atom)entireList.get(1);
         String name = nameAtom.value();
         Symbol symbol = Symbols.internSymbol(name);
 
-        Macro macro = new Macro(bindings, body, name);
+        Macro macro = new Macro(bindings, bodyNodes, name);
         MacroValue macroValue = new MacroValue(macro);
 
         environment.setGlobal(symbol, macroValue);

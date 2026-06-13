@@ -199,7 +199,98 @@
                     (return-from loop-block cur)
                     (go start))))))
 
-(my-do ((i 0 (+1 i))
+(my-do (
+    (i 0 (+1 i))
+    (cur 0 next)
+    (next 1 (+ cur next)))
+  ((= 10 i) cur))
+
+;; Now let's try to substitute in var decls
+;; Need to construct let bindings using first and second element from each list in var-decls
+(defvar *res* (mapcar #'let-var-extractor '(
+    (i 0 (+1 i))
+    (cur 0 next)
+    (next 1 (+ cur next)))))
+
+*res*
+
+;; This is close but I need to splice in temp-results into the constructed let bindings
+
+(defmacro my-do (var-decls end-test-and-result-forms &rest statements)
+    `(block loop-block
+        (let ,(mapcar #'let-var-extractor var-decls)
+
+            (tagbody
+                start
+                ; run statements if present
+
+                ; evaluate step forms and push results into temp-results
+                (push (1+ i) temp-results)
+                (push next temp-results)
+                (push (+ cur next) temp-results)
+
+                ; now set vars to results
+                (setq temp-results (reverse temp-results))
+                (setq i (pop temp-results))
+                (setq cur (pop temp-results))
+                (setq next (pop temp-results))
+
+                ; evaluate end-test-forms
+                (if (= i 10)
+                    (return-from loop-block cur)
+                    (go start))))))
+
+(my-do (
+    (i 0 (+1 i))
+    (cur 0 next)
+    (next 1 (+ cur next)))
+  ((= 10 i) cur))
+
+
+;; Now let's try to substitute in var decls with also a temp-results
+;; Need to construct let bindings using first and second element from each list in var-decls
+(defvar *res* (mapcar #'let-var-extractor '(
+    (i 0 (+1 i))
+    (cur 0 next)
+    (next 1 (+ cur next)))))
+
+(push '(temp-results ()) *res*)
+
+;; Now let's try that approach
+
+(defmacro my-do (var-decls end-test-and-result-forms &rest statements)
+    (defvar *temp-let-bindings* (mapcar #'let-var-extractor var-decls))
+    (push '(temp-results ()) *temp-let-bindings*)
+    `(let ,*temp-let-bindings*
+        (block loop-block
+            (tagbody
+                start
+                ; run statements if present
+
+                ; evaluate step forms and push results into temp-results
+                (push (1+ i) temp-results)
+                (push next temp-results)
+                (push (+ cur next) temp-results)
+
+                ; now set vars to results
+                (setq temp-results (reverse temp-results))
+                (setq i (pop temp-results))
+                (setq cur (pop temp-results))
+                (setq next (pop temp-results))
+
+                ; evaluate end-test-forms
+                (if (= i 10)
+                    (return-from loop-block cur)
+                    (go start))))))
+
+(macroexpand-1 '(my-do (
+    (i 0 (+1 i))
+    (cur 0 next)
+    (next 1 (+ cur next)))
+  ((= 10 i) cur)))
+
+(my-do (
+    (i 0 (+1 i))
     (cur 0 next)
     (next 1 (+ cur next)))
   ((= 10 i) cur))

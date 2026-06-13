@@ -147,7 +147,7 @@ class MacroExpanderSpec extends Specification {
         def macroDef = """
           (defmacro foo () 
             (defvar *x* 1)
-            '(+ *x* 2))
+            `(+ ,*x* 2))
         """
 
         def macro = parseMacro(macroDef)
@@ -174,8 +174,8 @@ class MacroExpanderSpec extends Specification {
         def name = macroDefList.nodes().get(1) as Atom
         def bindingsList = macroDefList.nodes().get(2) as RList
         List<Atom> bindings = bindingsList.nodes().collect {it -> (Atom)it}
-        def macroBody = macroDefList.nodes().get(3) as RList
-        return new Macro(bindings, macroBody, name.value())
+        def bodyNodes = macroDefList.nodes().subList(3, macroDefList.nodes().size())
+        return new Macro(bindings, bodyNodes, name.value())
     }
 
     def programToRList(program) {
