@@ -42,46 +42,49 @@
 ;;; do macro
 ;;;;;;;;;;;;
 
-(defun let-var-extractor (elem)
-    (list (car elem) (cadr elem)))
+(defun let-var-extractor (var-decls)
+    (mapcar #'(lambda (decl)
+        (list (car decl) (cadr decl))) var-decls))
 
 (defun step-forms-extractor (var-decls)
     (mapcar #'(lambda (decl)
         (list 'setq (car decl) (car (cdr (cdr decl))))) var-decls))
 
 (defmacro do (var-decls end-test-and-result-forms &rest statements)
-    (defvar *temp-let-bindings* (mapcar #'let-var-extractor var-decls))
-    (push '(temp-results nil) *temp-let-bindings*)
-    `(let ,*temp-let-bindings*
-        (block loop-block
-            (tagbody
-                start
-                ; run statements if present
+    (let ((temp-let-bindings (let-var-extractor var-decls))
+          (temp-step-forms (step-forms-extractor var-decls)))
+        (push '(temp-results nil) temp-let-bindings)
 
-                ; evaluate step forms and push results into temp-results so there are no side effects between step forms
-                (push (1+ i) temp-results)
-                (push next temp-results)
-                (push (+ cur next) temp-results)
+        `(let ,temp-let-bindings
+            (block loop-block
+                (tagbody
+                    start
+                    ; run statements if present
 
-                ; now set vars to temp-results
-                (setq temp-results (reverse temp-results))
-                (setq i (pop temp-results))
-                (setq cur (pop temp-results))
-                (setq next (pop temp-results))
+                    ; evaluate step forms and push results into temp-results so there are no side effects between step forms
+                    (push (1+ i) temp-results)
+                    (push next temp-results)
+                    (push (+ cur next) temp-results)
 
-                ; evaluate end-test-forms
-                (if (= i 10)
-                    (return-from loop-block cur)
-                    (go start))))))
+                    ; now set vars to temp-results
+                    (setq temp-results (reverse temp-results))
+                    (setq i (pop temp-results))
+                    (setq cur (pop temp-results))
+                    (setq next (pop temp-results))
+
+                    ; evaluate end-test-forms
+                    (if (= i 10)
+                        (return-from loop-block cur)
+                        (go start)))))))
 
 (macroexpand-1 '(do (
-    (i 0 (+1 i))
+    (i 0 (1+ i))
     (cur 0 next)
     (next 1 (+ cur next)))
   ((= 10 i) cur)))
 
 (do (
-    (i 0 (+1 i))
+    (i 0 (1+ i))
     (cur 0 next)
     (next 1 (+ cur next)))
   ((= 10 i) cur))
