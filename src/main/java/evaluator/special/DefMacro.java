@@ -17,8 +17,8 @@ public class DefMacro implements SpecialForm {
                              Environment environment,
                              Evaluator evaluator) {
 
-        if(entireList.size() != 4) {
-            throw new EvaluationException("incorrect number of elements for defmacro");
+        if(entireList.size() < 4) {
+            throw new EvaluationException("too few elements for defmacro");
         }
 
         RList bindingsList = (RList)entireList.get(2);
