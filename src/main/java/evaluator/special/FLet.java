@@ -78,7 +78,7 @@ public class FLet implements SpecialForm {
         Node body = binding.get(2);
 
         BindingEvaluator bindingEvaluator = new BindingEvaluator();
-        Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, body);
+        Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, List.of(body));
 
         return new ClosureValue(closure);
     }

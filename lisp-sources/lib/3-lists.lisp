@@ -87,3 +87,79 @@
     (cur 0 next)
     (next 1 (+ cur next)))
   ((= 10 i) cur))
+
+;;;;;; Working: builds lambda from step form passed in, inits i (hardcoded) and calls step form
+
+(defmacro stepper1 (step-form)
+    (let ((my-sf step-form))
+        `(let ((i 0)
+               (inner-sf #'(lambda (i) ,my-sf)))
+            (format t "~S" (funcall inner-sf i)))))
+
+(stepper1 (1+ i))
+
+;;;;;; Extract stuff out - ok
+
+(defun step-extractor (decls)
+    decls)
+
+(defmacro stepper2 (step-form)
+    (let ((my-sf (step-extractor step-form)))
+        `(let ((i 0)
+               (inner-sf #'(lambda (i) ,my-sf)))
+            (format t "~S" (funcall inner-sf i)))))
+
+(stepper2 (1+ i))
+
+;;;;;; Work with list of single step form - ok
+
+(defun steps-extractor1 (step-forms)
+    (car step-forms))
+
+(defmacro stepper3 (step-forms)
+    (let ((my-sf (steps-extractor1 step-forms)))
+        `(let ((i 0)
+               (inner-sf #'(lambda (i) ,my-sf)))
+            (format t "~S" (funcall inner-sf i)))))
+
+(stepper3 ((1+ i)))
+
+;;;;;; build let bindings dynamically
+(defmacro let-builder1 (decls)
+    `(let ,decls
+        (format t "~S" i)))
+
+(let-builder1 ((i 0)))
+
+;;;;;;;; just focus on the eventual let form we want - first basic
+(let ((i 0)
+      (x 1)
+      (step-forms '((i (lambda (i) (1+ i)))
+                    (x (lambda (x) (1+ x))))))
+    (format t "~S" x))
+
+;;;;;;;; just focus on the eventual let form we want - invoke step forms one by one - works!
+(let ((i 0)
+      (x 1)
+      (step-forms (list (list 'i #'(lambda () (1+ i)))
+                        (list 'x #'(lambda () (1+ x))))))
+    (setq i (funcall (car (cdr (car step-forms)))))
+    (format t "new value of i ~S" i))
+
+;;;;;;;; small tweaks to simplify
+(let ((i 0)
+      (x 1)
+      (step-forms (list (list 'i #'(lambda () (1+ i)))
+                        (list 'x #'(lambda () (1+ x))))))
+    (setq i (funcall (cadr (car step-forms))))
+    (format t "new value of i ~S" i))
+
+;;;;;;;; try iterating over step forms
+(let ((i 0)
+      (x 1)
+      (step-forms (list (list 'i #'(lambda () (1+ i)))
+                        (list 'x #'(lambda () (1+ x))))))
+    (mapcar #'(lambda (step-form)
+        (
+    (setq i (funcall (cadr (car step-forms))))
+    (format t "new value of i ~S" i))

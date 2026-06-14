@@ -14,7 +14,7 @@ public record Closure(Evaluator evaluator,
                       BindingEvaluator bindingEvaluator,
                       Environment capturedEnvironment,
                       List<Node> bindings,
-                      Node body) implements Function {
+                      List<Node> forms) implements Function {
 
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment noApplyTimeEnv) {
@@ -32,7 +32,11 @@ public record Closure(Evaluator evaluator,
             capturedEnvironment.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
         }
 
-        Value<?> evalResult = evaluator.evaluate(body, capturedEnvironment);
+        Value<?> evalResult = null;
+
+        for(Node form : forms) {
+            evalResult = evaluator.evaluate(form, capturedEnvironment);
+        }
         capturedEnvironment.leaveScope();
         return evalResult;
     }

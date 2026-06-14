@@ -32,7 +32,7 @@ public class Defun implements SpecialForm {
         Node body = entireList.get(3);
 
         BindingEvaluator bindingEvaluator = new BindingEvaluator();
-        Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, body);
+        Closure closure = new Closure(evaluator, bindingEvaluator, environment.capture(), bindings, List.of(body));
         Symbol symbol = Symbols.internSymbol(name);
         environment.setFunction(symbol, new ClosureValue(closure));
 
