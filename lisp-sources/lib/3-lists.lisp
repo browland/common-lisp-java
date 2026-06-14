@@ -155,11 +155,30 @@
     (format t "new value of i ~S" i))
 
 ;;;;;;;; try iterating over step forms
-(let ((i 0)
-      (x 1)
-      (step-forms (list (list 'i #'(lambda () (1+ i)))
-                        (list 'x #'(lambda () (1+ x))))))
-    (mapcar #'(lambda (step-form)
-        (
-    (setq i (funcall (cadr (car step-forms))))
-    (format t "new value of i ~S" i))
+;; Now we need a macro as we need to generate the setq forms
+;; But first just make what we've got working, work
+(defmacro do-again (var-decls)
+    (let ((var-decl-bits (mapcar #'(lambda (vd)
+                            (list (car vd) (cadr vd))) var-decls))
+          (step-form-bits (mapcar #'(lambda (vd)
+                            (list (car vd) #'(lambda (car vd) (car (cdr (cdr vd)))))) var-decls)))
+
+        `(let ,var-decl-bits ,step-form-bits
+            (format t "~S" i)
+            (format t "~S" next))))
+
+#|
+(macroexpand-1 '(do-again
+    ((i 0 (1+ i))
+    (cur 0 next)
+    (next 1 (+ cur next)))))
+
+(do-again
+    ((i 0 (1+ i))
+    (cur 0 next)
+    (next 1 (+ cur next))))
+|#
+
+;;; actually what I need to do is to handle the case where we emit a Closure during macro expansion - can't be too hard
+;;; as the Closure stores the Node bindings and Node body forms already.  So just build the list representing the lambda
+;;; form from the Closure (don't care about the captured env; it's not what we want).
