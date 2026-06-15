@@ -230,4 +230,42 @@ class MacroSpec extends Specification {
         var consResult = result.getValue() as ConsCell
         consResult.car().getValue() == 4
     }
+
+    def "macro returning lone function value"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def macroDef = """
+            (defmacro test1 ()
+                (let ((f #'(lambda () (+ 1 1))))
+                    `,f))
+            """
+
+        when:
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(macroexpand-1 '(test1))")
+
+        then:
+        result.getValue().toString() == "(lambda () (+ 1 1))"
+    }
+
+    def "macro returning function value within cons"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def macroDef = """
+            (defmacro test1 ()
+                (let ((f #'(lambda () (+ 1 1))))
+                    `(list ,f)))
+            """
+
+        when:
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(macroexpand-1 '(test1))")
+
+        then:
+        result.getValue().toString() == "(list (lambda () (+ 1 1)))"
+    }
 }

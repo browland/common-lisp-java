@@ -1,22 +1,18 @@
 package evaluator.macro;
 
 import syntaxtree.Node;
-import syntaxtree.NodeBuilder;
 import syntaxtree.RList;
 import value.*;
 
 public class ConsToRList {
     public Node translate(ConsCellValue consCellValue) {
-        return translateI(consCellValue).build();
-    }
+        RList rList = new RList();
 
-    public NodeBuilder translateI(ConsCellValue consCellValue) {
-        RList.Builder rListBuilder = new RList.Builder();
         ConsCell nextConsCell = consCellValue.getValue();
 
         while(nextConsCell != null) {
-            NodeBuilder nodeBuilder = extractBuilderForThisNode(nextConsCell);
-            rListBuilder.addNodeBuilder(nodeBuilder);
+            Node node = extractNode(nextConsCell);
+            rList.add(node);
 
             Value<?> nextConsCellValue = nextConsCell.cdr();
             if(nextConsCellValue.equals(Value.nil())) {
@@ -32,28 +28,34 @@ public class ConsToRList {
             }
         }
 
-        return rListBuilder;
+        return rList;
     }
 
-    private NodeBuilder extractBuilderForThisNode(ConsCell nextConsCell) {
+    private Node extractNode(ConsCell nextConsCell) {
         Value<?> carValue = nextConsCell.car();
-        NodeBuilder nodeBuilder;
+        Node node;
         if(carValue instanceof StringValue stringValue) {
-            nodeBuilder = ValueToAtomBuilder.atomBuilder(stringValue);
+            node = ValueToAtom.toAtom(stringValue);
         }
         else if(carValue instanceof IntegerValue integerValue) {
-            nodeBuilder = ValueToAtomBuilder.atomBuilder(integerValue);
+            node = ValueToAtom.toAtom(integerValue);
         }
         else if(carValue instanceof SymbolValue symbolValue) {
-            nodeBuilder = ValueToAtomBuilder.atomBuilder(symbolValue);
+            node = ValueToAtom.toAtom(symbolValue);
         }
         else if(carValue instanceof ConsCellValue consCellValue) {
-            nodeBuilder = translateI(consCellValue);
+            node = translate(consCellValue);
+        }
+        else if(carValue instanceof ClosureValue closureValue) {
+            node = ClosureToLambda.toLambdaNode(closureValue);
         }
         else {
+            // todo this happens when running 3-lists.lisp - this is because the offending value is buried in a ConsCellValue
+            //      so we dive into cons cell value handling and fail when handling the values within the cons cell
+            //      We need to rip out usage of builders, and re-use ClosureToLambda.
             throw new IllegalStateException("Unhandled value in cons: " + carValue);
         }
-        return nodeBuilder;
+        return node;
     }
 
 }

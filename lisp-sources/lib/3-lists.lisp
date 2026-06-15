@@ -167,7 +167,6 @@
             (format t "~S" i)
             (format t "~S" next))))
 
-#|
 (macroexpand-1 '(do-again
     ((i 0 (1+ i))
     (cur 0 next)
@@ -177,8 +176,3 @@
     ((i 0 (1+ i))
     (cur 0 next)
     (next 1 (+ cur next))))
-|#
-
-;;; actually what I need to do is to handle the case where we emit a Closure during macro expansion - can't be too hard
-;;; as the Closure stores the Node bindings and Node body forms already.  So just build the list representing the lambda
-;;; form from the Closure (don't care about the captured env; it's not what we want).

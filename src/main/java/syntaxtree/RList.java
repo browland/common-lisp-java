@@ -13,6 +13,11 @@ public final class RList implements Node {
     private RList parent;
     private boolean synthetic;  // inserted by the reader from syntactic sugar for quoting
 
+    // Used for things like macros where we're generating a list dynamically rather than via the reader
+    public RList() {
+        this(-1, null, false, false, new ArrayList<>(), false);
+    }
+
     public RList(int depth, String prefix, boolean isQuoted, boolean improperList, List<Node> nodes, boolean synthetic) {
         this.depth = depth;
         this.prefix = prefix;

@@ -45,12 +45,17 @@ public class MacroExpander {
             if (expandedValue instanceof ConsCellValue consCellValue) {
                 return consToRList.translate(consCellValue);
             } else if (expandedValue instanceof StringValue stringValue) {
-                return ValueToAtomBuilder.atomBuilder(stringValue).build();
+                return ValueToAtom.toAtom(stringValue);
             } else if (expandedValue instanceof SymbolValue symbolValue) {
-                return ValueToAtomBuilder.atomBuilder(symbolValue).build();
+                return ValueToAtom.toAtom(symbolValue);
             } else if (expandedValue instanceof IntegerValue integerValue) {
-                return ValueToAtomBuilder.atomBuilder(integerValue).build();
+                return ValueToAtom.toAtom(integerValue);
+            } else if(expandedValue instanceof ClosureValue closureValue) {
+                return ClosureToLambda.toLambdaNode(closureValue);
             }
+
+            // todo this happens when running MacroSpec."macro which expands to closure"()
+            //      we eval the expanded macro and its value is not something we know how to convert back to a Node
             throw new IllegalArgumentException("not ready yet for other value types");
         } finally {
             environment.leaveScope();
