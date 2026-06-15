@@ -172,7 +172,13 @@
     (cur 0 next)
     (next 1 (+ cur next)))))
 
+;;; The problem we now have is that the 'list' function is being elided from the step forms, so we end up with a form (i (lambda ...)) which we try to evaluate.
+;;; We want the list wrapper to survive, at least in some way so we don't end up with a form.
+;;; However, the var decls in the bindings DO want the list function to disappear, so that's fine as it is.
+
+#|
 (do-again
     ((i 0 (1+ i))
     (cur 0 next)
     (next 1 (+ cur next))))
+|#
