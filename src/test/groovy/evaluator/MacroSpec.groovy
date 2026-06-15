@@ -268,4 +268,40 @@ class MacroSpec extends Specification {
         then:
         result.getValue().toString() == "(list (lambda () (+ 1 1)))"
     }
+
+    def "macro returning list function call should survive"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def macroDef = """
+            (defmacro test1 ()
+                `(list 1 2 3))
+            """
+
+        when:
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(macroexpand-1 '(test1))")
+
+        then:
+        result.getValue().toString() == "(list 1 2 3)"
+    }
+
+    def "macro returning nested forms should survive without early evaluation"() {
+        given:
+        def env = new Environment()
+        def interpreter = new Interpreter(env)
+
+        def macroDef = """
+            (defmacro test1 ()
+                `(+ 1 (+ 1 2)))
+            """
+
+        when:
+        interpreter.interpret(macroDef)
+        Value<?> result = interpreter.interpret("(macroexpand-1 '(test1))")
+
+        then:
+        result.getValue().toString() == "(+ 1 (+ 1 2))"
+    }
 }

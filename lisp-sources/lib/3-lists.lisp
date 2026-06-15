@@ -172,9 +172,12 @@
     (cur 0 next)
     (next 1 (+ cur next)))))
 
-;;; The problem we now have is that the 'list' function is being elided from the step forms, so we end up with a form (i (lambda ...)) which we try to evaluate.
-;;; We want the list wrapper to survive, at least in some way so we don't end up with a form.
-;;; However, the var decls in the bindings DO want the list function to disappear, so that's fine as it is.
+;;; 1. One problem is probably just a lisp programming error - the list function usages are not (quasi-)quoted
+;;; so are rightly lost, and the list we end up substituting into the let bindings looks like a form.
+;;; 2. Another problem is we still have (car vd) etc in the emitted let bindings; these should be evaluated during
+;;; expansion before being put into the template.  And this is due to the 'list' usage, so it's all somewhat related.
+;;; 3. Same as 2?  The list function doesn't appear to be working correctly as the (car vd) etc survive all the way to
+;;; the template and are emitted.
 
 #|
 (do-again
