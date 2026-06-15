@@ -174,10 +174,9 @@
 
 ;;; 1. One problem is probably just a lisp programming error - the list function usages are not (quasi-)quoted
 ;;; so are rightly lost, and the list we end up substituting into the let bindings looks like a form.
-;;; 2. Another problem is we still have (car vd) etc in the emitted let bindings; these should be evaluated during
-;;; expansion before being put into the template.  And this is due to the 'list' usage, so it's all somewhat related.
-;;; 3. Same as 2?  The list function doesn't appear to be working correctly as the (car vd) etc survive all the way to
-;;; the template and are emitted.
+;;; 2. Another problem is we still have (car vd) etc in the emitted let bindings; this is because it's wrapped in a
+;;; lambda so 'survives' all the way to expansion, but refers to vd which is only defined within the macro body (in a
+;;; form before the final one the value of which is returned).
 
 #|
 (do-again
