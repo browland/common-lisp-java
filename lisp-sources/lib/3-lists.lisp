@@ -228,6 +228,11 @@
 (funcall (cdr (assoc 'add other-alist)) 1)
 
 ; Intended basic structure now working
+; Somehow we're adding i to 1 and not evaluating i, in the lambda - poss. because we have the symbol i in the cons cell.
+; This is where we simply must use a macro, to get from the symbol i (so we can update the appropriate variable) to its
+; step form lambda expression.
+;
 (let ((i 0)
       (step-forms `((i . ,#'(lambda (i) (1+ i))))))
-    (format t "lambda call result: ~S" (funcall (cdr (assoc 'i step-forms)) i)))
+   (mapcar #'(lambda (sf)
+      (list (car sf) (funcall (cdr sf) (car sf)))) step-forms))
