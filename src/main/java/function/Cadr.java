@@ -1,7 +1,9 @@
 package function;
 
 import evaluator.env.Environment;
+import exception.EvaluationException;
 import value.ConsCell;
+import value.ConsCellValue;
 import value.Value;
 import value.ValueType;
 
@@ -28,7 +30,13 @@ public class Cadr implements Function {
         }
 
         if(consCellIter.hasNext()) {
-            return consCellIter.next();
+            Value<?> cdrCandidate = consCellIter.next();
+            if(cdrCandidate instanceof ConsCellValue) {
+                return cdrCandidate;
+            }
+            else {
+                throw new EvaluationException("cadr: second element not a list");
+            }
         }
         else {
             return Value.nil();
