@@ -226,3 +226,8 @@
 
 ; Working too
 (funcall (cdr (assoc 'add other-alist)) 1)
+
+; Intended basic structure now working
+(let ((i 0)
+      (step-forms `((i . ,#'(lambda (i) (1+ i))))))
+    (format t "lambda call result: ~S" (funcall (cdr (assoc 'i step-forms)) i)))
