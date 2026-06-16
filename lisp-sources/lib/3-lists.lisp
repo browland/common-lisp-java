@@ -157,11 +157,15 @@
 ;;;;;;;; try iterating over step forms
 ;; Now we need a macro as we need to generate the setq forms
 ;; But first just make what we've got working, work
+#|
 (defmacro do-again (var-decls)
     (let ((var-decl-bits (mapcar #'(lambda (vd)
                             (list (car vd) (cadr vd))) var-decls))
           (step-form-bits (mapcar #'(lambda (vd)
-                            (list (car vd) #'(lambda (car vd) (car (cdr (cdr vd)))))) var-decls)))
+                            (list (car vd) (car (cdr (cdr vd))))) var-decls)))
+
+          (format t "~S" var-decl-bits)
+          (format t "~S" step-form-bits)
 
         `(let ,var-decl-bits ,step-form-bits
             (format t "~S" i)
@@ -178,9 +182,47 @@
 ;;; lambda so 'survives' all the way to expansion, but refers to vd which is only defined within the macro body (in a
 ;;; form before the final one the value of which is returned).
 
-#|
 (do-again
     ((i 0 (1+ i))
     (cur 0 next)
     (next 1 (+ cur next))))
+
+(defmacro something-new (var-decls)
+    `(let (,@(mapcar #'(lambda (vd) (list (car vd) (cadr vd))) var-decls)
+        (step-forms ',(mapcar #'(lambda (vd) (car vd)) var-decls)))
+        (format t "~S" step-forms)
+        (setq (car step-forms))))
+
+(macroexpand-1 '(something-new ((i 0 (1+ i))
+    (cur 0 next)
+    (next 1 (+ cur next)))))
+
+(something-new ((i 0 (1+ i))
+    (cur 0 next)
+    (next 1 (+ cur next))))
+
+(let ((i 0)
+      (step-forms '((i . #'(lambda (i) (1+ i))))))
+    (format t "lambda call result: ~S" (funcall (cadr (assoc 'i step-forms)) i)))
+
 |#
+
+;; playing with creating alist of symbol and function quote
+(setq my-alist (list (cons 'add  #'+)
+                     (cons 'sub #'-)
+                     (cons 'mul #'*)))
+
+(funcall (cdr (assoc 'add my-alist)) 1 2)
+
+
+;(setq other-alist (list (cons 'add  #'(lambda (x) (+ x 1)))))
+;(funcall (cdr (assoc 'add other-alist)) 1)
+
+(setq other-alist (list (cons 'add #'(lambda (x) (+ x 1)))))
+(funcall (cdr (assoc 'add other-alist)) 1)
+
+; This is valid way to express the dot syntax for pairs and somehow actually works
+(setq other-alist `((add . ,#'(lambda (x) (+ x 1)))))
+
+; Working too
+(funcall (cdr (assoc 'add other-alist)) 1)

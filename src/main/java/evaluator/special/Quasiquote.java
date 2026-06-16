@@ -72,12 +72,12 @@ public class Quasiquote implements SpecialForm {
         for (Node node : rlist.nodes()) {
             if(node instanceof Atom atom) {
                 Value<?> result = atomToValueNoEvaluation(atom);
-                currentCons = pushToCons(result, currentCons);
+                currentCons = pushToCons(result, currentCons, rlist.improperList());
             }
             else if(node instanceof RList rlistNode) {
                 QuasiquoteResult unquoteResult = handleRList(rlistNode, env, evaluator);  // can be atom or list; if was splicing then add elems one by one to current cons
                 if(!unquoteResult.unquoteSplicing()) {
-                    currentCons = pushToCons(unquoteResult.evaluatedValue(), currentCons);
+                    currentCons = pushToCons(unquoteResult.evaluatedValue(), currentCons, rlist.improperList());
                 }
                 else {
                     // step over values in the evaluated result and splice them in to current cons element by element
@@ -93,11 +93,11 @@ public class Quasiquote implements SpecialForm {
                         // No longer ...
                         // We need the temp list reversed, as otherwise copying one cons directly to another will end up reversing the order!
                         for(Value<?> currentVal : tempList) {
-                            currentCons = pushToCons(currentVal, currentCons);
+                            currentCons = pushToCons(currentVal, currentCons, rlist.improperList());
                         }
                     }
                     else {
-                        currentCons = pushToCons(evaluatedResult, currentCons);
+                        currentCons = pushToCons(evaluatedResult, currentCons, rlist.improperList());
                     }
                 }
             }
@@ -134,9 +134,19 @@ public class Quasiquote implements SpecialForm {
         }
     }
 
-    private ConsCell pushToCons(Value<?> value, ConsCell currentCons) {
-        Value<?> cdr = currentCons == null ? Value.nil() : new ConsCellValue(currentCons);
-        return new ConsCell(value, cdr);
+    private ConsCell pushToCons(Value<?> value, ConsCell currentCons, boolean improperList) {
+        if(currentCons == null) {
+            return new ConsCell(value, Value.nil());
+        }
+
+        if(improperList) {
+            Value<?> cdr = currentCons.car();
+            return new ConsCell(value, cdr);
+        }
+        else {
+            Value<?> cdr = new ConsCellValue(currentCons);
+            return new ConsCell(value, cdr);
+        }
     }
 
     record QuasiquoteResult(Value<?> evaluatedValue, boolean unquoteSplicing) {

@@ -1,7 +1,6 @@
 package function;
 
 import evaluator.env.Environment;
-import evaluator.env.Symbols;
 import exception.EvaluationException;
 import value.*;
 

@@ -28,6 +28,11 @@ public class ConsCell implements Iterable<Value<?>> {
 
     public static ConsCell reverse(ConsCell consCell) {
         ConsCell newCons = empty();
+        if(!(consCell.cdr instanceof ConsCellValue || Value.nil().equals(consCell.cdr))) {
+            // improper list
+            return new ConsCell(consCell.cdr, consCell.car);
+        }
+
         for (Value<?> value : consCell) {
             newCons = newCons.push(value);
         }
@@ -53,6 +58,11 @@ public class ConsCell implements Iterable<Value<?>> {
         List<Value<?>> valueList = new ArrayList<>();
         for(Value<?> nextValue : this) {
             valueList.add(nextValue);
+        }
+
+        if(! (cdr instanceof ConsCellValue)) {
+            // improper list
+            return "(" + car.toString() + " . " + cdr.toString() + ")";
         }
 
         return valueList.stream()
