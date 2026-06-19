@@ -30,13 +30,7 @@ public class Cadr implements Function {
         }
 
         if(consCellIter.hasNext()) {
-            Value<?> cdrCandidate = consCellIter.next();
-            if(cdrCandidate instanceof ConsCellValue) {
-                return cdrCandidate;
-            }
-            else {
-                throw new EvaluationException("cadr: second element not a list");
-            }
+            return consCellIter.next();
         }
         else {
             return Value.nil();
