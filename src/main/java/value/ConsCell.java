@@ -60,7 +60,7 @@ public class ConsCell implements Iterable<Value<?>> {
             valueList.add(nextValue);
         }
 
-        if(! (cdr instanceof ConsCellValue)) {
+        if(! (cdr instanceof ConsCellValue || Value.nil().equals(cdr))) {
             // improper list
             return "(" + car.toString() + " . " + cdr.toString() + ")";
         }
