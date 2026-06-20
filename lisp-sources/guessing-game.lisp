@@ -36,7 +36,7 @@
            (format t "~S" "Too high"))
 
           (t
-           (format t "~S" "Correct!")
+           (format t "Correct in ~S guesses!" guesses)
            (setq done t)))))))
 
 (guess-game)
