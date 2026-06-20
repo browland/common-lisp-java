@@ -2,6 +2,7 @@ package evaluator.macro
 
 import evaluator.Evaluator
 import evaluator.env.Environment
+import function.FunctionDefinitions
 import reader.NodeBuilder
 import spock.lang.Specification
 import syntaxtree.Atom
@@ -44,6 +45,7 @@ class MacroExpanderSpec extends Specification {
         def evaluator = new Evaluator()
         def macroExpander = new MacroExpander()
         def environment = new Environment()
+        FunctionDefinitions.addFunctionDefinitions(environment)
 
         def macroDef = """
             (defmacro inspect (x)
@@ -77,6 +79,7 @@ class MacroExpanderSpec extends Specification {
         def evaluator = new Evaluator()
         def macroExpander = new MacroExpander()
         def environment = new Environment()
+        FunctionDefinitions.addFunctionDefinitions(environment)
 
         def macroDef = """
             (defmacro inspect (x)
@@ -109,6 +112,7 @@ class MacroExpanderSpec extends Specification {
         def evaluator = new Evaluator()
         def macroExpander = new MacroExpander()
         def environment = new Environment()
+        FunctionDefinitions.addFunctionDefinitions(environment)
 
         def macroDef = """
             (defmacro inspect (x)

@@ -21,7 +21,6 @@ public class Evaluator {
     private final MacroExpander macroExpander = new MacroExpander();
     private final OperatorLookup operatorLookup = new OperatorLookup();
     private final AtomEvaluator atomEvaluator = new AtomEvaluator();
-    private final BindingEvaluator bindingEvaluator = new BindingEvaluator();
 
     public Value<?> evaluate(Node node, Environment environment) {
         // either an atom or a list

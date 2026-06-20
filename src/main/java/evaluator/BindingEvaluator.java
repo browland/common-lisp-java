@@ -135,7 +135,7 @@ public class BindingEvaluator {
         // TODO But if restOperands is empty list, then handle that case explicitly (otherwise we'll try to access an element)
         // TODO double check this empty list semantics and if ok make static method
         ConsCell emptyCons = new ConsCell(Value.nil(), Value.nil());
-        ConsCellValue restValuesCons = restOperands.isEmpty() ? new ConsCellValue(emptyCons) : ConsCellValue.fromJavaList(restOperands);
+        ConsCellValue restValuesCons = restOperands.isEmpty() ? new ConsCellValue(emptyCons) : ConsCellValueFactory.fromJavaList(restOperands);
 
         // 4. add this binding to the bindingsMap
         bindingSubsetMap.put(restArgsBindingSymbol, restValuesCons);
@@ -166,10 +166,9 @@ public class BindingEvaluator {
             return atomEvaluator.atomToValueNoLookup(atom.value());
         }
         else {
-            return ConsCellValue.fromRList((RList)node);
+            return ConsCellValueFactory.fromRList((RList)node);
         }
     }
-
 
     enum BindingType {
         REST, ATOM, LIST

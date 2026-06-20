@@ -47,7 +47,7 @@ public class Macroexpand1 implements Function {
 
         // Now need to convert to a ConsCellValue as we always return a Value from a function.
         if(expandedResult instanceof RList rlistResult) {
-            return ConsCellValue.fromRList(rlistResult);
+            return ConsCellValueFactory.fromRList(rlistResult);
         }
         else if(expandedResult instanceof Atom atomResult) {
             return atomEvaluator.atomToValueNoLookup(atomResult.value());

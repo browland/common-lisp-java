@@ -6,7 +6,7 @@ import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
-import value.ConsCellValue;
+import value.ConsCellValueFactory;
 import value.Value;
 
 public class Quote implements SpecialForm {
@@ -23,7 +23,7 @@ public class Quote implements SpecialForm {
             return atomEvaluator.atomToValueNoLookup(atom.value());
         }
         else if(operand instanceof RList rlist) {
-            return ConsCellValue.fromRList(rlist);
+            return ConsCellValueFactory.fromRList(rlist);
         }
         else {
             throw new UnsupportedOperationException("Unhandled type for quote " + operand);

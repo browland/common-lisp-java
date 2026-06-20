@@ -1,6 +1,7 @@
 package evaluator;
 
 import evaluator.env.Environment;
+import function.FunctionDefinitions;
 import reader.NodeBuilder;
 import syntaxtree.Node;
 import value.Value;
@@ -21,6 +22,8 @@ public class Interpreter {
 
         this.evaluator =  new Evaluator();
         this.environment = environment;
+
+        FunctionDefinitions.addFunctionDefinitions(environment);
     }
 
     public Value<?> interpret(String program) {
