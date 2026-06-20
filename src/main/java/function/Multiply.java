@@ -1,10 +1,8 @@
 package function;
 
 import evaluator.env.Environment;
-import exception.EvaluationException;
 import value.IntegerValue;
 import value.Value;
-import value.ValueType;
 
 import java.util.List;
 
@@ -12,22 +10,12 @@ public class Multiply implements Function {
 
     @Override
     public Value<Integer> apply(List<Value<?>> operands, Environment environment) {
-        // terrible assumption for now that operands are all Atoms and their string values parse as integers ... can overflow ... etc etc.
         int result = 1;
 
         for(Value<?> operand : operands) {
-            if(ValueType.INTEGER_LITERAL != operand.getType()) {
-                throw new EvaluationException("*: require integer operands");
-            }
-
-            Object value = operand.getValue();
-            if(! (value instanceof Integer)) {
-                throw new IllegalArgumentException("value not of type Integer");
-            }
-
-            int intValue = (Integer)value;
+            IntegerValue integerValue = operand.expectInt("*");
+            int intValue = integerValue.getValue();
             result *= intValue;
-
         }
 
         return new IntegerValue(result);

@@ -12,7 +12,7 @@ public class Random implements Function {
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
         // ints only for now
-        int limit = ((IntegerValue)operands.getFirst()).getValue();
+        int limit = operands.getFirst().expectInt("random").getValue();
         int randValue = random.nextInt(limit);
         return new IntegerValue(randValue);
     }

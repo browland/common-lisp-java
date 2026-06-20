@@ -3,29 +3,23 @@ package function;
 import evaluator.env.Environment;
 import value.IntegerValue;
 import value.Value;
-import value.ValueType;
 
 import java.util.List;
 
 public class GreaterThan implements Function {
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
-        // two operands should be integers
         if(operands.size() != 2) {
-            throw new IllegalArgumentException("< expects only two operands");
+            throw new IllegalArgumentException("> expects only two operands");
         }
 
-        Value<?> op1 = operands.get(0);
-        Value<?> op2 = operands.get(1);
+        IntegerValue integerValue1 = operands.getFirst().expectInt(">");
+        IntegerValue integerValue2 = operands.get(1).expectInt(">");
 
-        if(op1.getType() != ValueType.INTEGER_LITERAL || op2.getType() != ValueType.INTEGER_LITERAL) {
-            throw new IllegalArgumentException("< expects two integer operands");
-        }
+        int intValue1 = integerValue1.getValue();
+        int intValue2 = integerValue2.getValue();
 
-        IntegerValue intValue1 = (IntegerValue) op1;
-        IntegerValue intValue2 = (IntegerValue) op2;
-
-        boolean boolResult = intValue1.getValue() > intValue2.getValue();
+        boolean boolResult = intValue1 > intValue2;
         return boolResult ? Value.t() : Value.nil();
     }
 }

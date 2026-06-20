@@ -1,8 +1,7 @@
 package value;
 
-import evaluator.env.Environment;
 import evaluator.env.Symbols;
-import syntaxtree.Atom;
+import exception.EvaluationException;
 
 import java.util.Objects;
 
@@ -73,6 +72,15 @@ public sealed class Value<T> permits CharInputStreamValue, CharValue, ClosureVal
             return true;
         } catch (NumberFormatException e) {
             return false;
+        }
+    }
+
+    public IntegerValue expectInt(String operator) {
+        if(this instanceof IntegerValue intValue) {
+            return intValue;
+        }
+        else {
+            throw new EvaluationException("%s expects integer operands but received %s".formatted(operator, this));
         }
     }
 
