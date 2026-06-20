@@ -18,14 +18,14 @@ public class ClosureToLambda {
         List<Node> forms = closure.forms();
         Atom lambdaSymbol = new Atom("lambda", null);
 
-        RList bindingsRList = new RList(-1, null, false, false, bindings, false);
-        RList formsRList = new RList(-1, null, false, false, forms, false);
+        RList bindingsRList = new RList(false, bindings, false);
+        RList formsRList = new RList(false, forms, false);
 
         List<Node> topLevelNodes = new ArrayList<>();
         topLevelNodes.add(lambdaSymbol);
         topLevelNodes.add(bindingsRList);
         topLevelNodes.addAll(formsRList.nodes());
 
-        return new RList(-1, null, false, false, topLevelNodes, false);
+        return new RList(false, topLevelNodes, false);
     }
 }

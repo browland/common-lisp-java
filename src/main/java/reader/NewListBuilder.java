@@ -162,14 +162,13 @@ public class NewListBuilder {
 
     private void newList(boolean improperList, boolean synthetic) {
         if(currentList == null) {
-            currentList = new RList(0, null, false, improperList, new ArrayList<>(), synthetic);
+            currentList = new RList(improperList, new ArrayList<>(), synthetic);
         }
         else {
-            RList newList = new RList(0, null, false, improperList, new ArrayList<>(), synthetic);
+            RList newList = new RList(improperList, new ArrayList<>(), synthetic);
             newList.setParent(currentList);
             currentList.add(newList);
             currentList = newList;
-
         }
     }
 }

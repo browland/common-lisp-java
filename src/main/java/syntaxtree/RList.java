@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class RList implements Node {
-    private int depth;
-    private String prefix;
-    private boolean isQuoted;
     private boolean improperList;
     private List<Node> nodes;
     private RList parent;
@@ -15,13 +12,10 @@ public final class RList implements Node {
 
     // Used for things like macros where we're generating a list dynamically rather than via the reader
     public RList() {
-        this(-1, null, false, false, new ArrayList<>(), false);
+        this(false, new ArrayList<>(), false);
     }
 
-    public RList(int depth, String prefix, boolean isQuoted, boolean improperList, List<Node> nodes, boolean synthetic) {
-        this.depth = depth;
-        this.prefix = prefix;
-        this.isQuoted = isQuoted;
+    public RList(boolean improperList, List<Node> nodes, boolean synthetic) {
         this.improperList = improperList;
         this.nodes = nodes;
         this.synthetic = synthetic;
@@ -51,21 +45,8 @@ public final class RList implements Node {
         return improperList;
     }
 
-    public int depth() {
-        return depth;
-    }
-
-    public boolean isQuoted() {
-        return isQuoted;
-    }
-
     public boolean isSynthetic() {
         return synthetic;
-    }
-
-    public RList fromIndex(int index) {
-        List<Node> newNodes = nodes.subList(index, nodes.size());
-        return new RList(depth, prefix, this.isQuoted, false, newNodes, synthetic);
     }
 
     public void add(Node node) {
@@ -85,33 +66,8 @@ public final class RList implements Node {
 
         private RList.Builder parentListBuilder;
         private int depth;
-        private String prefix;
         private boolean isQuoted;
         private boolean improperList;
-
-        Builder parentListBuilder(RList.Builder parentListBuilder) {
-            this.parentListBuilder = parentListBuilder;
-            return this;
-        }
-
-        Builder depth(int depth) {
-            this.depth = depth;
-            return this;
-        }
-
-        public Builder prefix(String prefix) {
-            this.prefix = prefix;
-            return this;
-        }
-
-        public Builder quoted(boolean isQuoted) {
-            this.isQuoted = isQuoted;
-            return this;
-        }
-
-        public boolean isQuoted() {
-            return isQuoted;
-        }
 
         public Builder addNodeBuilder(NodeBuilder nodeBuilder) {
             this.nodeBuilders.add(nodeBuilder);
@@ -120,20 +76,9 @@ public final class RList implements Node {
 
         public RList build() {
             List<Node> nodes = nodeBuilders.stream().map(NodeBuilder::build).toList();
-            return new RList(depth, prefix, isQuoted, improperList, nodes, false);
+            return new RList(improperList, nodes, false);
         }
 
-        public void setIsImproperList() {
-            this.improperList = true;
-        }
-
-        public Builder getParentListBuilder() {
-            return parentListBuilder;
-        }
-
-        public int getDepth() {
-            return depth;
-        }
 
         public int getSize() {
             return nodeBuilders.size();
