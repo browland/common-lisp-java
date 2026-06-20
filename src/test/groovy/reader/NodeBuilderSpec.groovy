@@ -165,7 +165,6 @@ class NodeBuilderSpec extends Specification {
         innerAtom2.value() == "2"
     }
 
-    // we auto-close the function list too early as we thought we'd created the list ourselves via function quote :-/
     def "test breakage due to explicit use of function which we might accidentally auto close"() {
         given:
         var builder = new NodeBuilder()
@@ -176,6 +175,12 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 3
+        list.get(0) == new Atom("defvar")
+        list.get(1) == new Atom("x")
+        def functionQuoteList = list.get(2) as RList
+        functionQuoteList.size() == 2
+        functionQuoteList.get(0) == new Atom("function")
+        functionQuoteList.get(1) == new Atom("add")
     }
 
     def "test breakage due to with null returned"() {
@@ -188,6 +193,12 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 3
+        list.get(0) == new Atom("defvar")
+        list.get(1) == new Atom("z")
+        def functionQuoteList = list.get(2) as RList
+        functionQuoteList.size() == 2
+        functionQuoteList.get(0) == new Atom("function")
+        functionQuoteList.get(1) == new Atom("add")
     }
 
     def "multiple nested list"() {
@@ -200,6 +211,13 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 3
+        list.get(0) == new Atom("add")
+        list.get(2) == new Atom("2")
+
+        var innerList = list.get(1) as RList
+        innerList.get(0) == new Atom("add")
+        innerList.get(1) == new Atom("1")
+        innerList.get(2) == new Atom("2")
     }
 
     def "quote list and function quote"() {
@@ -212,6 +230,22 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 3
+        list.get(0) == new Atom("filter")
+
+        var quoteList = list.get(1) as RList
+        quoteList.get(0) == new Atom("quote")
+
+        var numsList = quoteList.get(1) as RList
+        numsList.get(0) == new Atom("6")
+        numsList.get(1) == new Atom("4")
+        numsList.get(2) == new Atom("3")
+        numsList.get(3) == new Atom("5")
+        numsList.get(4) == new Atom("2")
+
+        var functionQuoteList = list.get(2) as RList
+        functionQuoteList.size() == 2
+        functionQuoteList.get(0) == new Atom("function")
+        functionQuoteList.get(1) == new Atom("even")
     }
 
     def "string literal"() {
@@ -224,6 +258,9 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 3
+        list.get(0) == new Atom("format")
+        list.get(1) == new Atom("t")
+        list.get(2) == new Atom("\"hello world\"")
     }
 
     def "keyword symbols and list function"() {
@@ -236,6 +273,11 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 5
+        list.get(0) == new Atom("list")
+        list.get(1) == new Atom(":a")
+        list.get(2) == new Atom("1")
+        list.get(3) == new Atom(":b")
+        list.get(4) == new Atom("2")
     }
 
     def "multiple string literals"() {
@@ -248,6 +290,9 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 3
+        list.get(0) == new Atom("make-cd")
+        list.get(1) == new Atom("\"Roses\"")
+        list.get(2) == new Atom("\"Kathy Mattea\"")
     }
 
     def "complex lambda"() {
@@ -256,10 +301,37 @@ class NodeBuilderSpec extends Specification {
         var program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
 
         when:
-        var list = builder.build(program)[0] as RList
+        var outerLambdaApply = builder.build(program)[0] as RList
 
         then:
-        list.size() == 2
+        // Outer lambda application ... We expect 2 parts: inner lambda application, and an argument to this lambda application
+        outerLambdaApply.size() == 2
+        outerLambdaApply.get(1) == new Atom("5")
+
+        // Inner lambda application ... We expect 2 parts: outer lambda body, and an argument to this lambda application
+        var innerLambdaApply = outerLambdaApply.get(0) as RList
+        innerLambdaApply.size() == 2
+        innerLambdaApply.get(1) == new Atom("10")
+
+        // Outer lambda itself ... We expect 3 parts: "lambda", the bindings list containing just x, and the body which is just the inner lambda
+        var outerLambda = innerLambdaApply.get(0) as RList
+        outerLambda.size() == 3
+        outerLambda.get(0) == new Atom("lambda")
+        def outerLambdaBindings = outerLambda.get(1) as RList
+        outerLambdaBindings.get(0) == new Atom("x")
+
+        // Inner lambda itself ... We expect 3 parts: "lambda", the bindings list containing just y, and the body which is a list of 3 atoms
+        var innerLambda = outerLambda.get(2) as RList
+        innerLambda.size() == 3
+        innerLambda.get(0) == new Atom("lambda")
+        var innerLambdaBindings = innerLambda.get(1) as RList
+        innerLambdaBindings.get(0) == new Atom("y")
+
+        var innerLambdaBody = innerLambda.get(2) as RList
+        innerLambdaBody.size() == 3
+        innerLambdaBody.get(0) == new Atom("+")
+        innerLambdaBody.get(1) == new Atom("x")
+        innerLambdaBody.get(2) == new Atom("y")
     }
 
     def "quote list - should not evaluate as form"() {
@@ -272,6 +344,13 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 2
+        list.get(0) == new Atom("quote")
+
+        var innerList = list.get(1) as RList
+        innerList.size() == 3
+        innerList.get(0) == new Atom("add")
+        innerList.get(1) == new Atom("1")
+        innerList.get(2) == new Atom("2")
     }
 
     def "quasiquote with unquote symbol"() {
@@ -284,6 +363,17 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 2
+        list.get(0) == new Atom("quasiquote")
+
+        var innerList = list.get(1) as RList
+        innerList.size() == 3
+        innerList.get(0) == new Atom("add")
+
+        var unquoteSplicingList = innerList.get(1) as RList
+        unquoteSplicingList.get(0) == new Atom("unquote")
+        unquoteSplicingList.get(1) == new Atom("x")
+
+        innerList.get(2) == new Atom("2")
     }
 
     def "quasiquote with unquote splicing"() {
@@ -296,6 +386,17 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 2
+        list.get(0) == new Atom("quasiquote")
+
+        var innerList = list.get(1) as RList
+        innerList.size() == 3
+        innerList.get(0) == new Atom("add")
+
+        var unquoteSplicingList = innerList.get(1) as RList
+        unquoteSplicingList.get(0) == new Atom("unquote-splicing")
+        unquoteSplicingList.get(1) == new Atom("x")
+
+        innerList.get(2) == new Atom("2")
     }
 
     def "simple atom"() {
@@ -320,6 +421,8 @@ class NodeBuilderSpec extends Specification {
 
         then:
         list.size() == 2
+        list.get(0) == new Atom("1")
+        list.get(1) == new Atom("2")
     }
 
     def "string literal containing spaces"() {
