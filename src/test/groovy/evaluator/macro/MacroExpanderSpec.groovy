@@ -2,12 +2,10 @@ package evaluator.macro
 
 import evaluator.Evaluator
 import evaluator.env.Environment
-import reader.CharacterReader
+import reader.NewListBuilder
 import spock.lang.Specification
 import syntaxtree.Atom
-import syntaxtree.ParseElementBuilder
 import syntaxtree.RList
-import syntaxtree.SyntaxTreeBuilder
 import value.Macro
 
 class MacroExpanderSpec extends Specification {
@@ -179,10 +177,7 @@ class MacroExpanderSpec extends Specification {
     }
 
     def programToRList(program) {
-        def syntaxTreeBuilder = new SyntaxTreeBuilder()
-        def reader = new ParseElementBuilder(syntaxTreeBuilder)
-        def characterReader = new CharacterReader(reader)
-        characterReader.read(program)
-        return syntaxTreeBuilder.getResult()
+        def listBuilder = new NewListBuilder()
+        return listBuilder.build(program).getFirst()
     }
 }

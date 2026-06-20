@@ -1,16 +1,15 @@
 package evaluator;
 
 import evaluator.env.Environment;
-import reader.CharacterReader;
+import reader.NewListBuilder;
 import syntaxtree.Node;
-import syntaxtree.ParseElementBuilder;
-import syntaxtree.SyntaxTreeBuilder;
 import value.Value;
+
+import java.util.List;
 
 public class Interpreter {
     private final Evaluator evaluator;
-    private final CharacterReader characterReader;
-    private final SyntaxTreeBuilder syntaxTreeBuilder;
+    private final NewListBuilder newListBuilder;
     private final Environment environment;
 
     public Interpreter() {
@@ -18,20 +17,19 @@ public class Interpreter {
     }
 
     public Interpreter(Environment environment) {
-        syntaxTreeBuilder = new SyntaxTreeBuilder();
-        ParseElementBuilder parseElementBuilder = new ParseElementBuilder(syntaxTreeBuilder);
-        characterReader = new CharacterReader(parseElementBuilder);
+        newListBuilder = new NewListBuilder();
 
         this.evaluator =  new Evaluator();
         this.environment = environment;
     }
 
     public Value<?> interpret(String program) {
-        characterReader.read(program);
+        List<Node> nodes = newListBuilder.build(program);
+        Value<?> result = null;
+        for(Node node : nodes) {
+            result = evaluator.evaluate(node, environment);
+        }
 
-        Node list = syntaxTreeBuilder.getResult();
-        Value<?> evaluate = evaluator.evaluate(list, environment);
-        syntaxTreeBuilder.reset();
-        return evaluate;
+        return result;
     }
 }

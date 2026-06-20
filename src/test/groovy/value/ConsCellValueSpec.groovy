@@ -1,23 +1,19 @@
 package value
 
 import evaluator.env.Symbols
-import reader.CharacterReader
+import reader.NewListBuilder
 import spock.lang.Specification
-import syntaxtree.ParseElementBuilder
-import syntaxtree.SyntaxTreeBuilder
+import syntaxtree.RList
 
 class ConsCellValueSpec extends Specification {
 
     def "test construction from syntax tree"() {
         given:
-        def syntaxTreeBuilder = new SyntaxTreeBuilder()
-        def reader = new ParseElementBuilder(syntaxTreeBuilder)
-        def characterReader = new CharacterReader(reader)
         def program = "(add (add 1 2) 2)"
 
         when:
-        characterReader.read(program)
-        def outerList = syntaxTreeBuilder.getResult()
+        def listBuilder = new NewListBuilder()
+        def outerList = listBuilder.build(program).getFirst() as RList
         def result = ConsCellValue.fromRList(outerList)
 
         then:

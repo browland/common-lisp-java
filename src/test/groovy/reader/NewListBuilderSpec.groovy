@@ -189,4 +189,18 @@ class NewListBuilderSpec extends Specification {
         then:
         list.size() == 3
     }
+
+    // todo tests ported over from old reader tests
+//    def program = "(add (add 1 2) 2)"
+//    def program = "(filter '(6 4 3 5 2) #'even)"
+//    def program = "(format t \"hello world\")"
+//    def program = "(list :a 1 :b 2)"
+//    def program = "(make-cd \"Roses\" \"Kathy Mattea\")"
+//    def program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
+//    def program = "'(add 1 2)"
+//    def program = "`(add ,x 2)"
+//    def program = "`(add ,@x 2)"
+//    def program = "1"
+//    def program = "(1 . 2)"
+//    def program = "\"A steel door blocks your way. Key? (yes/no)\""
 }
