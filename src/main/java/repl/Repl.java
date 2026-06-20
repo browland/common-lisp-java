@@ -3,6 +3,7 @@ package repl;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import exception.EvaluationException;
+import function.FunctionDefinitions;
 import reader.NewListBuilder;
 import syntaxtree.Node;
 import value.Value;
@@ -24,10 +25,9 @@ public class Repl implements ReplOutput {
     private final Environment env = new Environment();
 
     public static void main(String[] args) throws IOException {
-        loadLibrary();
-
         if(args.length == 1) {
             try {
+                repl.init();
                 Path initialFormsFile = Path.of("/Users/ben/git/lisp/lisp-sources", args[0]);
                 loadFile(initialFormsFile);
             }
@@ -36,7 +36,7 @@ public class Repl implements ReplOutput {
             }
         }
         else {
-            repl.run();
+            repl.init();
         }
     }
 
@@ -67,6 +67,7 @@ public class Repl implements ReplOutput {
     public void run(String initialForms) throws IOException {
         BufferedReader br = new BufferedReader(new StringReader(initialForms));
         String line = br.readLine();
+
         while(line != null) {
             List<Node> forms = newListBuilder.build(line);
             if (forms != null) {
@@ -83,10 +84,16 @@ public class Repl implements ReplOutput {
         }
     }
 
+    private void init() throws IOException {
+        FunctionDefinitions.addFunctionDefinitions(env);
+        loadLibrary();
+    }
+
     public void run() throws IOException{
-        // here
+        init();
         promptForNewForm();
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
         while(true) {
             String line = br.readLine();
             List<Node> forms = newListBuilder.build(line);

@@ -6,7 +6,6 @@ import evaluator.special.SpecialForm;
 import evaluator.special.SpecialFormRegistry;
 import exception.EvaluationException;
 import function.Function;
-import function.FunctionRegistry;
 import syntaxtree.Atom;
 import value.Macro;
 import value.Symbol;
@@ -17,16 +16,12 @@ import java.util.Optional;
 
 public class OperatorLookup {
     private static final SpecialFormRegistry specialFormRegistry = new SpecialFormRegistry();
-    private static final FunctionRegistry functionRegistry = new FunctionRegistry();
 
     public OperatorType determineOperatorType(Atom operatorAtom,
                                               Environment environment) {
         String operatorName = operatorAtom.value();
         if(specialFormRegistry.findByName(operatorName).isPresent()) {
             return OperatorType.SPECIAL_FORM;
-        }
-        else if(functionRegistry.findByName(operatorName).isPresent()) {
-            return OperatorType.FUNCTION;
         }
 
         Symbol operatorSymbol = Symbols.internSymbol(operatorName);
@@ -46,11 +41,6 @@ public class OperatorLookup {
     }
 
     public Optional<Function> lookupFunction(String name, Environment environment) {
-        Optional<Function> builtInFunction = functionRegistry.findByName(name);
-        if(builtInFunction.isPresent()) {
-            return builtInFunction;
-        }
-
         Symbol operatorSymbol = Symbols.internSymbol(name);
 
         Optional<Value<?>> optionalOperator = environment.getFunction(operatorSymbol);
