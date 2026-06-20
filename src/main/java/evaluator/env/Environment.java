@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public class Environment {
     private final GlobalEnvironment globalEnvironment;
-    private Deque<ScopeEnvironment> scopes;
+    private final Deque<ScopeEnvironment> scopes;
 
     public Environment() {
         this(new GlobalEnvironment());
@@ -18,6 +18,11 @@ public class Environment {
     public Environment(GlobalEnvironment globalEnvironment) {
         this.globalEnvironment = globalEnvironment;
         this.scopes = new LinkedList<>();
+    }
+
+    public Environment(GlobalEnvironment globalEnvironment, Deque<ScopeEnvironment> scopes) {
+        this.globalEnvironment = globalEnvironment;
+        this.scopes = scopes;
     }
 
     public Optional<Value<?>> getVariable(Symbol symbol) {
@@ -137,7 +142,6 @@ public class Environment {
     }
 
     public Environment capture() {
-        Environment capturedEnvironment = new Environment(this.globalEnvironment);
 
         // We have to be very careful re. scopes captured by closures:
         // 1. We must create a new stack (LinkedList) so closures don't lose any enclosing scope when that scope terminates.
@@ -156,7 +160,6 @@ public class Environment {
         // can reference global variables which aren't captured at creation time, but will be set at application time.
         // This is fulfilled by using the Environment copy constructor above, which points to the existing (single) global
         // environment.
-        capturedEnvironment.scopes = new LinkedList<>(this.scopes);
-        return capturedEnvironment;
+        return new Environment(this.globalEnvironment, new LinkedList<>(this.scopes));
     }
 }
