@@ -50,24 +50,6 @@ public class Environment {
         globalEnvironment.setVariable(symbol, value);
     }
 
-    @Deprecated
-    public void setGlobal(Symbol symbol, Value<?> value) {
-        if(globalEnvironment.isReserved(symbol)) {
-            throw new RuntimeException("Can't set for name which already exists in global env " + symbol);
-        }
-
-        switch(value.getType()) {
-            case MACRO:
-                globalEnvironment.setMacro(symbol, value);
-                break;
-            case OPERATOR:
-                globalEnvironment.setFunction(symbol, value);
-                break;
-            default:
-                globalEnvironment.setGlobal(symbol, value);
-        }
-    }
-
     public void setInScope(Symbol symbol,
                            Value<?> value,
                            Namespace namespace) {
@@ -153,6 +135,14 @@ public class Environment {
         }
 
         return globalEnvironment.getMacro(symbol);
+    }
+
+    public void setMacro(Symbol symbol, Value<?> macroValue) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't set for symbol which already exists in global env " + symbol);
+        }
+
+        globalEnvironment.setMacro(symbol, macroValue);
     }
 
     public void enterScope() {

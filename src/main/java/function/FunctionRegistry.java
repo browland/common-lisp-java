@@ -35,7 +35,6 @@ public class FunctionRegistry {
         registry.put("random", new Random());
         registry.put("assoc", new Assoc());
         registry.put("null", new Null());
-        registry.put("mapcar", new Mapcar());
         registry.put("string=", new StringEqual());
         registry.put("evenp", new Evenp());
         registry.put("values", new Values());

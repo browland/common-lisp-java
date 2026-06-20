@@ -29,7 +29,7 @@ public record Closure(Evaluator evaluator,
 
         capturedEnvironment.enterScope();
         for(Symbol bindingSymbol : bindingsMap.keySet()) {
-            capturedEnvironment.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
+            capturedEnvironment.setVariable(bindingSymbol, bindingsMap.get(bindingSymbol));
         }
 
         Value<?> evalResult = null;

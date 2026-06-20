@@ -34,7 +34,7 @@ public class DefMacro implements SpecialForm {
         Macro macro = new Macro(bindings, bodyNodes, name);
         MacroValue macroValue = new MacroValue(macro);
 
-        environment.setGlobal(symbol, macroValue);
+        environment.setMacro(symbol, macroValue);
 
         return new StringValue(name);
     }

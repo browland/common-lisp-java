@@ -1,3 +1,4 @@
+
 (defmacro dolist (mylist func)
   `(let ((curr (car ,mylist))
         (rest (cdr ,mylist)))
@@ -26,6 +27,14 @@
         (dolist list #'(lambda (x)
             (if x (push x newlist))))
             newlist))
+
+(defun mapcar (fxn the-list)
+    (let ((res-list '())
+          (acum-fxn #'(lambda (x) (push (funcall fxn x) res-list))))
+       (dolist the-list acum-fxn)
+       (reverse res-list)))
+
+(mapcar #'(lambda (x) (+ x 1)) '(1 2 3))
 
 (defmacro dotimes ((var num) &rest forms)
     `(let ((,var 0))
