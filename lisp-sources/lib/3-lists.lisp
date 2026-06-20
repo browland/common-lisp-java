@@ -42,197 +42,26 @@
 ;;; do macro
 ;;;;;;;;;;;;
 
-(defun let-var-extractor (var-decls)
-    (mapcar #'(lambda (decl)
-        (list (car decl) (cadr decl))) var-decls))
+;; The template body we're looking to emit at expansion time - this is if we were to call:
+;; (do ((i 0 (1+ i))
+;;      (cur 0 (1+ cur)))
+;;     ((> i 5) 'done)
+;;   (print i))
 
-(defun step-forms-extractor (var-decls)
-    (mapcar #'(lambda (decl)
-        (list 'setq (car decl) (car (cdr (cdr decl))))) var-decls))
-
-(defmacro do (var-decls end-test-and-result-forms &rest statements)
-    (let ((temp-let-bindings (let-var-extractor var-decls)))
-        (push '(temp-results nil) temp-let-bindings)
-
-        `(let ,temp-let-bindings
-            (block loop-block
-                (tagbody
-                    start
-                    ; run statements if present
-
-                    ; evaluate step forms and push results into temp-results so there are no side effects between step forms
-                    (push (1+ i) temp-results)
-                    (push next temp-results)
-                    (push (+ cur next) temp-results)
-
-                    ; now set vars to temp-results
-                    (setq temp-results (reverse temp-results))
-                    (setq i (pop temp-results))
-                    (setq cur (pop temp-results))
-                    (setq next (pop temp-results))
-
-                    ; evaluate end-test-forms
-                    (if (= i 10)
-                        (return-from loop-block cur)
-                        (go start)))))))
-
-(macroexpand-1 '(do (
-    (i 0 (1+ i))
-    (cur 0 next)
-    (next 1 (+ cur next)))
-  ((= 10 i) cur)))
-
-(do (
-    (i 0 (1+ i))
-    (cur 0 next)
-    (next 1 (+ cur next)))
-  ((= 10 i) cur))
-
-;;;;;; Working: builds lambda from step form passed in, inits i (hardcoded) and calls step form
-
-(defmacro stepper1 (step-form)
-    (let ((my-sf step-form))
-        `(let ((i 0)
-               (inner-sf #'(lambda (i) ,my-sf)))
-            (format t "~S" (funcall inner-sf i)))))
-
-(stepper1 (1+ i))
-
-;;;;;; Extract stuff out - ok
-
-(defun step-extractor (decls)
-    decls)
-
-(defmacro stepper2 (step-form)
-    (let ((my-sf (step-extractor step-form)))
-        `(let ((i 0)
-               (inner-sf #'(lambda (i) ,my-sf)))
-            (format t "~S" (funcall inner-sf i)))))
-
-(stepper2 (1+ i))
-
-;;;;;; Work with list of single step form - ok
-
-(defun steps-extractor1 (step-forms)
-    (car step-forms))
-
-(defmacro stepper3 (step-forms)
-    (let ((my-sf (steps-extractor1 step-forms)))
-        `(let ((i 0)
-               (inner-sf #'(lambda (i) ,my-sf)))
-            (format t "~S" (funcall inner-sf i)))))
-
-(stepper3 ((1+ i)))
-
-;;;;;; build let bindings dynamically
-(defmacro let-builder1 (decls)
-    `(let ,decls
-        (format t "~S" i)))
-
-(let-builder1 ((i 0)))
-
-;;;;;;;; just focus on the eventual let form we want - first basic
-(let ((i 0)
-      (x 1)
-      (step-forms '((i (lambda (i) (1+ i)))
-                    (x (lambda (x) (1+ x))))))
-    (format t "~S" x))
-
-;;;;;;;; just focus on the eventual let form we want - invoke step forms one by one - works!
-(let ((i 0)
-      (x 1)
-      (step-forms (list (list 'i #'(lambda () (1+ i)))
-                        (list 'x #'(lambda () (1+ x))))))
-    (setq i (funcall (car (cdr (car step-forms)))))
-    (format t "new value of i ~S" i))
-
-;;;;;;;; small tweaks to simplify
-(let ((i 0)
-      (x 1)
-      (step-forms (list (list 'i #'(lambda () (1+ i)))
-                        (list 'x #'(lambda () (1+ x))))))
-    (setq i (funcall (cadr (car step-forms))))
-    (format t "new value of i ~S" i))
-
-;;;;;;;; try iterating over step forms
-;; Now we need a macro as we need to generate the setq forms
-;; But first just make what we've got working, work
-#|
-(defmacro do-again (var-decls)
-    (let ((var-decl-bits (mapcar #'(lambda (vd)
-                            (list (car vd) (cadr vd))) var-decls))
-          (step-form-bits (mapcar #'(lambda (vd)
-                            (list (car vd) (car (cdr (cdr vd))))) var-decls)))
-
-          (format t "~S" var-decl-bits)
-          (format t "~S" step-form-bits)
-
-        `(let ,var-decl-bits ,step-form-bits
-            (format t "~S" i)
-            (format t "~S" next))))
-
-(macroexpand-1 '(do-again
-    ((i 0 (1+ i))
-    (cur 0 next)
-    (next 1 (+ cur next)))))
-
-;;; 1. One problem is probably just a lisp programming error - the list function usages are not (quasi-)quoted
-;;; so are rightly lost, and the list we end up substituting into the let bindings looks like a form.
-;;; 2. Another problem is we still have (car vd) etc in the emitted let bindings; this is because it's wrapped in a
-;;; lambda so 'survives' all the way to expansion, but refers to vd which is only defined within the macro body (in a
-;;; form before the final one the value of which is returned).
-
-(do-again
-    ((i 0 (1+ i))
-    (cur 0 next)
-    (next 1 (+ cur next))))
-
-(defmacro something-new (var-decls)
-    `(let (,@(mapcar #'(lambda (vd) (list (car vd) (cadr vd))) var-decls)
-        (step-forms ',(mapcar #'(lambda (vd) (car vd)) var-decls)))
-        (format t "~S" step-forms)
-        (setq (car step-forms))))
-
-(macroexpand-1 '(something-new ((i 0 (1+ i))
-    (cur 0 next)
-    (next 1 (+ cur next)))))
-
-(something-new ((i 0 (1+ i))
-    (cur 0 next)
-    (next 1 (+ cur next))))
+;; temp print macro
+(defmacro print (stuff)
+   `(format t "~S" ,stuff))
 
 (let ((i 0)
-      (step-forms '((i . #'(lambda (i) (1+ i))))))
-    (format t "lambda call result: ~S" (funcall (cadr (assoc 'i step-forms)) i)))
-
-|#
-
-;; playing with creating alist of symbol and function quote
-(setq my-alist (list (cons 'add  #'+)
-                     (cons 'sub #'-)
-                     (cons 'mul #'*)))
-
-(funcall (cdr (assoc 'add my-alist)) 1 2)
-
-
-;(setq other-alist (list (cons 'add  #'(lambda (x) (+ x 1)))))
-;(funcall (cdr (assoc 'add other-alist)) 1)
-
-(setq other-alist (list (cons 'add #'(lambda (x) (+ x 1)))))
-(funcall (cdr (assoc 'add other-alist)) 1)
-
-; This is valid way to express the dot syntax for pairs and somehow actually works
-(setq other-alist `((add . ,#'(lambda (x) (+ x 1)))))
-
-; Working too
-(funcall (cdr (assoc 'add other-alist)) 1)
-
-; Intended basic structure now working
-; Somehow we're adding i to 1 and not evaluating i, in the lambda - poss. because we have the symbol i in the cons cell.
-; This is where we simply must use a macro, to get from the symbol i (so we can update the appropriate variable) to its
-; step form lambda expression.
-;
-(let ((i 0)
-      (step-forms `((i . ,#'(lambda (i) (1+ i))))))
-   (mapcar #'(lambda (sf)
-      (list (car sf) (funcall (cdr sf) (car sf)))) step-forms))
+      (cur 0))
+   (block my-loop
+      (tagbody
+         start
+            (if (> i 5)
+               (return-from my-loop 'done))
+            (print i)
+            (setq temp-i (1+ i))
+            (setq temp-cur (1+ cur))
+            (setq i temp-i)
+            (setq cur temp-cur)
+         (go start))))
