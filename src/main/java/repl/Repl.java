@@ -100,24 +100,21 @@ public class Repl implements ReplOutput {
                         System.out.println(e.getMessage());
                     }
                 }
+                promptForNewForm();
             }
-            promptForNewForm();
+            else {
+                promptForMidForm();
+            }
         }
     }
 
     @Override
     public void promptForNewForm() {
         System.out.print("> ");
-
     }
 
     @Override
     public void promptForMidForm() {
         System.out.print("... ");
-    }
-
-    @Override
-    public void emitOutput(String value) {
-        System.out.println(value);
     }
 }

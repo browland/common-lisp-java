@@ -18,11 +18,11 @@ public class Block implements SpecialForm {
                              Evaluator evaluator) {
         List<Node> nodes = entireList.nodes();
         Node nameNode = nodes.get(1);
-        if (!(nameNode instanceof Atom nameAtom)) {
+
+        if (!(nameNode instanceof Atom(String name))) {
             throw new IllegalArgumentException("list provided for block name");
         }
 
-        String name = nameAtom.value();
         Symbol nameSymbol = Symbols.internSymbol(name);
 
         Value<?> bodyEvaluation;

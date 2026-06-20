@@ -33,29 +33,13 @@ public class ConsToRList {
 
     private Node extractNode(ConsCell nextConsCell) {
         Value<?> carValue = nextConsCell.car();
-        Node node;
-        if(carValue instanceof StringValue stringValue) {
-            node = ValueToAtom.toAtom(stringValue);
-        }
-        else if(carValue instanceof IntegerValue integerValue) {
-            node = ValueToAtom.toAtom(integerValue);
-        }
-        else if(carValue instanceof SymbolValue symbolValue) {
-            node = ValueToAtom.toAtom(symbolValue);
-        }
-        else if(carValue instanceof ConsCellValue consCellValue) {
-            node = translate(consCellValue);
-        }
-        else if(carValue instanceof ClosureValue closureValue) {
-            node = ClosureToLambda.toLambdaNode(closureValue);
-        }
-        else {
-            // todo this happens when running 3-lists.lisp - this is because the offending value is buried in a ConsCellValue
-            //      so we dive into cons cell value handling and fail when handling the values within the cons cell
-            //      We need to rip out usage of builders, and re-use ClosureToLambda.
-            throw new IllegalStateException("Unhandled value in cons: " + carValue);
-        }
-        return node;
+        return switch(carValue) {
+            case StringValue stringValue -> ValueToAtom.toAtom(stringValue);
+            case IntegerValue integerValue -> ValueToAtom.toAtom(integerValue);
+            case SymbolValue symbolValue -> ValueToAtom.toAtom(symbolValue);
+            case ConsCellValue consCellValue -> translate(consCellValue);
+            case ClosureValue closureValue -> ClosureToLambda.toLambdaNode(closureValue);
+            default -> throw new IllegalStateException("Unhandled value in cons: " + carValue);
+        };
     }
-
 }
