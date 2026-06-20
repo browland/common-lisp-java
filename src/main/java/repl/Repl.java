@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class Repl {
+    private static final String LISP_SOURCES_DIR = "LISP_SOURCES_DIR";
+    private static final String LISP_LIB_DIR = "LISP_LIB_DIR";
+
     private static final Repl repl = new Repl();
 
     private final NodeBuilder nodeBuilder = new NodeBuilder();
@@ -28,7 +31,8 @@ public class Repl {
         if(args.length == 1) {
             try {
                 repl.init();
-                Path initialFormsFile = Path.of("/Users/ben/git/lisp/lisp-sources", args[0]);
+                String lispSourcesDir = getLispSourcesDir();
+                Path initialFormsFile = Path.of(lispSourcesDir, args[0]);
                 loadFile(initialFormsFile);
             }
             catch (Exception e) {
@@ -37,6 +41,7 @@ public class Repl {
         }
         else {
             repl.init();
+            repl.run();
         }
     }
 
@@ -54,12 +59,13 @@ public class Repl {
     }
 
     private static void loadLibrary() throws IOException {
-        Path initialFormsDir = Path.of("/Users/ben/git/lisp/lisp-sources/lib");
-        if(!Files.exists(initialFormsDir)) {
-            throw new RuntimeException("does not exist");
+        String lispLibDir = getLispLibDir();
+        Path lispLibPath = Path.of(lispLibDir);
+        if(!Files.exists(lispLibPath)) {
+            throw new RuntimeException("LISP_LIB_PATH does not exist (set to %s)".formatted(lispLibDir));
         }
 
-        try(Stream<Path> initialFormsStream = Files.list(initialFormsDir).sorted()) {
+        try(Stream<Path> initialFormsStream = Files.list(lispLibPath).sorted()) {
             initialFormsStream.forEach(Repl::loadFile);
         }
     }
@@ -113,6 +119,22 @@ public class Repl {
                 promptForMidForm();
             }
         }
+    }
+
+    private static String getLispSourcesDir() {
+        String sourcesDirEnvVar = System.getenv(LISP_SOURCES_DIR);
+        if(sourcesDirEnvVar == null) {
+            throw new RuntimeException("Please set environment variable LISP_SOURCES_DIR");
+        }
+        return sourcesDirEnvVar;
+    }
+
+    private static String getLispLibDir() {
+        String libDirEnvVar = System.getenv(LISP_LIB_DIR);
+        if(libDirEnvVar == null) {
+            throw new RuntimeException("Please set environment variable LISP_LIB_DIR");
+        }
+        return libDirEnvVar;
     }
 
     public void promptForNewForm() {
