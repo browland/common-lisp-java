@@ -11,23 +11,18 @@ public class Add implements Function {
 
     @Override
     public Value<Integer> apply(List<Value<?>> operands, Environment environment) {
-        // terrible assumption for now that operands are all Atoms and their string values parse as integers ... can overflow ... etc etc.
         int result = 0;
 
         for(Value<?> operand : operands) {
-            int opInt = toInt(operand);
-            result += opInt;
+            switch(operand) {
+                case IntegerValue intValue -> {
+                    int opInt = intValue.getValue();
+                    result += opInt;
+                }
+                default -> throw new EvaluationException("add: requires integer operands");
+            }
         }
 
         return new IntegerValue(result);
-    }
-
-    public int toInt(Value<?> value) {
-        if(value instanceof IntegerValue integerValue) {
-            return integerValue.getValue();
-        }
-        else {
-            throw new EvaluationException("add: requires integer operands");
-        }
     }
 }

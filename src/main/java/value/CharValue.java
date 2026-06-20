@@ -1,6 +1,6 @@
 package value;
 
-public class CharValue extends Value<Character> {
+public final class CharValue extends Value<Character> {
     public CharValue(char c) {
         super(c, ValueType.CHARACTER);
     }
