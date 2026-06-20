@@ -190,17 +190,147 @@ class NewListBuilderSpec extends Specification {
         list.size() == 3
     }
 
-    // todo tests ported over from old reader tests
-//    def program = "(add (add 1 2) 2)"
-//    def program = "(filter '(6 4 3 5 2) #'even)"
-//    def program = "(format t \"hello world\")"
-//    def program = "(list :a 1 :b 2)"
-//    def program = "(make-cd \"Roses\" \"Kathy Mattea\")"
-//    def program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
-//    def program = "'(add 1 2)"
-//    def program = "`(add ,x 2)"
-//    def program = "`(add ,@x 2)"
-//    def program = "1"
-//    def program = "(1 . 2)"
-//    def program = "\"A steel door blocks your way. Key? (yes/no)\""
+    def "multiple nested list"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(add (add 1 2) 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 3
+    }
+
+    def "quote list and function quote"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(filter '(6 4 3 5 2) #'even)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 3
+    }
+
+    def "string literal"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(format t \"hello world\")"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 3
+    }
+
+    def "keyword symbols and list function"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(list :a 1 :b 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 5
+    }
+
+    def "multiple string literals"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(make-cd \"Roses\" \"Kathy Mattea\")"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 3
+    }
+
+    def "complex lambda"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+    }
+
+    def "quote list - should not evaluate as form"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "'(add 1 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+    }
+
+    def "quasiquote with unquote symbol"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "`(add ,x 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+    }
+
+    def "quasiquote with unquote splicing"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "`(add ,@x 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+    }
+
+    def "simple atom"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "1"
+
+        when:
+        var atom = builder.build(program)[0] as Atom
+
+        then:
+        atom.value() == "1"
+    }
+
+    def "improper list"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "(1 . 2)"
+
+        when:
+        var list = builder.build(program)[0] as RList
+
+        then:
+        list.size() == 2
+    }
+
+    def "string literal containing spaces"() {
+        given:
+        var builder = new NewListBuilder()
+        var program = "\"A steel door blocks your way. Key? (yes/no)\""
+
+        when:
+        var atom = builder.build(program)[0] as Atom
+
+        then:
+        atom.value() == "\"A steel door blocks your way. Key? (yes/no)\""
+    }
 }
