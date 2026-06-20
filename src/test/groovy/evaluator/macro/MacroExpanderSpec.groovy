@@ -2,7 +2,7 @@ package evaluator.macro
 
 import evaluator.Evaluator
 import evaluator.env.Environment
-import reader.NewListBuilder
+import reader.NodeBuilder
 import spock.lang.Specification
 import syntaxtree.Atom
 import syntaxtree.RList
@@ -177,7 +177,7 @@ class MacroExpanderSpec extends Specification {
     }
 
     def programToRList(program) {
-        def listBuilder = new NewListBuilder()
+        def listBuilder = new NodeBuilder()
         return listBuilder.build(program).getFirst()
     }
 }

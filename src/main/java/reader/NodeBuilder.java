@@ -1,35 +1,18 @@
 package reader;
 
-import evaluator.Evaluator;
-import evaluator.env.Environment;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class NewListBuilder {
+public class NodeBuilder {
     private static final Set<String> TOKENS_WHICH_INSERT_AS_LIST = Set.of("quote", "unquote", "quasiquote", "unquote-splicing", "function");
 
-    private final SimplerTokeniser tokeniser = new SimplerTokeniser();
+    private final Tokeniser tokeniser = new Tokeniser();
     private RList currentList;
-
-    public static void main(String[] args) throws IOException {
-        String program = Files.readString(Path.of("/Users/ben/git/lisp/lisp-sources/adventure.lisp"));
-        NewListBuilder builder = new NewListBuilder();
-        List<Node> forms = builder.build(program);
-
-        Evaluator evaluator = new Evaluator();
-        Environment env = new Environment();
-        for(Node form : forms) {
-            evaluator.evaluate(form, env);
-        }
-    }
 
     // Returns list of top level forms
     public List<Node> build(String program) {

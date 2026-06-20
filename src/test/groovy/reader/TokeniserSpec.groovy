@@ -2,12 +2,12 @@ package reader
 
 import spock.lang.Specification
 
-class SimplerTokeniserSpec extends Specification {
+class TokeniserSpec extends Specification {
 
     def "character literals"() {
         given:
         def program = "#\\space #\\x"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -21,7 +21,7 @@ class SimplerTokeniserSpec extends Specification {
     def "block comment, single line"() {
         given:
         def program = "#| testing testing |#"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -34,7 +34,7 @@ class SimplerTokeniserSpec extends Specification {
         given:
         def program1 = "#| testing "
         def program2 = "  testing |#"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result1 = tokeniser.tokenise(program1)
@@ -49,7 +49,7 @@ class SimplerTokeniserSpec extends Specification {
         given:
         def program1 = "#| testing "
         def program2 = "  testing |# #\\x"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result1 = tokeniser.tokenise(program1)
@@ -68,7 +68,7 @@ class SimplerTokeniserSpec extends Specification {
                        they can be nested!
                     |#
                 |#"""
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -81,7 +81,7 @@ class SimplerTokeniserSpec extends Specification {
         given:
         def program = """; this is a test
             """
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -93,7 +93,7 @@ class SimplerTokeniserSpec extends Specification {
     def "open close list"() {
         given:
         def program = "(())"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -109,7 +109,7 @@ class SimplerTokeniserSpec extends Specification {
     def "numeric types"() {
         given:
         def program = "1 3.14159s0 3.14159d0"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -124,7 +124,7 @@ class SimplerTokeniserSpec extends Specification {
     def "string and double-quote escaping"() {
         given:
         def program = "\"hello\\\" \\\"world\""
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -137,7 +137,7 @@ class SimplerTokeniserSpec extends Specification {
     def "complex number"() {
         given:
         def program = "#C(1 2)"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -150,7 +150,7 @@ class SimplerTokeniserSpec extends Specification {
     def "binary value"() {
         given:
         def program = "#b0010"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -163,7 +163,7 @@ class SimplerTokeniserSpec extends Specification {
     def "octal value"() {
         given:
         def program = "#o111"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -176,7 +176,7 @@ class SimplerTokeniserSpec extends Specification {
     def "hex value"() {
         given:
         def program = "#xa0d"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -189,7 +189,7 @@ class SimplerTokeniserSpec extends Specification {
     def "ratio value"() {
         given:
         def program = "1/2"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -202,7 +202,7 @@ class SimplerTokeniserSpec extends Specification {
     def "simple atom"() {
         given:
         def program = "hello"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -215,7 +215,7 @@ class SimplerTokeniserSpec extends Specification {
     def "vector value"() {
         given:
         def program = "#(1 2 3)"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -228,7 +228,7 @@ class SimplerTokeniserSpec extends Specification {
     def "quoted value"() {
         given:
         def program = "'a"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -242,7 +242,7 @@ class SimplerTokeniserSpec extends Specification {
     def "function quote usage"() {
         given:
         def program = "(mapcar #'foo '(1 2 3))"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -265,7 +265,7 @@ class SimplerTokeniserSpec extends Specification {
     def "simple list"() {
         given:
         def program = "(1 2 3)"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -282,7 +282,7 @@ class SimplerTokeniserSpec extends Specification {
     def "quoted list"() {
         given:
         def program = "'(1 2 3)"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -300,7 +300,7 @@ class SimplerTokeniserSpec extends Specification {
     def "quasi-quoted list"() {
         given:
         def program = "`(1 2 3)"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -318,7 +318,7 @@ class SimplerTokeniserSpec extends Specification {
     def "more complex test"() {
         given:
         def program = "(1 (2 3) #\\a #C(1 2) ())"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -343,7 +343,7 @@ class SimplerTokeniserSpec extends Specification {
         def program = """
         (+ 1 2)
         """
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -358,7 +358,7 @@ class SimplerTokeniserSpec extends Specification {
         def program = """
         ,x
         """
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -374,7 +374,7 @@ class SimplerTokeniserSpec extends Specification {
         def program = """
         ,(x y z)
         """
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -394,7 +394,7 @@ class SimplerTokeniserSpec extends Specification {
         def program = """
         (defvar x (function add))
         """
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
@@ -414,7 +414,7 @@ class SimplerTokeniserSpec extends Specification {
     def "test 1+"() {
         given:
         def program = "1+"
-        SimplerTokeniser tokeniser = new SimplerTokeniser()
+        Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)

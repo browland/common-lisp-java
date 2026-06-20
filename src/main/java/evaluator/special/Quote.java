@@ -1,5 +1,6 @@
 package evaluator.special;
 
+import evaluator.AtomEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import syntaxtree.Atom;
@@ -9,6 +10,8 @@ import value.ConsCellValue;
 import value.Value;
 
 public class Quote implements SpecialForm {
+    private final AtomEvaluator atomEvaluator = new AtomEvaluator();
+
     @Override
     public Value<?> evaluate(RList entireList,
                              Environment environment,
@@ -17,7 +20,7 @@ public class Quote implements SpecialForm {
         Node operand = entireList.nodes().get(1);
 
         if(operand instanceof Atom atom) {
-            return Value.of(atom.value());
+            return atomEvaluator.atomToValueNoLookup(atom.value());
         }
         else if(operand instanceof RList rlist) {
             return ConsCellValue.fromRList(rlist);

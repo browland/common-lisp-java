@@ -1,5 +1,6 @@
 package evaluator.special;
 
+import evaluator.AtomEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import evaluator.env.Symbols;
@@ -18,6 +19,8 @@ import java.util.List;
  * the quasiquote operator).
  */
 public class Quasiquote implements SpecialForm {
+    private final AtomEvaluator atomEvaluator = new AtomEvaluator();
+
     @Override
     public Value<?> evaluate(RList entireList,
                              Environment environment,
@@ -31,7 +34,7 @@ public class Quasiquote implements SpecialForm {
             return handleRList(rlist, environment, evaluator).evaluatedValue();
         }
         else if(operand instanceof Atom atom) {
-            return Value.of(atom.value());
+            return atomEvaluator.atomToValueNoLookup(atom.value());
         }
         else {
             throw new UnsupportedOperationException("Unhandled type for quasiquote " + operand);

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SimplerTokeniser {
+public class Tokeniser {
     private State state;
     private int blockCommentDepth = 0;
 

@@ -40,7 +40,7 @@ public class AtomEvaluator {
         }
     }
 
-    Value<?> atomToValueNoLookup(String atomStringValue) {
+    public Value<?> atomToValueNoLookup(String atomStringValue) {
         if(atomStringValue.startsWith(":")) {
             // keyword symbol - a literal symbol which evaluates to itself
             Symbol symbol = Symbols.internSymbol(atomStringValue);

@@ -2,7 +2,7 @@ package function;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
-import reader.NewListBuilder;
+import reader.NodeBuilder;
 import syntaxtree.Node;
 import value.Value;
 
@@ -14,7 +14,7 @@ import java.util.List;
 public class Load implements Function {
     private static final String DEFAULT_LOAD_PATH = "/Users/ben/git/lisp/lisp-sources/";
 
-    private final NewListBuilder newListBuilder = new NewListBuilder();
+    private final NodeBuilder nodeBuilder = new NodeBuilder();
     private final Evaluator evaluator = new Evaluator();
 
     @Override
@@ -26,7 +26,7 @@ public class Load implements Function {
         try {
             List<String> lines = Files.readAllLines(absolutePath);
             for(String line : lines) {
-                List<Node> nodes = newListBuilder.build(line);
+                List<Node> nodes = nodeBuilder.build(line);
                 if(nodes == null) {
                     continue;
                 }

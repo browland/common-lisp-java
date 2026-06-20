@@ -54,16 +54,13 @@ public class BindingEvaluator {
             }
         }
 
-        if(restMode) {
-            if(operands.size() < bindings.size()-1) {
-//                throw new EvaluationException("Expected at least " + (bindings.size() - 1) + " arguments but got " + operands.size());
-                // Do nothing as we inserted an empty list for the missing &rest binding
-            }
-        }
-        else {
+        if(!restMode) {
             if (operands.size() != bindings.size()) {
                 throw new EvaluationException("Expected  " + (bindings.size()) + " arguments but got " + operands.size());
             }
+        }
+        else {
+            // Do nothing as we inserted an empty list for the missing &rest binding
         }
 
         return bindingsMap;

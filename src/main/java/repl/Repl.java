@@ -4,7 +4,7 @@ import evaluator.Evaluator;
 import evaluator.env.Environment;
 import exception.EvaluationException;
 import function.FunctionDefinitions;
-import reader.NewListBuilder;
+import reader.NodeBuilder;
 import syntaxtree.Node;
 import value.Value;
 
@@ -17,10 +17,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class Repl implements ReplOutput {
+public class Repl {
     private static final Repl repl = new Repl();
 
-    private final NewListBuilder newListBuilder = new NewListBuilder();
+    private final NodeBuilder nodeBuilder = new NodeBuilder();
     private final Evaluator evaluator = new Evaluator();
     private final Environment env = new Environment();
 
@@ -69,7 +69,7 @@ public class Repl implements ReplOutput {
         String line = br.readLine();
 
         while(line != null) {
-            List<Node> forms = newListBuilder.build(line);
+            List<Node> forms = nodeBuilder.build(line);
             if (forms != null) {
                 for (Node form : forms) {
                     try {
@@ -96,7 +96,7 @@ public class Repl implements ReplOutput {
 
         while(true) {
             String line = br.readLine();
-            List<Node> forms = newListBuilder.build(line);
+            List<Node> forms = nodeBuilder.build(line);
             if(forms != null) {
                 for(Node form : forms) {
                     try {
@@ -115,12 +115,10 @@ public class Repl implements ReplOutput {
         }
     }
 
-    @Override
     public void promptForNewForm() {
         System.out.print("> ");
     }
 
-    @Override
     public void promptForMidForm() {
         System.out.print("... ");
     }

@@ -4,10 +4,10 @@ import spock.lang.Specification
 import syntaxtree.Atom
 import syntaxtree.RList
 
-class NewListBuilderSpec extends Specification {
+class NodeBuilderSpec extends Specification {
     def "simple list"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = """(+ 1 2)"""
 
         when:
@@ -25,7 +25,7 @@ class NewListBuilderSpec extends Specification {
 
     def "apply form with no space before open paren"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = """'(1 2 3(3 2 1))"""
 
         when:
@@ -39,7 +39,7 @@ class NewListBuilderSpec extends Specification {
 
     def "cons pair (improper list)"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = """(1 . 2)"""
 
         when:
@@ -55,7 +55,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quoted atom"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "'foo"
 
         when:
@@ -71,7 +71,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quoted function"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "#'foo"
 
         when:
@@ -87,7 +87,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quoted list"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "'(1 2)"
 
         when:
@@ -107,7 +107,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quasiquoted list"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "`(1 2)"
 
         when:
@@ -127,7 +127,7 @@ class NewListBuilderSpec extends Specification {
 
     def "unquoted list"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = ",(1 2)"
 
         when:
@@ -147,7 +147,7 @@ class NewListBuilderSpec extends Specification {
 
     def "unquote splicing list"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = ",@(1 2)"
 
         when:
@@ -168,7 +168,7 @@ class NewListBuilderSpec extends Specification {
     // we auto-close the function list too early as we thought we'd created the list ourselves via function quote :-/
     def "test breakage due to explicit use of function which we might accidentally auto close"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(defvar x (function add))"
 
         when:
@@ -180,7 +180,7 @@ class NewListBuilderSpec extends Specification {
 
     def "test breakage due to with null returned"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(defvar z #'add)"
 
         when:
@@ -192,7 +192,7 @@ class NewListBuilderSpec extends Specification {
 
     def "multiple nested list"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(add (add 1 2) 2)"
 
         when:
@@ -204,7 +204,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quote list and function quote"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(filter '(6 4 3 5 2) #'even)"
 
         when:
@@ -216,7 +216,7 @@ class NewListBuilderSpec extends Specification {
 
     def "string literal"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(format t \"hello world\")"
 
         when:
@@ -228,7 +228,7 @@ class NewListBuilderSpec extends Specification {
 
     def "keyword symbols and list function"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(list :a 1 :b 2)"
 
         when:
@@ -240,7 +240,7 @@ class NewListBuilderSpec extends Specification {
 
     def "multiple string literals"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(make-cd \"Roses\" \"Kathy Mattea\")"
 
         when:
@@ -252,7 +252,7 @@ class NewListBuilderSpec extends Specification {
 
     def "complex lambda"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(( (lambda (x) (lambda (y) (+ x y))) 10) 5)"
 
         when:
@@ -264,7 +264,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quote list - should not evaluate as form"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "'(add 1 2)"
 
         when:
@@ -276,7 +276,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quasiquote with unquote symbol"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "`(add ,x 2)"
 
         when:
@@ -288,7 +288,7 @@ class NewListBuilderSpec extends Specification {
 
     def "quasiquote with unquote splicing"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "`(add ,@x 2)"
 
         when:
@@ -300,7 +300,7 @@ class NewListBuilderSpec extends Specification {
 
     def "simple atom"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "1"
 
         when:
@@ -312,7 +312,7 @@ class NewListBuilderSpec extends Specification {
 
     def "improper list"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "(1 . 2)"
 
         when:
@@ -324,7 +324,7 @@ class NewListBuilderSpec extends Specification {
 
     def "string literal containing spaces"() {
         given:
-        var builder = new NewListBuilder()
+        var builder = new NodeBuilder()
         var program = "\"A steel door blocks your way. Key? (yes/no)\""
 
         when:

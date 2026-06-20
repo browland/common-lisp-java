@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * RList is a reader list - a list of nodes built by the reader, for want of a better name.
+ */
 public final class RList implements Node {
     private final boolean improperList;
     private final List<Node> nodes;
@@ -22,10 +25,9 @@ public final class RList implements Node {
     }
 
     public String toString() {
-        String nodeStrings = nodes.stream()
+        return nodes.stream()
                 .map(Object::toString)
                 .collect(Collectors.joining(" ", "(", ")"));
-        return nodeStrings;
     }
 
     public Node get(int i) {

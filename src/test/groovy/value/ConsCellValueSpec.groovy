@@ -1,7 +1,7 @@
 package value
 
 import evaluator.env.Symbols
-import reader.NewListBuilder
+import reader.NodeBuilder
 import spock.lang.Specification
 import syntaxtree.RList
 
@@ -12,7 +12,7 @@ class ConsCellValueSpec extends Specification {
         def program = "(add (add 1 2) 2)"
 
         when:
-        def listBuilder = new NewListBuilder()
+        def listBuilder = new NodeBuilder()
         def outerList = listBuilder.build(program).getFirst() as RList
         def result = ConsCellValue.fromRList(outerList)
 

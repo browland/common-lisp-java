@@ -17,6 +17,7 @@ public final class ConsCellValue extends Value<ConsCell> {
         return readerList.improperList() ? improperListFromJavaList(readerList.nodes()) : fromJavaList(readerList.nodes());
     }
 
+    // todo needs to be factored out from here - RListToCons?
     public static ConsCellValue improperListFromJavaList(List<?> javaList) {
         if(javaList.size() != 2) {
             throw new RuntimeException("Evaluating improper list but != 2 elements; not implemented properly");
@@ -57,6 +58,8 @@ public final class ConsCellValue extends Value<ConsCell> {
                     throw new UnsupportedOperationException("unsupported type to build cons cell " + object);
         };
     }
+
+    // todo needs to be factored out to here
 
     public String toString() {
         return value.toString();

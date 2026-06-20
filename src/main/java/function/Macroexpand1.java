@@ -1,5 +1,6 @@
 package function;
 
+import evaluator.AtomEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
 import evaluator.macro.ConsToRList;
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class Macroexpand1 implements Function {
     private final MacroExpander macroExpander = new MacroExpander();
     private final ConsToRList consToRList = new ConsToRList();
+    private final AtomEvaluator atomEvaluator = new AtomEvaluator();
 
     @Override
     public Value<?> apply(List<Value<?>> operands, Environment environment) {
@@ -48,7 +50,7 @@ public class Macroexpand1 implements Function {
             return ConsCellValue.fromRList(rlistResult);
         }
         else if(expandedResult instanceof Atom atomResult) {
-            return Value.of(atomResult.value());
+            return atomEvaluator.atomToValueNoLookup(atomResult.value());
         }
         else {
             throw new IllegalArgumentException("Unsupported macro expansion result");
