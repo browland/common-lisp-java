@@ -49,6 +49,24 @@ public class Environment {
         globalEnvironment.setVariable(symbol, value);
     }
 
+    /**
+     * Follows behaviour of defvar - if the variable is already defined as a global then this has no effect.
+     */
+    public void declareGlobal(Symbol symbol, Value<?> value, Namespace namespace) {
+        if(globalEnvironment.isReserved(symbol)) {
+            throw new RuntimeException("Can't declare variable for reserved symbol " + symbol);
+        }
+
+        switch(namespace) {
+            case VARIABLE -> {
+                if(globalEnvironment.getVariable(symbol).isEmpty()) {
+                    globalEnvironment.setVariable(symbol, value);
+                }
+            }
+            case FUNCTION, BLOCK -> throw new UnsupportedOperationException("Not yet implemented");
+        }
+    }
+
     public void declareLexical(Symbol symbol,
                                Value<?> value,
                                Namespace namespace) {

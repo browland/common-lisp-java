@@ -2,6 +2,7 @@ package evaluator.special;
 
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Namespace;
 import evaluator.env.Symbols;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -26,7 +27,7 @@ public class Defvar implements SpecialForm {
         Node valueNode = entireList.get(2);
         Value<?> valueValue = evaluator.evaluate(valueNode, environment);
 
-        environment.setVariable(symbol, valueValue);
+        environment.declareGlobal(symbol, valueValue, Namespace.VARIABLE);
 
         // returns the name of the variable
         return new SymbolValue(symbol);

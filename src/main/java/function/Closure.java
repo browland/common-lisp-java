@@ -3,6 +3,7 @@ package function;
 import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Namespace;
 import syntaxtree.Node;
 import value.Symbol;
 import value.Value;
@@ -29,7 +30,7 @@ public record Closure(Evaluator evaluator,
 
         capturedEnvironment.enterScope();
         for(Symbol bindingSymbol : bindingsMap.keySet()) {
-            capturedEnvironment.setVariable(bindingSymbol, bindingsMap.get(bindingSymbol));
+            capturedEnvironment.declareLexical(bindingSymbol, bindingsMap.get(bindingSymbol), Namespace.VARIABLE);
         }
 
         Value<?> evalResult = null;
