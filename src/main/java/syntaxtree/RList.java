@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class RList implements Node {
-    private boolean improperList;
-    private List<Node> nodes;
+    private final boolean improperList;
+    private final List<Node> nodes;
+    private final boolean synthetic;  // inserted by the reader from syntactic sugar for quoting
     private RList parent;
-    private boolean synthetic;  // inserted by the reader from syntactic sugar for quoting
 
     // Used for things like macros where we're generating a list dynamically rather than via the reader
     public RList() {
@@ -59,29 +59,5 @@ public final class RList implements Node {
 
     public void setParent(RList parent) {
         this.parent = parent;
-    }
-
-    public static final class Builder implements NodeBuilder {
-        private final List<NodeBuilder> nodeBuilders = new ArrayList<>();
-
-        private RList.Builder parentListBuilder;
-        private int depth;
-        private boolean isQuoted;
-        private boolean improperList;
-
-        public Builder addNodeBuilder(NodeBuilder nodeBuilder) {
-            this.nodeBuilders.add(nodeBuilder);
-            return this;
-        }
-
-        public RList build() {
-            List<Node> nodes = nodeBuilders.stream().map(NodeBuilder::build).toList();
-            return new RList(improperList, nodes, false);
-        }
-
-
-        public int getSize() {
-            return nodeBuilders.size();
-        }
     }
 }

@@ -18,10 +18,6 @@ public class Setq implements SpecialForm {
                              Evaluator evaluator) {
 
         Atom symbolAtom = (Atom) entireList.get(1);
-        if((symbolAtom.prefix() != null && !symbolAtom.prefix().isEmpty())) {
-            throw new IllegalArgumentException("in setq, not a symbol: [" + symbolAtom + "]");
-        }
-
         String name = symbolAtom.value();
         Symbol symbol = Symbols.internSymbol(name);
 

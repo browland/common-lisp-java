@@ -8,15 +8,15 @@ import value.SymbolValue;
 
 public class ValueToAtom {
     static Atom toAtom(StringValue stringValue) {
-        return new Atom("\"" + stringValue.getValue() + "\"", null);
+        return new Atom("\"" + stringValue.getValue() + "\"");
     }
 
     static Atom toAtom(IntegerValue integerValue) {
-        return new Atom(Integer.toString(integerValue.getValue()), null);
+        return new Atom(Integer.toString(integerValue.getValue()));
     }
 
     static Atom toAtom(SymbolValue symbolValue) {
         Symbol symbol = symbolValue.getValue();
-        return new Atom(symbol.name(), null);
+        return new Atom(symbol.name());
     }
 }

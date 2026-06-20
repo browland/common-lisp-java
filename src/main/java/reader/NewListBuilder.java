@@ -60,7 +60,7 @@ public class NewListBuilder {
             }
             else if(token.equals("`")) {
                 newList(false, true);
-                currentList.add(new Atom("quasiquote", null));
+                currentList.add(new Atom("quasiquote"));
             }
             else if(token.startsWith("#'")){
                 handleFunctionQuote();
@@ -68,11 +68,11 @@ public class NewListBuilder {
             else if(token.startsWith(",")) {
                 if(token.equals(",")) {
                     newList(false, true);
-                    currentList.add(new Atom("unquote", null));
+                    currentList.add(new Atom("unquote"));
                 }
                 else if(token.equals(",@")) {
                     newList(false, true);
-                    currentList.add(new Atom("unquote-splicing", null));
+                    currentList.add(new Atom("unquote-splicing"));
                 }
             }
             else {
@@ -84,7 +84,7 @@ public class NewListBuilder {
                 }
                 else {
                     // bare atom only
-                    Atom bareAtom = new Atom(token, null);
+                    Atom bareAtom = new Atom(token);
                     result.add(bareAtom);
                 }
             }
@@ -114,12 +114,12 @@ public class NewListBuilder {
 
     private void handleFunctionQuote() {
         newList(false, true);
-        currentList.add(new Atom("function", null));
+        currentList.add(new Atom("function"));
     }
 
     private void handleQuote() {
         newList(false, true);
-        currentList.add(new Atom("quote", null));
+        currentList.add(new Atom("quote"));
     }
 
     // returns list if we're closing the top level form
@@ -131,7 +131,7 @@ public class NewListBuilder {
                 return null;
             }
         }
-        currentList.add(new Atom(token, null));
+        currentList.add(new Atom(token));
 
         if(currentList.get(0) instanceof Atom possibleQuoteAtom) {
             if(currentList.isSynthetic()) {

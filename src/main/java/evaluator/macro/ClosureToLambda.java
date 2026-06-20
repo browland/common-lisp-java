@@ -16,7 +16,7 @@ public class ClosureToLambda {
 
         List<Node> bindings = closure.bindings();
         List<Node> forms = closure.forms();
-        Atom lambdaSymbol = new Atom("lambda", null);
+        Atom lambdaSymbol = new Atom("lambda");
 
         RList bindingsRList = new RList(false, bindings, false);
         RList formsRList = new RList(false, forms, false);
