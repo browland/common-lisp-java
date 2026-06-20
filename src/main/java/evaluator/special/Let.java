@@ -55,7 +55,7 @@ public class Let implements SpecialForm {
         }
 
         for(Symbol symbol : evaluatedBindings.keySet()) {
-            environment.setInScope(symbol, evaluatedBindings.get(symbol), Namespace.VARIABLE);
+            environment.declareLexical(symbol, evaluatedBindings.get(symbol), Namespace.VARIABLE);
         }
     }
 }

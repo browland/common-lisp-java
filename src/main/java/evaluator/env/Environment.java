@@ -2,7 +2,6 @@ package evaluator.env;
 
 import value.Symbol;
 import value.Value;
-import value.ValueType;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -50,9 +49,9 @@ public class Environment {
         globalEnvironment.setVariable(symbol, value);
     }
 
-    public void setInScope(Symbol symbol,
-                           Value<?> value,
-                           Namespace namespace) {
+    public void declareLexical(Symbol symbol,
+                               Value<?> value,
+                               Namespace namespace) {
         if(globalEnvironment.isReserved(symbol)) {
             throw new RuntimeException("Can't set for symbol which already exists in global env " + symbol);
         }
@@ -67,44 +66,6 @@ public class Environment {
             case FUNCTION -> thisScopeEnv.setFunction(symbol, value);
             case BLOCK -> thisScopeEnv.setBlock(symbol, value);
         }
-    }
-
-    // Should pass a namespace as it depends on the caller, not the type of the value
-    @Deprecated
-    public void setInScope(Symbol symbol, Value<?> value) {
-        if(globalEnvironment.isReserved(symbol)) {
-            throw new RuntimeException("Can't set for symbol which already exists in global env " + symbol);
-        }
-
-        ScopeEnvironment thisScopeEnv = scopes.peek();
-        if(thisScopeEnv == null) {
-            throw new RuntimeException("Can't set in scope as no scopes exist!");
-        }
-
-        if(value.getType() == ValueType.OPERATOR) {
-            thisScopeEnv.setFunction(symbol, value);
-        }
-        else {
-            thisScopeEnv.setVariable(symbol, value);
-        }
-    }
-
-    /**
-     * E.g. for setq we find the binding at the closest lexical level.  We work through lexical
-     * scopes from inner to outer, and then consider the globals last.
-     */
-    public void setVariableInMostLocalScope(Symbol symbol,
-                                            Value<?> value) {
-        // walk stack of scopes first
-        for (ScopeEnvironment scope : scopes) {
-            Optional<Value<?>> possibleBinding = scope.getVariable(symbol);
-            if (possibleBinding.isPresent()) {
-                scope.setVariable(symbol, value);
-                return;
-            }
-        }
-
-        setVariable(symbol, value);
     }
 
     public Optional<Value<?>> getFunction(Symbol symbol) {

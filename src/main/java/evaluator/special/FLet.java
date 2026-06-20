@@ -62,7 +62,7 @@ public class FLet implements SpecialForm {
 
 
         for(Symbol symbol : evaluatedBindings.keySet()) {
-            environment.setInScope(symbol, evaluatedBindings.get(symbol), Namespace.FUNCTION);
+            environment.declareLexical(symbol, evaluatedBindings.get(symbol), Namespace.FUNCTION);
         }
 
     }

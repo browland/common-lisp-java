@@ -3,6 +3,7 @@ package evaluator.macro;
 import evaluator.BindingEvaluator;
 import evaluator.Evaluator;
 import evaluator.env.Environment;
+import evaluator.env.Namespace;
 import exception.EvaluationException;
 import syntaxtree.Node;
 import syntaxtree.RList;
@@ -35,7 +36,7 @@ public class MacroExpander {
         try {
             environment.enterScope();
             for (Symbol bindingSymbol : bindingsMap.keySet()) {
-                environment.setInScope(bindingSymbol, bindingsMap.get(bindingSymbol));
+                environment.declareLexical(bindingSymbol, bindingsMap.get(bindingSymbol), Namespace.VARIABLE);
             }
 
             Value<?> expandedValue = null;
