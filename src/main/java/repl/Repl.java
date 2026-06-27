@@ -65,7 +65,9 @@ public class Repl {
             throw new RuntimeException("LISP_LIB_PATH does not exist (set to %s)".formatted(lispLibDir));
         }
 
-        try(Stream<Path> initialFormsStream = Files.list(lispLibPath).sorted()) {
+        try(Stream<Path> initialFormsStream = Files.list(lispLibPath)
+                .filter(path -> path.toString().endsWith("lisp"))
+                .sorted()) {
             initialFormsStream.forEach(Repl::loadFile);
         }
     }
