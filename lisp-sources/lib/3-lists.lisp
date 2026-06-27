@@ -91,14 +91,30 @@
        (format t i))))
 
 
-;;; Step 3: now provide body form
-(defmacro letter3 (var-decls-with-body-form)
-  (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls)))
+;;; Step 3: now provide test-and-result, and body form, this means 3 args - one for bindings, one for test-and-result, and one for body-forms.
+;;; For now we'll unquote-splice in the body forms as that's a direct replacement.  Still need to handle the looping and test-and-result etc
+(defmacro letter3 (var-decls test-and-result &rest body-forms)
+  ; trivially grabbing just the var decls from all-bindings for now
+  (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+        (test-form (car test-and-result))
+        (result-form (cadr test-and-result)))
     `(let ,var-decls-only
-       (format t i))))
+       ,@body-forms)))
 
-;; allow incremental testing in the repl via:
-;; (and (load "lib/3-lists.lisp") (test))
-(defun test ()
-  (letter2 ((i 0 (1+ i)) (cur 0 (1+ cur)))))
+;;; Step 4 add block and tagbody
+(defmacro letter4 (var-decls test-and-result &rest body-forms)
+  (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+        (test-form (car test-and-result))
+        (result-form (cadr test-and-result)))
+           `(let ,var-decls-only
+              (block my-loop
+                     (tagbody
+                       start
+                       ,@body-forms)))))
+
+  ;; allow incremental testing in the repl via:
+  ;; (and (load "lib/3-lists.lisp") (test))
+  (defun test ()
+    ; trivial test-and-result which is just t and t
+    (letter4 ((i 0 (1+ i)) (cur 0 (1+ cur))) (t t) (format t "in body")))
 
