@@ -48,6 +48,18 @@ Looping is implemented using a simple macro, defined in this project:
 )
 ```
 
+Hygienic macros work, too:
+
+```
+(defmacro safe-do-twice (body)
+  (let ((var (gensym)))
+    `(dotimes (,var 2)
+      ,body)))
+
+(safe-do-twice (format t "hello world"))
+```
+
+
 ## A bit more info ...
 
 Things which basically work: user-defined functions, hygienic macros (using `gensym`), lambdas with closures, basic data types.  There's also support for many
