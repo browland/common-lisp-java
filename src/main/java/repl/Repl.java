@@ -6,6 +6,7 @@ import exception.EvaluationException;
 import function.FunctionDefinitions;
 import reader.NodeBuilder;
 import syntaxtree.Node;
+import syntaxtree.ReaderException;
 import value.Value;
 
 import java.io.BufferedReader;
@@ -104,7 +105,16 @@ public class Repl {
 
         while(true) {
             String line = br.readLine();
-            List<Node> forms = nodeBuilder.build(line);
+            List<Node> forms = null;
+            try {
+                forms = nodeBuilder.build(line);
+            }
+            catch(ReaderException e) {
+                System.out.println(e.getMessage());
+                promptForNewForm();
+                continue;
+            }
+
             if(forms != null) {
                 for(Node form : forms) {
                     try {

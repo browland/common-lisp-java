@@ -4,6 +4,7 @@ import evaluator.Evaluator;
 import evaluator.env.Environment;
 import evaluator.env.Namespace;
 import evaluator.env.Symbols;
+import exception.EvaluationException;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
@@ -47,6 +48,9 @@ public class Let implements SpecialForm {
 
         for(Node bindingNode : bindings.nodes()) {
             RList bindingList = (RList)bindingNode;
+            if (bindingList.get(0) instanceof RList) {
+                throw new EvaluationException("let binding name must be an atom but was %s".formatted(bindingList.get(0)));
+            }
             Atom name = (Atom)bindingList.get(0);
             Symbol nameSymbol = Symbols.internSymbol(name.value());
             Node value = bindingList.get(1);

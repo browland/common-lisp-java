@@ -61,6 +61,7 @@
 (defmacro print (stuff)
    `(format t "~S" ,stuff))
 
+#|
 (let ((i 0)
       (cur 0))
    (block my-loop
@@ -74,3 +75,30 @@
             (setq i temp-i)
             (setq cur temp-cur)
          (go start))))
+|#
+
+;;; Step 1: build let form out of expansion where the vars are provided in list, and we init them to 0
+(defmacro letter1 (vars)
+  (let ((var-inits (mapcar #'(lambda (v) `(,v 0)) vars)))
+    `(let ,var-inits
+       (format t i))))
+
+
+;;; Step 2: now provide step forms too, but ignore them
+(defmacro letter2 (var-decls)
+  (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls)))
+    `(let ,var-decls-only
+       (format t i))))
+
+
+;;; Step 3: now provide body form
+(defmacro letter3 (var-decls-with-body-form)
+  (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls)))
+    `(let ,var-decls-only
+       (format t i))))
+
+;; allow incremental testing in the repl via:
+;; (and (load "lib/3-lists.lisp") (test))
+(defun test ()
+  (letter2 ((i 0 (1+ i)) (cur 0 (1+ cur)))))
+

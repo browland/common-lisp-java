@@ -3,6 +3,7 @@ package reader;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
+import syntaxtree.ReaderException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,6 +130,11 @@ public class NodeBuilder {
     // Returns list being closed
     private RList closeList() {
         RList result = currentList;
+        if(result == null) {
+            // We've got an additional close bracket, probably due to a programming mistake
+            throw new ReaderException("Too many close brackets (have already reached top level)");
+        }
+
         RList parent = currentList.getParent();
         // Don't come up out of the top-level list, otherwise we have nothing left!
         currentList = parent;
