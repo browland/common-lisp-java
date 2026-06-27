@@ -2,6 +2,7 @@ package evaluator.env;
 
 import value.Symbol;
 import value.Value;
+import value.IntegerValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,9 @@ public class GlobalEnvironment {
 
         Symbol nil = Symbols.nil();
         builtInVariables.put(nil, Value.nil());
+
+        Symbol gensymCounter = Symbols.internSymbol("*gensym-counter*");
+        builtInVariables.put(gensymCounter, new IntegerValue(0));
     }
 
     public Optional<Value<?>> getVariable(Symbol symbol) {
@@ -39,6 +43,10 @@ public class GlobalEnvironment {
             throw new RuntimeException("Can't set a built-in global " + symbol);
         }
         globalVariables.put(symbol, value);
+    }
+
+    public void setBuiltInVariable(Symbol symbol, Value<?> value) {
+        builtInVariables.put(symbol, value);
     }
 
     @Deprecated

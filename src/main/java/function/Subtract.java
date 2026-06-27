@@ -12,12 +12,9 @@ public class Subtract implements Function {
     public Value<Integer> apply(List<Value<?>> operands, Environment environment) {
         int result = 0;
 
-        for(Value<?> operand : operands) {
-            IntegerValue intValue = operand.expectInt("-");
-            int opInt = intValue.getValue();
-            result -= opInt;
-        }
+        IntegerValue intValue1 = operands.getFirst().expectInt("-");
+        IntegerValue intValue2 = operands.get(1).expectInt("-");
 
-        return new IntegerValue(result);
+        return new IntegerValue(intValue1.getValue() - intValue2.getValue());
     }
 }

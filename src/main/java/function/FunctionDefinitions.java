@@ -40,5 +40,6 @@ public class FunctionDefinitions {
         env.setFunction(Symbols.internSymbol("open"), new FunctionValue(new Open()));
         env.setFunction(Symbols.internSymbol("close"), new FunctionValue(new Close()));
         env.setFunction(Symbols.internSymbol("read-char"), new FunctionValue(new ReadChar()));
+        env.setFunction(Symbols.internSymbol("gensym"), new FunctionValue(new Gensym()));
     }
 }

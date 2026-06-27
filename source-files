@@ -76,6 +76,7 @@
 ./src/main/java/function/Add.java
 ./src/main/java/function/Null.java
 ./src/main/java/function/NumsEqual.java
+./src/main/java/function/Gensym.java
 ./src/main/java/function/Funcall.java
 ./src/main/java/function/Consp.java
 ./src/main/java/function/ListFunction.java

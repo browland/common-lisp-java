@@ -90,7 +90,7 @@ works but will not update it.
 ### Macros
 
 These have started to be implemented, but are being provided as I become able to write them :-/  The `do` macro is in 
-progress, and requires `gensym` to be implemented before it'll be ready.
+progress, and now that `gensym` is implemented (hygienic macros) we're a bit closer to implementing it.
 
 We don't support `&body` yet, but we do support `&rest` which still works to bind the body forms for macro definitions.
 
@@ -102,6 +102,9 @@ and `consp`, `and` (done), `rplaca` (done), `rplacd`, `cadr` (done), `symbolp` (
 `setf` should be able to update an existing variable, and can't update one which is not yet declared.  `setf` also can't assign a new
 value to special constants e.g. `t`.
 
+### Load
+
+The `load` special form is really handy for testing lisp sources in the repl.  But it only prints the result of the last form in the loaded file.  It would be handy to be able to execute a 'script' in the repl as if we were typing it in, e.g. for testing some work in progress.  I'm not sure if this should be the responsibility of `load` though.  Maybe another special form, or maybe `load` indeed can be re-purposed?
 
 # Reading
 

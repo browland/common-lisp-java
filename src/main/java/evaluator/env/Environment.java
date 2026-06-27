@@ -54,6 +54,10 @@ public class Environment {
         globalEnvironment.setVariable(symbol, value);
     }
 
+    public void setBuiltInVariable(Symbol symbol, Value<?> value) {
+        globalEnvironment.setBuiltInVariable(symbol, value);
+    }
+
     /**
      * Follows behaviour of defvar - if the variable is already defined as a global then this has no effect.
      */
