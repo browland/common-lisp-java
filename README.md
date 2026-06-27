@@ -1,6 +1,6 @@
 # Lisp Interpreter
 
-*Very* simple Common Lisp interpreter with a REPL.  Far from complete, but the small subset implemented works well enough for a learning exercise.
+Simple Common Lisp interpreter with a REPL.  Far from complete, but the small subset implemented works well enough for a learning exercise.
 
 ## Quick Example
 
@@ -50,7 +50,7 @@ Looping is implemented using a simple macro, defined in this project:
 
 ## A bit more info ...
 
-Things which basically work: user-defined functions, macros, lambdas, basic data types.  There's also support for many
+Things which basically work: user-defined functions, hygienic macros (using `gensym`), lambdas with closures, basic data types.  There's also support for many
 special forms like `if`, `defvar`, `cond`, `funcall` and things like that.  Basic I/O support is starting to be added
 so we can do useful and interesting stuff like Advent of Code or whatever.  Support for character literals was recently
 added, which forced (another) rewrite of the parsing layer to allow lookahead.
@@ -59,18 +59,16 @@ Implementation has reached the point where we can start defining functions and m
 calling back to the host language.  E.g. some loop macros have been implemented, but not `do` and not the true `loop` 
 macro as it implements its own little domain-specific language - maybe one for later.
 
-Speaking of macros, support for *hygienic macros* doesn't yet exist.  Once `gensym` is implemented, then that will
-become possible.
-
 ## Running
 
 ```
 export LISP_SOURCES_DIR=<path to the lisp-sources directory in this project>
 export LISP_SOURCES_LIB=<path to the lisp-sources/lib directory in this project>
 
+./build.sh
+./repl.sh
+
 ```
-TODO: have a decent way to run more portably from a shell script, as I'm currently running the Repl class directly 
-from IntelliJ.
 
 ## Issues
 So I don't lose track ...
