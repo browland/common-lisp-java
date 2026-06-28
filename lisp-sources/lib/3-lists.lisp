@@ -33,8 +33,6 @@
        (dolist the-list acum-fxn)
        (reverse res-list)))
 
-(mapcar #'(lambda (x) (+ x 1)) '(1 2 3))
-
 (defmacro dotimes ((var num) &rest forms)
     `(let ((,var 0))
         (block myloop
@@ -51,7 +49,8 @@
   (let ((result nil)
         (count 0))
     (dolist the-list #'(lambda (item) 
-                          (if (eq count n) (setq result item)) (incf count)))
+                         (if (eq count n) (setq result item)) 
+                         (incf count)))
     result))
 
 (defmacro do (var-decls end-test-and-result &rest body-forms)
@@ -72,37 +71,45 @@
                 ;;; execute body forms (first iteration)
                 ,@body-forms
 
-                ;;; start loop
+                ;;; start loop tag
                 start
-                ;;; update temp variables
+
+                ;;; This is do (not do*) so we update the variables in parallel.  So we generate setq
+                ;;; forms to update our gensym'd temp variables first.
                 ,@(mapcar #'(lambda (vtv) 
                               `(setq ,(cadr vtv) ,(cadr (assoc (car vtv) step-forms)))) var-to-temp-var)
 
-                ;;; set loop variables to temp variables
+                ;;; now generate setq forms to set loop variables to temp variables
                 ,@(mapcar #'(lambda (vtv) 
                               `(setq ,(car vtv) ,(cadr vtv))) var-to-temp-var)
 
-                ;;; evaluate test-form (within loop)
+                ;;; evaluate test-form
                 (if ,end-test-form (return-from my-loop ,result-form))
 
                 ;;; execute body forms
                 ,@body-forms
 
-                ;;; test end-test-form and do next loop if false
+                ;;; jump to start tag for next loop
                 (go start))))))
 
 ;; Can do incremental testing in the repl, e.g:
 ;; (and (load "lib/3-lists.lisp") (test1))
 
 (defun test1 ()
-  (do ((i 0 (1+ i)) (cur 0 (1+ cur))) ((eq i 10) 'done) (format t "in body")))
+  (do ((i 0 (1+ i)) 
+       (cur 0 (1+ cur))) 
+    ((eq i 10) 'done) 
+    (format t "in body")))
 
-(defun test2 () (do ((temp-one 1 (1+ temp-one))
-                     (temp-two 0 (1- temp-two)))
-                  ((> (- temp-one temp-two) 5) temp-one)))
+(defun test2 () 
+  (do ((temp-one 1 (1+ temp-one))
+       (temp-two 0 (1- temp-two)))
+    ((> (- temp-one temp-two) 5) temp-one)))
 
 
-(defun test3 () (do ((temp-one 1 (1+ temp-one))
-                     (temp-two 0 (1+ temp-one)))     
-                  ((= 3 temp-two) temp-one) (format t "In loop body: ~S ~S" temp-one temp-two)))
+(defun test3 () 
+  (do ((temp-one 1 (1+ temp-one))
+       (temp-two 0 (1+ temp-one)))     
+    ((= 3 temp-two) temp-one) 
+    (format t "In loop body: ~S ~S" temp-one temp-two)))
 

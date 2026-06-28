@@ -1,0 +1,7 @@
+source-files
+.DS_Store
+.gradle
+.idea
+build
+**/*.swp
+tags
