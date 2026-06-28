@@ -16,7 +16,7 @@ public class Cadr implements Function {
         // single operand - if it's not a ConsCell then error
         Value<?> operand = operands.getFirst();
         if(operand.getType() != ValueType.CONS_CELL) {
-            throw new IllegalArgumentException("Can only invoke car on a list");
+            throw new EvaluationException("Can only invoke cadr on a list, is actually " + operand);
         }
 
         ConsCell consCell = (ConsCell) operand.getValue();

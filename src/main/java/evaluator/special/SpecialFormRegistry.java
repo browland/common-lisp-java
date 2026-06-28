@@ -17,6 +17,7 @@ public class SpecialFormRegistry {
         registry.put("defmacro", new DefMacro());
         registry.put("quote", new Quote());
         registry.put("let", new Let());
+        registry.put("let*", new LetStar());
         registry.put("quasiquote", new Quasiquote());
         registry.put("block", new Block());
         registry.put("return-from", new ReturnFrom());

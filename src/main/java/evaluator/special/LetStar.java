@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Let implements SpecialForm {
+public class LetStar implements SpecialForm {
     @Override
     public Value<?> evaluate(RList entireList,
                              Environment environment,
@@ -35,11 +35,6 @@ public class Let implements SpecialForm {
         return bodyEvaluation;
     }
 
-    /**
-     * We only add the bindings to the environment at the end (after evaluating the values of the
-     * bindings.  Otherwise, we'd be implementing let* which can have dependencies between the
-     * bindings.
-     */
     private void addBindingsIntoScope(RList entireList,
                                       Environment environment,
                                       Evaluator evaluator) {
@@ -47,20 +42,15 @@ public class Let implements SpecialForm {
         Map<Symbol, Value<?>> evaluatedBindings = new HashMap<>();
 
         for(Node bindingNode : bindings.nodes()) {
-            if(bindingNode instanceof RList bindingList) {
-                Atom name = (Atom)bindingList.get(0);
-                Symbol nameSymbol = Symbols.internSymbol(name.value());
-                Node value = bindingList.get(1);
-                Value<?> evaluatedValue = evaluator.evaluate(value, environment);
-                evaluatedBindings.put(nameSymbol, evaluatedValue);
+            RList bindingList = (RList)bindingNode;
+            if (bindingList.get(0) instanceof RList) {
+                throw new EvaluationException("let binding name must be an atom but was %s".formatted(bindingList.get(0)));
             }
-            else {
-                throw new EvaluationException("let binding name must be an atom but was %s".formatted(bindingNode));
-            }
-        }
-
-        for(Symbol symbol : evaluatedBindings.keySet()) {
-            environment.declareLexical(symbol, evaluatedBindings.get(symbol), Namespace.VARIABLE);
+            Atom name = (Atom)bindingList.get(0);
+            Symbol nameSymbol = Symbols.internSymbol(name.value());
+            Node value = bindingList.get(1);
+            Value<?> evaluatedValue = evaluator.evaluate(value, environment);
+            environment.declareLexical(nameSymbol, evaluatedValue, Namespace.VARIABLE);
         }
     }
 }

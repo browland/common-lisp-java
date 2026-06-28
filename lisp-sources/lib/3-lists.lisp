@@ -47,6 +47,17 @@
                     (incf ,var)
                     (go start)))))
 
+
+(defun nth (n the-list)
+  (let ((result nil)
+        (count 0))
+    (dolist the-list #'(lambda (item) 
+                          (if (eq count n) (setq result item)) (incf count)))
+    result))
+
+;;; (nth 2 '(1 2 3))
+
+
 ;;;;;;;;;;;;
 ;;; do macro
 ;;;;;;;;;;;;
@@ -106,15 +117,155 @@
   (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
         (test-form (car test-and-result))
         (result-form (cadr test-and-result)))
-           `(let ,var-decls-only
-              (block my-loop
-                     (tagbody
-                       start
-                       ,@body-forms)))))
+    `(let ,var-decls-only
+       (block my-loop
+              (tagbody
+                start
+                ,@body-forms)))))
 
-  ;; allow incremental testing in the repl via:
-  ;; (and (load "lib/3-lists.lisp") (test))
-  (defun test ()
-    ; trivial test-and-result which is just t and t
-    (letter4 ((i 0 (1+ i)) (cur 0 (1+ cur))) (t t) (format t "in body")))
+;;; Step 5 add step forms let binding
+(defmacro letter5 (var-decls test-and-result &rest body-forms)
+  (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+        (test-form (car test-and-result))
+        (result-form (cadr test-and-result))
+        (step-forms (mapcar #'(lambda (v) (nth 2 v) var-decls))))
+    `(let ,var-decls-only
+       (block my-loop
+              (tagbody
+                start
+                ,@body-forms)))))
+
+;;; Step 6 add in an assoc list var-to-temp-var (actual var to gensym'd var)
+;;; just setq the gensym'd one to 1 for now
+(defmacro letter6 (var-decls test-and-result &rest body-forms)
+  (let* ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+         (test-form (car test-and-result))
+         (result-form (cadr test-and-result))
+         (step-forms (mapcar #'(lambda (v) (nth 2 v)) var-decls))
+         (var-to-temp-var (mapcar #'(lambda (v) `(,(car v) ,(gensym))) var-decls)))
+         ;(temp-updates (mapcar #'(lambda (v-to-t) (cadr v-to-t)) var-to-temp-var)))
+    `(let ,var-decls-only
+       (block my-loop
+              (tagbody
+                start
+                ,@(mapcar #'(lambda (vtv) `(setq ,(cadr vtv) 1)) var-to-temp-var))))))
+
+;;; Step 7 set temp var to step result instead of 1; this involves using the assoc list 
+;;; for the step forms
+(defmacro letter7 (var-decls test-and-result &rest body-forms)
+  (let* ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+         (test-form (car test-and-result))
+         (result-form (cadr test-and-result))
+         (step-forms (mapcar #'(lambda (v) `(,(car v) ,(nth 2 v))) var-decls))
+         (var-to-temp-var (mapcar #'(lambda (v) `(,(car v) ,(gensym))) var-decls)))
+    `(let ,var-decls-only
+       (block my-loop
+              (tagbody
+                start
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(cadr vtv) ,(cadr (assoc (car vtv) step-forms)))) var-to-temp-var))))))
+
+;;; Step 8 the gensyms should be added to the (let) lexical scope
+(defmacro letter8 (var-decls test-and-result &rest body-forms)
+  (let* ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+         (test-form (car test-and-result))
+         (result-form (cadr test-and-result))
+         (step-forms (mapcar #'(lambda (v) `(,(car v) ,(nth 2 v))) var-decls))
+         (var-to-temp-var (mapcar #'(lambda (v) `(,(car v) ,(gensym))) var-decls))
+         (temp-var-decls (mapcar #'(lambda (vtv) 
+                                     (list (cadr vtv) 
+                                           (cadr (assoc (car vtv) var-decls-only)))) var-to-temp-var)))
+    `(let (,@temp-var-decls ,@var-decls-only)
+       (block my-loop
+              (tagbody
+                start
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(cadr vtv) ,(cadr (assoc (car vtv) step-forms)))) var-to-temp-var))))))
+
+;;; Step 9 evaluate the test-form and rename to end-test-form to make it clearer
+(defmacro letter9 (var-decls end-test-and-result &rest body-forms)
+  (let* ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+         (end-test-form (car end-test-and-result))
+         (result-form (cadr end-test-and-result))
+         (step-forms (mapcar #'(lambda (v) `(,(car v) ,(nth 2 v))) var-decls))
+         (var-to-temp-var (mapcar #'(lambda (v) `(,(car v) ,(gensym))) var-decls))
+         (temp-var-decls (mapcar #'(lambda (vtv) 
+                                     (list (cadr vtv) 
+                                           (cadr (assoc (car vtv) var-decls-only)))) var-to-temp-var)))
+    `(let (,@temp-var-decls ,@var-decls-only)
+       (block my-loop
+              (tagbody
+                start
+                ;;; evaluate test-form and return result if true
+                (if ,end-test-form (return-from my-loop ,result-form))
+                ;;; update temp variables
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(cadr vtv) ,(cadr (assoc (car vtv) step-forms)))) var-to-temp-var)
+                ;;; execute body forms
+                ,@body-forms)))))
+
+
+;;; Step 10 construct updates of loop vars from temp vars
+(defmacro letter10 (var-decls end-test-and-result &rest body-forms)
+  (let* ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+         (end-test-form (car end-test-and-result))
+         (result-form (cadr end-test-and-result))
+         (step-forms (mapcar #'(lambda (v) `(,(car v) ,(nth 2 v))) var-decls))
+         (var-to-temp-var (mapcar #'(lambda (v) `(,(car v) ,(gensym))) var-decls))
+         (temp-var-decls (mapcar #'(lambda (vtv) 
+                                     (list (cadr vtv) 
+                                           (cadr (assoc (car vtv) var-decls-only)))) var-to-temp-var)))
+    `(let (,@temp-var-decls ,@var-decls-only)
+       (block my-loop
+              (tagbody
+                start
+                ;;; evaluate test-form and return result if true
+                (if ,end-test-form (return-from my-loop ,result-form))
+                ;;; update temp variables
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(cadr vtv) ,(cadr (assoc (car vtv) step-forms)))) var-to-temp-var)
+                ;;; set loop variables to temp variables
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(car vtv) ,(cadr vtv))) var-to-temp-var)
+
+                ;;; execute body forms
+                ,@body-forms)))))
+
+;;; Step 11 goto start if end test false
+(defmacro letter11 (var-decls end-test-and-result &rest body-forms)
+  (let* ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+         (end-test-form (car end-test-and-result))
+         (result-form (cadr end-test-and-result))
+         (step-forms (mapcar #'(lambda (v) `(,(car v) ,(nth 2 v))) var-decls))
+         (var-to-temp-var (mapcar #'(lambda (v) `(,(car v) ,(gensym))) var-decls))
+         (temp-var-decls (mapcar #'(lambda (vtv) 
+                                     (list (cadr vtv) 
+                                           (cadr (assoc (car vtv) var-decls-only)))) var-to-temp-var)))
+    `(let (,@temp-var-decls ,@var-decls-only)
+       (block my-loop
+              (tagbody
+                start
+                ;;; evaluate test-form and return result if true
+                (if ,end-test-form (return-from my-loop ,result-form))
+                ;;; update temp variables
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(cadr vtv) ,(cadr (assoc (car vtv) step-forms)))) var-to-temp-var)
+                ;;; set loop variables to temp variables
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(car vtv) ,(cadr vtv))) var-to-temp-var)
+
+                ;;; execute body forms
+                ,@body-forms
+
+                ;;; test end-test-form and do next loop if false
+                (if ,end-test-form t (go start))
+                )))))
+
+;; allow incremental testing in the repl via:
+;; (and (load "lib/3-lists.lisp") (test))
+(defun test ()
+  ; trivial test-and-result which is just t and t
+  (letter11 ((i 0 (1+ i)) (cur 0 (1+ cur))) ((eq i 10) 'done) (format t "in body")))
+
+(macroexpand-1 '(letter11 ((i 0 (1+ i)) (cur 0 (1+ cur))) ((eq i 10) '(1)) (format t "in body")))
 
