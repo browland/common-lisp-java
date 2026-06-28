@@ -261,11 +261,86 @@
                 (if ,end-test-form t (go start))
                 )))))
 
+;;; Step 12 return correct value when end-test-form
+(defmacro do (var-decls end-test-and-result &rest body-forms)
+  (let* ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+         (end-test-form (car end-test-and-result))
+         (result-form (cadr end-test-and-result))
+         (step-forms (mapcar #'(lambda (v) `(,(car v) ,(nth 2 v))) var-decls))
+         (var-to-temp-var (mapcar #'(lambda (v) `(,(car v) ,(gensym))) var-decls))
+         (temp-var-decls (mapcar #'(lambda (vtv) 
+                                     (list (cadr vtv) 
+                                           (cadr (assoc (car vtv) var-decls-only)))) var-to-temp-var)))
+    `(let (,@temp-var-decls ,@var-decls-only)
+       (block my-loop
+              (tagbody
+                ;;; evaluate test-form and return result if true (first iteration)
+                (if ,end-test-form (return-from my-loop ,result-form))
+
+                ;;; execute body forms (first iteration)
+                ,@body-forms
+
+                ;;; start loop
+                start
+                ;;; update temp variables
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(cadr vtv) ,(cadr (assoc (car vtv) step-forms)))) var-to-temp-var)
+
+                ;; debug temp vars
+                ;(format t "var to temp var ~S" ',var-to-temp-var)
+                ;(format t "temp vars (update each time!) ~S ~S" #:G92 #:G93)
+
+                ;;; set loop variables to temp variables
+                ,@(mapcar #'(lambda (vtv) 
+                              `(setq ,(car vtv) ,(cadr vtv))) var-to-temp-var)
+
+                ;;; evaluate test-form (within loop)
+                (if ,end-test-form (return-from my-loop ,result-form))
+
+                ;;; execute body forms
+                ,@body-forms
+
+                ;;; test end-test-form and do next loop if false
+                (go start)
+                )))))
+
 ;; allow incremental testing in the repl via:
-;; (and (load "lib/3-lists.lisp") (test))
-(defun test ()
+;; (and (load "lib/3-lists.lisp") (test1))
+(defun test1 ()
   ; trivial test-and-result which is just t and t
-  (letter11 ((i 0 (1+ i)) (cur 0 (1+ cur))) ((eq i 10) 'done) (format t "in body")))
+  (do ((i 0 (1+ i)) (cur 0 (1+ cur))) ((eq i 10) 'done) (format t "in body")))
 
-(macroexpand-1 '(letter11 ((i 0 (1+ i)) (cur 0 (1+ cur))) ((eq i 10) '(1)) (format t "in body")))
+(macroexpand-1 '(do ((i 0 (1+ i)) (cur 0 (1+ cur))) ((eq i 10) '(1)) (format t "in body")))
 
+;;; do some more tests
+(defun test2 () (do ((temp-one 1 (1+ temp-one))
+                     (temp-two 0 (1- temp-two)))
+                  ((> (- temp-one temp-two) 5) temp-one)))
+
+
+(macroexpand-1 '(do ((temp-one 1 (1+ temp-one))
+                     (temp-two 0 (1- temp-two)))
+                  ((> (- temp-one temp-two) 5) temp-one)))
+
+;;; should return 3 but returns 2; updates go like:
+;;; there are no body forms
+;;; (before loop): temp-one = 1, temp-two = 0
+;;;                end-test (= 3 temp-two) is false so we continue with the loop
+;;; (update temp vars): g1 (for temp-one) = (1+ temp-one) = 2
+;;;                     g2 (for temp-two) = (1+ temp-one) = 2
+;;; (update loop vars): temp-one = 2
+;;;                     temp-one = 2
+;;; (eval test form):   (=3 temp-two) = false
+;;; (go start)
+;;; (update temp vars): g1 (for temp-one) = (1+ temp-one) = 3
+;;;                     g2 (for temp-two) = (1+ temp-one) = 3
+;;; (update loop vars): temp-one = 3
+;;;                     temp-one = 3
+;;; (eval test form):   (=3 temp-two) = true
+;;; 
+
+(defun test3 () (do ((temp-one 1 (1+ temp-one))
+                     (temp-two 0 (1+ temp-one)))     
+                  ((= 3 temp-two) temp-one) (format t "In loop body: ~S ~S" temp-one temp-two)))
+
+(test3)
