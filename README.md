@@ -1,6 +1,6 @@
 # Lisp Interpreter
 
-Simple Common Lisp interpreter with a REPL.  Far from complete, but the small subset implemented works well enough for a learning exercise.
+Simple Common Lisp (tree-walking) interpreter with a REPL.  Far from complete coverage of the CL language, but support exists for lambda functions, hygienic macros, lexical scopes etc.
 
 ## Quick Example
 
@@ -68,8 +68,7 @@ so we can do useful and interesting stuff like Advent of Code or whatever.  Supp
 added, which forced (another) rewrite of the parsing layer to allow lookahead.
 
 Implementation has reached the point where we can start defining functions and macros in lisp itself, rather than always
-calling back to the host language.  E.g. some loop macros have been implemented, but not `do` and not the true `loop` 
-macro as it implements its own little domain-specific language - maybe one for later.
+calling back to the host language.  E.g. some loop macros have been implemented, including `dotimes`, `dolist` and `do`.
 
 ## Running
 

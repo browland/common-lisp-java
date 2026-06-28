@@ -113,3 +113,42 @@
     ((= 3 temp-two) temp-one) 
     (format t "In loop body: ~S ~S" temp-one temp-two)))
 
+
+(defmacro do* (var-decls end-test-and-result &rest body-forms)
+  (let ((var-decls-only (mapcar #'(lambda (v) `(,(car v) ,(cadr v))) var-decls))
+        (end-test-form (car end-test-and-result))
+        (result-form (cadr end-test-and-result)))
+    `(let* (,@var-decls-only)
+       (block my-loop
+              (tagbody
+                ;;; evaluate test-form and return result if true (first iteration)
+                (if ,end-test-form (return-from my-loop ,result-form))
+
+                ;;; execute body forms (first iteration)
+                ,@body-forms
+
+                ;;; start loop tag
+                start
+
+                ;;; generate setq forms to update loop variables in sequence (potentially with side effects between them)
+                ,@(mapcar #'(lambda (vd) 
+                              `(setq ,(car vd) ,(nth 2 vd))) var-decls)
+
+                ;;; evaluate test-form
+                (if ,end-test-form (return-from my-loop ,result-form))
+
+                ;;; execute body forms
+                ,@body-forms
+
+                ;;; jump to start tag for next loop
+                (go start))))))
+
+(defun test4 ()
+  (do* ((temp-one 1 (1+ temp-one))
+        (temp-two 0 (1+ temp-one)))
+    ((= 3 temp-two) temp-one)))
+
+(macroexpand-1 '(do* ((temp-one 1 (1+ temp-one))
+                      (temp-two 0 (1+ temp-one)))
+                  ((= 3 temp-two) temp-one)))
+
