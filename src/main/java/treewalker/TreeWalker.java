@@ -3,69 +3,59 @@ package treewalker;
 import reader.NodeBuilder;
 import syntaxtree.Atom;
 import syntaxtree.Node;
+import syntaxtree.RList;
 
+import java.util.ArrayList;
 import java.util.List;
 
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
+    private final NodeListener nodeListener = new NodeHandler();
 
     public static void main(String[] args) {
         NodeBuilder nodeBuilder = new NodeBuilder();
 
+        TreeWalker walker = new TreeWalker();
+
         // String atom
         String program = "\"hello world\"";
         List<Node> nodes = nodeBuilder.build(program);
-        walkTree(nodes);
+        walker.walkTree(nodes);
 
         // int atom
         program = "1";
         nodes = nodeBuilder.build(program);
-        walkTree(nodes);
+        walker.walkTree(nodes);
 
         // float atom
         program = "1.23";
         nodes = nodeBuilder.build(program);
-        walkTree(nodes);
+        walker.walkTree(nodes);
 
         // char atom
         program = "#\\c";
         nodes = nodeBuilder.build(program);
-        walkTree(nodes);
+        walker.walkTree(nodes);
     }
 
-    private static void walkTree(List<Node> nodes) {
+    // We walk through each node in turn at this level, recursing for any list encountered in any of the Node positions.
+    // Once we end up with the evaluated list of nodes, then we evaluate the "flattened" list at this level as a form.
+    // We call into our NodeListener for individual atoms as well as the overall form at each level while we still
+    // evolve the design.
+    private void walkTree(List<Node> nodes) {
+        List<TypedAtom<?>> evaluatedNodes = new ArrayList<>();
         for (Node node : nodes) {
             if (node instanceof Atom atom) {
-                handleAtom(atom);
+                TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
+                evaluatedNodes.add(typedAtom);
+                nodeListener.handleAtom(typedAtom);
+            }
+            else if (node instanceof RList rlist) {
+                walkTree(rlist.nodes());
             }
         }
-    }
 
-    private static void handleAtom(Atom atom) {
-        TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
-        switch(typedAtom) {
-            case StringAtom stringAtom -> handleStringAtom(stringAtom);
-            case IntAtom intAtom -> handleIntAtom(intAtom);
-            case FloatAtom floatAtom -> handleFloatAtom(floatAtom);
-            case CharAtom charAtom -> handleCharAtom(charAtom);
-            default -> throw new UnsupportedOperationException("not supported: " + atom);
-        }
-    }
-
-    private static void handleStringAtom(StringAtom stringAtom) {
-        System.out.printf("encountered string atom %s with value %s%n", stringAtom, stringAtom.getValue());
-    }
-
-    private static void handleIntAtom(IntAtom intAtom) {
-        System.out.printf("encountered int atom %s with value %d%n", intAtom, intAtom.getValue());
-    }
-
-    private static void handleFloatAtom(FloatAtom floatAtom) {
-        System.out.printf("encountered float atom: %s with value %f%n", floatAtom, floatAtom.getValue());
-    }
-
-    private static void handleCharAtom(CharAtom charAtom) {
-        System.out.printf("encountered char atom: %s with value %s%n", charAtom, charAtom.getValue());
+        nodeListener.handleForm(evaluatedNodes);
     }
 }

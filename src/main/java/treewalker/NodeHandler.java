@@ -1,0 +1,38 @@
+package treewalker;
+
+import java.util.List;
+
+// we consider each node and dispatch to appropriate handler for that thing
+public class NodeHandler implements NodeListener {
+
+    public void handleAtom(TypedAtom typedAtom) {
+        switch(typedAtom) {
+            case StringAtom stringAtom -> handleStringAtom(stringAtom);
+            case IntAtom intAtom -> handleIntAtom(intAtom);
+            case FloatAtom floatAtom -> handleFloatAtom(floatAtom);
+            case CharAtom charAtom -> handleCharAtom(charAtom);
+            default -> throw new UnsupportedOperationException("not supported: " + typedAtom);
+        }
+    }
+
+    @Override
+    public void handleForm(List<TypedAtom<?>> typedAtoms) {
+        System.out.println("handle form with " + typedAtoms);
+    }
+
+    private static void handleStringAtom(StringAtom stringAtom) {
+        System.out.printf("encountered string atom %s with value %s%n", stringAtom, stringAtom.getValue());
+    }
+
+    private static void handleIntAtom(IntAtom intAtom) {
+        System.out.printf("encountered int atom %s with value %d%n", intAtom, intAtom.getValue());
+    }
+
+    private static void handleFloatAtom(FloatAtom floatAtom) {
+        System.out.printf("encountered float atom: %s with value %f%n", floatAtom, floatAtom.getValue());
+    }
+
+    private static void handleCharAtom(CharAtom charAtom) {
+        System.out.printf("encountered char atom: %s with value %s%n", charAtom, charAtom.getValue());
+    }
+}
