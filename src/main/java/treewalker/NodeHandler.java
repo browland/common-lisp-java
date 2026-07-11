@@ -18,18 +18,29 @@ public class NodeHandler implements NodeListener {
 
     @Override
     public void startForm() {
+        // TODO should we actually emit instructions from here to begin the form we're in the process of applying?
+        //      E.g. can then also handle each argument as we encounter them in e.g. handleStringAtom() etc by allocating
+        //      space on stack and doing malloc and storing address on stack etc.  That would be inefficient but perhaps
+        //      easier for now as we create the shape of things.
         System.out.println("start form");
     }
 
     @Override
     public ProcessedForm processForm(List<ProcessedNode> processedNodes) {
-        String generatedFunctionName = ApplyFormFunctionGenerator.getNextFunctionName();
+        String generatedFunctionName = ApplyFormFunctionGenerator.generateApplyForm(processedNodes);
         ProcessedForm processedForm = new ProcessedForm(generatedFunctionName);
         System.out.println("process form with " + processedNodes + " resulted in generated function " + processedForm);
         return processedForm;
     }
 
     private static void handleStringAtom(StringAtom stringAtom) {
+        // TODO call generator to generate asm for string in .ro data section, returning its name, and then move it onto
+        //      stack
+        // TODO TypedAtom or whatever we're going to call it) could store its (arg) position so it knows its address on
+        //      stack.  E.g. handleIntAtom() will receive an IntAtom, the IntAtom has its arg position so it can
+        //      generate the instruction to write the appropriate literal to the right offset on the stack.  Not sure
+        //      whether it's worth storing this on the TypedAtom as we'll need it again later for apply form (move
+        //      stuff from stack to registers before calling the function).
         System.out.printf("encountered string atom %s with value %s%n", stringAtom, stringAtom.getValue());
     }
 
