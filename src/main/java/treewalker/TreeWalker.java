@@ -19,43 +19,58 @@ public class TreeWalker {
         TreeWalker walker = new TreeWalker();
 
         // String atom
-        String program = "\"hello world\"";
+        String program = "(+ 1 (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
-        walker.walkTree(nodes);
-
-        // int atom
-        program = "1";
-        nodes = nodeBuilder.build(program);
-        walker.walkTree(nodes);
-
-        // float atom
-        program = "1.23";
-        nodes = nodeBuilder.build(program);
-        walker.walkTree(nodes);
-
-        // char atom
-        program = "#\\c";
-        nodes = nodeBuilder.build(program);
-        walker.walkTree(nodes);
+        walker.walkTopLevelNodes(nodes);
     }
 
     // We walk through each node in turn at this level, recursing for any list encountered in any of the Node positions.
     // Once we end up with the evaluated list of nodes, then we evaluate the "flattened" list at this level as a form.
     // We call into our NodeListener for individual atoms as well as the overall form at each level while we still
     // evolve the design.
-    private void walkTree(List<Node> nodes) {
-        List<TypedAtom<?>> evaluatedNodes = new ArrayList<>();
+    private void walkTopLevelNodes(List<Node> nodes) {
         for (Node node : nodes) {
-            if (node instanceof Atom atom) {
-                TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
-                evaluatedNodes.add(typedAtom);
-                nodeListener.handleAtom(typedAtom);
+            walkTree(node);
+        }
+    }
+
+    private void walkTree(Node node) {
+        if (node instanceof Atom atom) {
+            handleAtom(atom);
+        }
+        else if (node instanceof RList rlist) {
+            walkTree(rlist);
+        }
+    }
+
+    private TypedAtom<?> handleAtom(Atom atom) {
+        TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
+        nodeListener.handleAtom(typedAtom);
+        return typedAtom;
+    }
+
+    private void walkTree(RList rlist) {
+        // This is a form.  When we first begin a form we need to call down to NodeListener as that maps to creation of
+        // a function/stack frame.
+        nodeListener.startForm();
+
+        List<TypedAtom<?>> handledNodes = new ArrayList<>();
+        for (Node childNode : rlist.nodes()) {
+            if (childNode instanceof Atom atom) {
+                TypedAtom<?> typedAtom = handleAtom(atom);
+                handledNodes.add(typedAtom);
             }
-            else if (node instanceof RList rlist) {
-                walkTree(rlist.nodes());
+            else if (childNode instanceof RList innerRList) {
+                // todo we need some kind of r.v. to represent the processing of the inner form, e.g. another TypedNode
+                //      which we can then add to the list of handledNodes at this level
+                //      Otherwise we can't generate code to call the inner function, though we could perhaps assume there'll
+                //      be an r.v. of some kind we can use for this place in the form at this level.
+                //      E.g. a FormTypedNode which holds its TypedNode list and stores the name of its generated function.
+                walkTree(innerRList);
             }
         }
 
-        nodeListener.handleForm(evaluatedNodes);
+        nodeListener.applyForm(handledNodes);
     }
+
 }

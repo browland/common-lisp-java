@@ -5,19 +5,25 @@ import java.util.List;
 // we consider each node and dispatch to appropriate handler for that thing
 public class NodeHandler implements NodeListener {
 
-    public void handleAtom(TypedAtom typedAtom) {
+    public void handleAtom(TypedAtom<?> typedAtom) {
         switch(typedAtom) {
             case StringAtom stringAtom -> handleStringAtom(stringAtom);
             case IntAtom intAtom -> handleIntAtom(intAtom);
             case FloatAtom floatAtom -> handleFloatAtom(floatAtom);
             case CharAtom charAtom -> handleCharAtom(charAtom);
+            case SymbolAtom symbolAtom -> handleSymbolAtom(symbolAtom);
             default -> throw new UnsupportedOperationException("not supported: " + typedAtom);
         }
     }
 
     @Override
-    public void handleForm(List<TypedAtom<?>> typedAtoms) {
-        System.out.println("handle form with " + typedAtoms);
+    public void startForm() {
+        System.out.println("start form");
+    }
+
+    @Override
+    public void applyForm(List<TypedAtom<?>> typedAtoms) {
+        System.out.println("apply form with " + typedAtoms);
     }
 
     private static void handleStringAtom(StringAtom stringAtom) {
@@ -34,5 +40,9 @@ public class NodeHandler implements NodeListener {
 
     private static void handleCharAtom(CharAtom charAtom) {
         System.out.printf("encountered char atom: %s with value %s%n", charAtom, charAtom.getValue());
+    }
+
+    private static void handleSymbolAtom(SymbolAtom symbolAtom) {
+        System.out.printf("encountered symbol atom: %s with value %s%n", symbolAtom, symbolAtom.getValue());
     }
 }
