@@ -49,28 +49,23 @@ public class TreeWalker {
         return typedAtom;
     }
 
-    private void walkTree(RList rlist) {
+    private ProcessedForm walkTree(RList rlist) {
         // This is a form.  When we first begin a form we need to call down to NodeListener as that maps to creation of
         // a function/stack frame.
         nodeListener.startForm();
 
-        List<TypedAtom<?>> handledNodes = new ArrayList<>();
+        List<ProcessedNode> processedNodes = new ArrayList<>();
         for (Node childNode : rlist.nodes()) {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = handleAtom(atom);
-                handledNodes.add(typedAtom);
+                processedNodes.add(typedAtom);
             }
             else if (childNode instanceof RList innerRList) {
-                // todo we need some kind of r.v. to represent the processing of the inner form, e.g. another TypedNode
-                //      which we can then add to the list of handledNodes at this level
-                //      Otherwise we can't generate code to call the inner function, though we could perhaps assume there'll
-                //      be an r.v. of some kind we can use for this place in the form at this level.
-                //      E.g. a FormTypedNode which holds its TypedNode list and stores the name of its generated function.
-                walkTree(innerRList);
+                ProcessedForm innerProcessedForm = walkTree(innerRList);
+                processedNodes.add(innerProcessedForm);
             }
         }
 
-        nodeListener.applyForm(handledNodes);
+        return nodeListener.processForm(processedNodes);
     }
-
 }

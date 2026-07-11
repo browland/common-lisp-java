@@ -2,7 +2,7 @@ package treewalker;
 
 import syntaxtree.Atom;
 
-public sealed class TypedAtom<T> permits StringAtom, IntAtom, FloatAtom, CharAtom, SymbolAtom {
+public sealed class TypedAtom<T> implements ProcessedNode permits StringAtom, IntAtom, FloatAtom, CharAtom, SymbolAtom  {
     private Atom atom;
     private T value;
 

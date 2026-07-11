@@ -22,8 +22,11 @@ public class NodeHandler implements NodeListener {
     }
 
     @Override
-    public void applyForm(List<TypedAtom<?>> typedAtoms) {
-        System.out.println("apply form with " + typedAtoms);
+    public ProcessedForm processForm(List<ProcessedNode> processedNodes) {
+        String generatedFunctionName = ApplyFormFunctionGenerator.getNextFunctionName();
+        ProcessedForm processedForm = new ProcessedForm(generatedFunctionName);
+        System.out.println("process form with " + processedNodes + " resulted in generated function " + processedForm);
+        return processedForm;
     }
 
     private static void handleStringAtom(StringAtom stringAtom) {
