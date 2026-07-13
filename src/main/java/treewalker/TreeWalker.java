@@ -34,7 +34,7 @@ public class TreeWalker {
     private void walkTopLevelNodes(List<Node> nodes) throws IOException, InterruptedException {
         for (Node node : nodes) {
             walkTree(node);
-            String asm = nodeListener.generate();
+            String asm = nodeListener.endTree();
             writeAssembleRun(asm);
         }
     }

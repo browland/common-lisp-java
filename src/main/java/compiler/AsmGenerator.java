@@ -52,9 +52,10 @@ public class AsmGenerator {
 
         // Functions ...
         List<Function> functions = context.getFunctions();
-        for (Function function : functions) {
-            myAsm = generateFunction(function, myAsm);
-        }
+
+        // TODO fixed a bug here where we were looping over the functions here; we walk through them internally.
+        Function function = functions.getFirst();
+        myAsm += generateFunction(function);
 
         // String literals ...
         List<StringLiteral> stringLiterals = context.getStringLiterals();
@@ -69,7 +70,8 @@ public class AsmGenerator {
         return myAsm;
     }
 
-    private static String generateFunction(Function function, String myAsm) {
+    private static String generateFunction(Function function) {
+        String myAsm = "";
         myAsm += "\n";
         String name = function.getName();
         myAsm += ".p2align 3\n";
@@ -97,6 +99,7 @@ public class AsmGenerator {
 
         myAsm += "sub sp, sp, #" + stackBytes + "\n";
 
+        // Move operands to stack
         for (int i=1; i<parts.size(); i++) {
             // if an int then generate instructions for mov immediate value and ldr
             // if a function then generate instructions to call the function, then ldr x0 to appropriate stack pos
@@ -112,17 +115,10 @@ public class AsmGenerator {
         }
 
         // call the operator - hardcode for now as this is getting too dicey
-        if (parts.get(0) instanceof Operator op) {  // all we have for now
-            if ("+".equals(op.getOperator())) {
-                // expect 2 operands on the stack; load to x0 and x1
-                myAsm += "ldr x0, [x29, #-8]\n";
-                myAsm += "ldr x1, [x29, #-16]\n";
-                myAsm += "add x0, x0, x1\n";
-            }
+        if (parts.getFirst() instanceof Operator op) {  // all we have for now
+            myAsm += moveOperandsFromStackToRegisters(numStackSlots);
+            myAsm += executeInstruction(op);
         }
-
-        // Print result - no incorrect
-        //myAsm += "bl _putchar\n";
 
         // Restore function pointer and link register
         myAsm += "ldp x29, x30, [x29]\n";
@@ -135,24 +131,42 @@ public class AsmGenerator {
         // If Function parts exist, recurse to generate those too, concat'ing their output to myAsm
         for (Object part : parts) {
             if (part instanceof Function fxn) {
-                generateFunction(fxn, myAsm);
+                myAsm += generateFunction(fxn);
             }
         }
 
         return myAsm;
     }
 
+    private static String moveOperandsFromStackToRegisters(int numStackSlots) {
+        String myAsm = "";
+        // for each operand (numStackSlots) move the appropriate operand from stack to next register
+
+        // Stack offset relative to frame pointer (e.g. -8 is the highest 8-byte value, with -16 below it and so on).
+        int stackOffset;
+        String register;
+        for (int i = 0; i<numStackSlots; i++) {
+            stackOffset = (i+1) * -8;
+            register = "x" + i;
+            myAsm += "ldr " + register + ", [x29, #" + stackOffset + "]\n";
+        }
+        return myAsm;
+    }
+
+    private static String executeInstruction(Operator op) {
+        String myAsm = "";
+        if ("+".equals(op.getOperator())) {
+            myAsm += "add x0, x0, x1\n";
+        }
+        return myAsm;
+    }
+
     public void pushInt(int i, AsmContext context) {
         context.pushInt(i);
-
     }
 
     public void withOperator(String op, AsmContext context) {
         context.withOperator(op);
 
-    }
-
-    public void pushReturnValue(AsmContext context) {
-        context.pushReturnValue();
     }
 }

@@ -17,7 +17,14 @@ public class NodeHandler implements NodeListener {
             case IntAtom intAtom -> handleIntAtom(intAtom, pos);
             case FloatAtom floatAtom -> handleFloatAtom(floatAtom, pos);
             case CharAtom charAtom -> handleCharAtom(charAtom, pos);
-            case SymbolAtom symbolAtom -> handleSymbolAtom(symbolAtom, pos);
+            case SymbolAtom symbolAtom -> {
+                if (pos == 0) {
+                    handleOperatorNode(symbolAtom);
+                }
+                else {
+                    handleSymbolAtom(symbolAtom, pos);
+                }
+            }
             default -> throw new UnsupportedOperationException("not supported: " + typedAtom);
         }
     }
@@ -43,8 +50,9 @@ public class NodeHandler implements NodeListener {
         return null;  // todo ProcessedForm now redundant?
     }
 
-    // todo clumsily allowing access to AsmGenerator from TreeWalker; doesn't belong in NodeHandler
-    public String generate() {
+    // TODO should return something more general (to handle interpreter mode) OR make the context which we're passing
+    //      around more general.
+    public String endTree() {
         return generator.generate(context);
     }
 
@@ -73,13 +81,11 @@ public class NodeHandler implements NodeListener {
     }
 
     private void handleSymbolAtom(SymbolAtom symbolAtom, int pos) {
-        if (pos == 0) {
-            // operator position
-            System.out.printf("encountered symbol atom in operator pos: %s with value %s%n", symbolAtom, symbolAtom.getValue());
-            generator.withOperator("+", context);
-        }
-        else {
-            System.out.printf("encountered symbol atom in argument pos: %s with value %s%n", symbolAtom, symbolAtom.getValue());
-        }
+        System.out.printf("encountered symbol atom in argument pos: %s with value %s%n", symbolAtom, symbolAtom.getValue());
+    }
+
+    private void handleOperatorNode(SymbolAtom symbolAtom) {
+        System.out.printf("encountered symbol atom in operator pos: %s with value %s%n", symbolAtom, symbolAtom.getValue());
+        generator.withOperator("+", context);
     }
 }
