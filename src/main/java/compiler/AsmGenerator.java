@@ -18,17 +18,17 @@ public class AsmGenerator {
         return stringLiteral;
     }
 
-    void startFunction(AsmContext context) {
+    public void startFunction(AsmContext context) {
         String name = "_fxn_" + functionIndex++;
         Function function = new Function(name);
         context.startFunction(function);
     }
 
-    void endFunction(AsmContext context) {
+    public void endFunction(AsmContext context) {
         context.endFunction();
     }
 
-    String generate(AsmContext context) {
+    public String generate(AsmContext context) {
         String myAsm = """
                     .text
                     .global _main
