@@ -9,15 +9,26 @@ import java.io.IOException;
  */
 public class BasicAsmTest {
     public static void main(String[] args) throws IOException, InterruptedException {
-        String myAsm = """
-                    .text
-                    .global _main
-                    .p2align 3
-                _main:
-                    mov x0, #0
-                    ret
-                """;
+        AsmContext context = new AsmContext();
+        AsmGenerator generator = new AsmGenerator();
+        generator.addStringLiteral("hello world", context);
 
+        // Simulating (+ 1 (+ 1 2))
+        generator.startFunction(context);
+        generator.withOperator("+", context);
+        generator.pushInt(10, context);
+            generator.startFunction(context);
+            generator.withOperator("+", context);
+            generator.pushInt(1, context);
+            generator.pushInt(7, context);
+            generator.endFunction(context);
+        generator.endFunction(context);
+
+        String myAsm = generator.generate(context);
+        writeAssembleRun(myAsm);
+    }
+
+    private static void writeAssembleRun(String myAsm) throws IOException, InterruptedException {
         File asmFile = new File("./my-asm.s");
         try (FileWriter fw = new FileWriter(asmFile)) {
             fw.write(myAsm);
