@@ -19,8 +19,8 @@ public class AsmGenerator {
     }
 
     public void startForm(AsmContext context) {
-        String name = "_fxn_" + formFunctionIndex++;
-        Form form = new Form(name);
+        String asmFunctionName = "_fxn_" + formFunctionIndex++;
+        Form form = new Form(asmFunctionName);
         context.startForm(form);
     }
 
@@ -61,7 +61,7 @@ public class AsmGenerator {
         // Set our frame pointer to stack pointer
         myAsm += "mov x29, sp\n";
 
-        myAsm += "bl " + context.getFunctions().getFirst().getName() + "\n";
+        myAsm += "bl " + context.getFunctions().getFirst().getAsmFunctionName() + "\n";
 
         // Restore function pointer and link register
         myAsm += "ldp x29, x30, [x29]\n";
@@ -94,11 +94,14 @@ public class AsmGenerator {
      * declarations by making a recursive call to this method.
      *
      * So far we evaluate operands supplied in the form of function calls but no other evaluation takes place.
+     *
+     * TODO consider we don't always want to recurse into inner forms.  E.g. if this form is (if ...) then we evaluate
+     *      the first operand then evaluate one or the other of remaining operands and return its result.
      */
     private static String generateNextFormFunction(Form nextForm) {
         String myAsm = "";
         myAsm += "\n";
-        String name = nextForm.getName();
+        String name = nextForm.getAsmFunctionName();
         myAsm += ".p2align 3\n";
         myAsm += ".global " + name + "\n";
         myAsm += name + ":\n";
@@ -108,53 +111,17 @@ public class AsmGenerator {
         // Set our frame pointer to stack pointer
         myAsm += "mov x29, sp\n";
 
-        // Reserve space on the stack for our operands which we need to figure out as we go
-        List<Object> parts = nextForm.getRawParts();
-        // 0th part is the operator; we don't need that until the very end.
-        // We also treat Function operands as just space on the stack for its return value and recurse to generate THAT function.
-        // So we need to reserve len(parts)-1 slots on the stack.
-        int numStackSlots = parts.size()-1;
+        // TODO look at nextForm.parts.getFirst() - should extract out the op
+        myAsm += new AddAsm().generate(nextForm);
 
-        // add 1 more slot if needed so we're 16 bytes aligned
-        if (numStackSlots % 2 != 0) {
-            numStackSlots++;
-        }
-
-        int stackBytes = 8*numStackSlots;
-
-        myAsm += "sub sp, sp, #" + stackBytes + "\n";
-
-        // Move operands to stack
-        for (int i=1; i<parts.size(); i++) {
-            // if an int then generate instructions for mov immediate value and ldr
-            // if a function then generate instructions to call the function, then ldr x0 to appropriate stack pos
-            Object part = parts.get(i);
-            if (part instanceof Integer) {
-                myAsm += "mov x0, #" + part + "\n";
-            }
-            else if (part instanceof Form fxn) {
-                myAsm += "bl " + fxn.getName() + "\n";
-            }
-            // so far this always works
-            myAsm += "str x0, [x29, #-" + (i*8) + "]\n";  // i starts from 1 so the SP moves down in 8 byte chunks like 8, 16, 24 etc.
-        }
-
-        // call the operator - hardcode for now as this is getting too dicey
-        if (parts.getFirst() instanceof Operator op) {  // all we have for now
-            myAsm += moveOperandsFromStackToRegisters(numStackSlots);
-            myAsm += executeInstruction(op);
-        }
-
-        // Restore function pointer and link register
-        myAsm += "ldp x29, x30, [x29]\n";
-
-        // Free space from stack, including the 16 bytes for the FP and LR
-        myAsm += "add sp, sp, #" + (16 + stackBytes) + "\n";
+        // Restore function pointer and link register and free stack space we used to stash them
+        myAsm += "ldp x29, x30, [sp], #16\n";
 
         myAsm += "ret\n";
 
         // If Function parts exist, recurse to generate those too, concat'ing their output to myAsm
-        for (Object part : parts) {
+        List<Object> parts2 = nextForm.getRawParts();
+        for (Object part : parts2) {
             if (part instanceof Form fxn) {
                 myAsm += generateNextFormFunction(fxn);
             }
@@ -163,28 +130,6 @@ public class AsmGenerator {
         return myAsm;
     }
 
-    private static String moveOperandsFromStackToRegisters(int numStackSlots) {
-        String myAsm = "";
-        // for each operand (numStackSlots) move the appropriate operand from stack to next register
-
-        // Stack offset relative to frame pointer (e.g. -8 is the highest 8-byte value, with -16 below it and so on).
-        int stackOffset;
-        String register;
-        for (int i = 0; i<numStackSlots; i++) {
-            stackOffset = (i+1) * -8;
-            register = "x" + i;
-            myAsm += "ldr " + register + ", [x29, #" + stackOffset + "]\n";
-        }
-        return myAsm;
-    }
-
-    private static String executeInstruction(Operator op) {
-        String myAsm = "";
-        if ("+".equals(op.getOperator())) {
-            myAsm += "add x0, x0, x1\n";
-        }
-        return myAsm;
-    }
 
     public void pushInt(int i, AsmContext context) {
         context.pushInt(i);

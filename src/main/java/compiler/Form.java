@@ -13,12 +13,12 @@ import java.util.List;
  *
  */
 public class Form {
-    private final String name;
+    private final String asmFunctionName;
     // Unevaluated parts of this form, including operator - not evaluated, just straight from the tree
     private final List<Object> rawParts = new ArrayList<>();
 
-    public Form(String name) {
-        this.name = name;
+    public Form(String asmFunctionName) {
+        this.asmFunctionName = asmFunctionName;
     }
 
     public void pushInt(int i) {
@@ -38,8 +38,8 @@ public class Form {
         rawParts.add(new ReturnValue());
     }
 
-    public String getName() {
-        return name;
+    public String getAsmFunctionName() {
+        return asmFunctionName;
     }
 
     public List<Object> getRawParts() {
