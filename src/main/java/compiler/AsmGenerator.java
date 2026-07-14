@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class AsmGenerator {
     private int stringLiteralIndex;
-    private int functionIndex;
+    private int formFunctionIndex;
 
     StringLiteral addStringLiteral(String value, AsmContext context) {
         String name = "l_str_" + stringLiteralIndex++;
@@ -18,21 +18,43 @@ public class AsmGenerator {
         return stringLiteral;
     }
 
-    public void startFunction(AsmContext context) {
-        String name = "_fxn_" + functionIndex++;
-        Function function = new Function(name);
-        context.startFunction(function);
+    public void startForm(AsmContext context) {
+        String name = "_fxn_" + formFunctionIndex++;
+        Form form = new Form(name);
+        context.startForm(form);
     }
 
-    public void endFunction(AsmContext context) {
-        context.endFunction();
+    public void endForm(AsmContext context) {
+        context.endForm();
+    }
+
+    public String generateStartTextRegion(AsmContext context) {
+        return """
+                    .text
+                    .global _main
+                    """;
     }
 
     public String generate(AsmContext context) {
+        String myAsm = generateStartTextRegion(context);
+
+        // The main function essentially calls the function which implements the top-level form
+        myAsm += generateMainFunction(context);
+
+        // Functions ...
+        List<Form> forms = context.getFunctions();
+
+        Form form = forms.getFirst();
+        myAsm += generateNextFormFunction(form);
+
+        myAsm += generateGlobals(context);
+
+        return myAsm;
+    }
+
+    private static String generateMainFunction(AsmContext context) {
         String myAsm = """
-                    .text
-                    .global _main
-                    .p2align 3
+                .p2align 3
                 _main:\n""";
         // Store frame pointer and link register
         myAsm += "stp x29, x30, [sp, #-16]!\n";
@@ -49,15 +71,12 @@ public class AsmGenerator {
 
         // Return from _main
         myAsm += "ret\n";
+        return myAsm;
+    }
 
-        // Functions ...
-        List<Function> functions = context.getFunctions();
-
-        // TODO fixed a bug here where we were looping over the functions here; we walk through them internally.
-        Function function = functions.getFirst();
-        myAsm += generateFunction(function);
-
+    private static String generateGlobals(AsmContext context) {
         // String literals ...
+        String myAsm = "";
         List<StringLiteral> stringLiterals = context.getStringLiterals();
         if (! stringLiterals.isEmpty()) {
             myAsm += ".cstring\n";
@@ -66,14 +85,20 @@ public class AsmGenerator {
                 myAsm += "   .asciz \"" + stringLiteral.value() + "\"\n";
             }
         }
-
         return myAsm;
     }
 
-    private static String generateFunction(Function function) {
+    /**
+     * Generates asm for next form encountered in the tree.  We generate the declaration, and if any other
+     * forms are evaluated we make the calls to functions implementing them, and then we generate each of their
+     * declarations by making a recursive call to this method.
+     *
+     * So far we evaluate operands supplied in the form of function calls but no other evaluation takes place.
+     */
+    private static String generateNextFormFunction(Form nextForm) {
         String myAsm = "";
         myAsm += "\n";
-        String name = function.getName();
+        String name = nextForm.getName();
         myAsm += ".p2align 3\n";
         myAsm += ".global " + name + "\n";
         myAsm += name + ":\n";
@@ -84,7 +109,7 @@ public class AsmGenerator {
         myAsm += "mov x29, sp\n";
 
         // Reserve space on the stack for our operands which we need to figure out as we go
-        List<Object> parts = function.getParts();
+        List<Object> parts = nextForm.getRawParts();
         // 0th part is the operator; we don't need that until the very end.
         // We also treat Function operands as just space on the stack for its return value and recurse to generate THAT function.
         // So we need to reserve len(parts)-1 slots on the stack.
@@ -107,7 +132,7 @@ public class AsmGenerator {
             if (part instanceof Integer) {
                 myAsm += "mov x0, #" + part + "\n";
             }
-            else if (part instanceof Function fxn) {
+            else if (part instanceof Form fxn) {
                 myAsm += "bl " + fxn.getName() + "\n";
             }
             // so far this always works
@@ -130,8 +155,8 @@ public class AsmGenerator {
 
         // If Function parts exist, recurse to generate those too, concat'ing their output to myAsm
         for (Object part : parts) {
-            if (part instanceof Function fxn) {
-                myAsm += generateFunction(fxn);
+            if (part instanceof Form fxn) {
+                myAsm += generateNextFormFunction(fxn);
             }
         }
 

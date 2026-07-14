@@ -36,12 +36,12 @@ public class NodeHandler implements NodeListener {
         //      space on stack and doing malloc and storing address on stack etc.  That would be inefficient but perhaps
         //      easier for now as we create the shape of things.
         System.out.println("start form");
-        generator.startFunction(context);
+        generator.startForm(context);
     }
 
     @Override
     public ProcessedForm processForm(List<ProcessedNode> processedNodes) {
-        generator.endFunction(context);
+        generator.endForm(context);
 
         //String generatedFunctionName = ApplyFormFunctionGenerator.generateApplyForm(processedNodes);
         //ProcessedForm processedForm = new ProcessedForm(generatedFunctionName);

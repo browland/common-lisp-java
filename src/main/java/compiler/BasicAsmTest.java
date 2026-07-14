@@ -14,15 +14,15 @@ public class BasicAsmTest {
         generator.addStringLiteral("hello world", context);
 
         // Simulating (+ 1 (+ 1 2))
-        generator.startFunction(context);
+        generator.startForm(context);
         generator.withOperator("+", context);
         generator.pushInt(10, context);
-            generator.startFunction(context);
+            generator.startForm(context);
             generator.withOperator("+", context);
             generator.pushInt(1, context);
             generator.pushInt(7, context);
-            generator.endFunction(context);
-        generator.endFunction(context);
+            generator.endForm(context);
+        generator.endForm(context);
 
         String myAsm = generator.generate(context);
         writeAssembleRun(myAsm);

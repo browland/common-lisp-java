@@ -7,31 +7,31 @@ import java.util.List;
 
 public class AsmContext {
     private List<StringLiteral> stringLiterals = new ArrayList<>();
-    private Deque<Function> functionStack = new LinkedList<>();
-    private List<Function> functions = new ArrayList<>();
+    private Deque<Form> formStack = new LinkedList<>();
+    private List<Form> forms = new ArrayList<>();
 
     void addStringLiteral(StringLiteral stringLiteral) {
         stringLiterals.add(stringLiteral);
     }
 
-    void startFunction(Function function) {
-        if (!functionStack.isEmpty()) {
-            functionStack.peek().pushFunction(function);
+    void startForm(Form form) {
+        if (!formStack.isEmpty()) {
+            formStack.peek().pushForm(form);
         }
-        functionStack.push(function);
-        functions.add(function);
+        formStack.push(form);
+        forms.add(form);
     }
 
-    void endFunction() {
-        functionStack.pop();
+    void endForm() {
+        formStack.pop();
     }
 
     List<StringLiteral> getStringLiterals() {
         return stringLiterals;
     }
 
-    public Function getCurrentFunction() {
-        return functionStack.peek();
+    public Form getCurrentFunction() {
+        return formStack.peek();
     }
 
     public void pushInt(int i) {
@@ -47,7 +47,7 @@ public class AsmContext {
         getCurrentFunction().pushReturnValue();
     }
 
-    public List<Function> getFunctions() {
-        return functions;
+    public List<Form> getFunctions() {
+        return forms;
     }
 }
