@@ -28,7 +28,7 @@ public class AsmGenerator {
         context.endForm();
     }
 
-    public String generateStartTextRegion(AsmContext context) {
+    public String generateStartTextRegion() {
         return """
                     .text
                     .global _main
@@ -36,7 +36,7 @@ public class AsmGenerator {
     }
 
     public String generate(AsmContext context) {
-        String myAsm = generateStartTextRegion(context);
+        String myAsm = generateStartTextRegion();
 
         // The main function essentially calls the function which implements the top-level form
         myAsm += generateMainFunction(context);
@@ -98,10 +98,10 @@ public class AsmGenerator {
      * TODO consider we don't always want to recurse into inner forms.  E.g. if this form is (if ...) then we evaluate
      *      the first operand then evaluate one or the other of remaining operands and return its result.
      */
-    private static String generateNextFormFunction(Form nextForm) {
+    private static String generateNextFormFunction(Form thisForm) {
         String myAsm = "";
         myAsm += "\n";
-        String name = nextForm.getAsmFunctionName();
+        String name = thisForm.getAsmFunctionName();
         myAsm += ".p2align 3\n";
         myAsm += ".global " + name + "\n";
         myAsm += name + ":\n";
@@ -111,8 +111,9 @@ public class AsmGenerator {
         // Set our frame pointer to stack pointer
         myAsm += "mov x29, sp\n";
 
-        // TODO look at nextForm.parts.getFirst() - should extract out the op
-        myAsm += new AddAsm().generate(nextForm);
+        if (OperatorType.ADD.equals(thisForm.getOperator().getOperator())) {
+            myAsm += new AddAsm().generate(thisForm);
+        }
 
         // Restore function pointer and link register and free stack space we used to stash them
         myAsm += "ldp x29, x30, [sp], #16\n";
@@ -120,8 +121,8 @@ public class AsmGenerator {
         myAsm += "ret\n";
 
         // If Function parts exist, recurse to generate those too, concat'ing their output to myAsm
-        List<Object> parts2 = nextForm.getRawParts();
-        for (Object part : parts2) {
+        List<Object> parts = thisForm.getRawParts();
+        for (Object part : parts) {
             if (part instanceof Form fxn) {
                 myAsm += generateNextFormFunction(fxn);
             }
@@ -135,8 +136,7 @@ public class AsmGenerator {
         context.pushInt(i);
     }
 
-    public void withOperator(String op, AsmContext context) {
-        context.withOperator(op);
-
+    public void withOperator(String operatorSymbol, AsmContext context) {
+        context.withOperator(operatorSymbol);
     }
 }

@@ -86,6 +86,6 @@ public class NodeHandler implements NodeListener {
 
     private void handleOperatorNode(SymbolAtom symbolAtom) {
         System.out.printf("encountered symbol atom in operator pos: %s with value %s%n", symbolAtom, symbolAtom.getValue());
-        generator.withOperator("+", context);
+        generator.withOperator(symbolAtom.getValue(), context);
     }
 }

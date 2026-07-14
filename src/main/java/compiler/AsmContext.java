@@ -39,8 +39,8 @@ public class AsmContext {
 
     }
 
-    public void withOperator(String op) {
-        getCurrentFunction().pushOperator(op);
+    public void withOperator(String operatorSymbol) {
+        getCurrentFunction().pushOperator(operatorSymbol);
     }
 
     public void pushReturnValue() {

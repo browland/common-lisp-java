@@ -16,6 +16,7 @@ public class Form {
     private final String asmFunctionName;
     // Unevaluated parts of this form, including operator - not evaluated, just straight from the tree
     private final List<Object> rawParts = new ArrayList<>();
+    private Operator operator;
 
     public Form(String asmFunctionName) {
         this.asmFunctionName = asmFunctionName;
@@ -25,9 +26,10 @@ public class Form {
         rawParts.add(i);
     }
 
-    public void pushOperator(String op) {
-        Operator operator = new Operator(op);
+    public void pushOperator(String operatorSymbol) {
+        Operator operator = Operator.fromSymbol(operatorSymbol);
         rawParts.add(operator);
+        this.operator = operator;
     }
 
     public void pushForm(Form form) {
@@ -44,5 +46,9 @@ public class Form {
 
     public List<Object> getRawParts() {
         return rawParts;
+    }
+
+    public Operator getOperator() {
+        return operator;
     }
 }

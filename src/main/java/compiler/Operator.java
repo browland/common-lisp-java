@@ -1,14 +1,21 @@
 package compiler;
 
 public class Operator {
-    private final String operator;
+    private final OperatorType operatorType;
 
-    public Operator(String operator) {
-        this.operator = operator;
+    public Operator(OperatorType operatorType) {
+        this.operatorType = operatorType;
     }
 
-    public String getOperator() {
-        return operator;
+    public OperatorType getOperator() {
+        return operatorType;
+    }
+
+    public static Operator fromSymbol(String symbol) {
+        switch (symbol) {
+            case "+": return new Operator(OperatorType.ADD);
+            default: throw new UnsupportedOperationException("unsupported operator");
+        }
     }
 
 }

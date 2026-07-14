@@ -2,6 +2,7 @@ package compiler;
 
 import java.util.List;
 
+// TODO we allow variadic arguments but only use the first two
 public class AddAsm implements FormAsm {
     @Override
     public String generate(Form form) {
@@ -35,17 +36,15 @@ public class AddAsm implements FormAsm {
             myAsm += "str x0, [x29, #-" + (i * 8) + "]\n";  // i starts from 1 so the SP moves down in 8 byte chunks like 8, 16, 24 etc.
         }
 
-        // call the operator - hardcode for now as this is getting too dicey
-        if (parts.getFirst() instanceof Operator op) {  // all we have for now
-            myAsm += moveOperandsFromStackToRegisters(numStackSlots);
-            myAsm += "add x0, x0, x1\n";
-        }
+        myAsm += moveOperandsFromStackToRegisters(numStackSlots);
+        myAsm += "add x0, x0, x1\n";
 
         // Free space from stack (local variables for this function only)
         myAsm += "add sp, sp, #" + stackBytes + "\n";
         return myAsm;
     }
 
+    // TODO can be library code
     private static String moveOperandsFromStackToRegisters(int numStackSlots) {
         String myAsm = "";
         // for each operand (numStackSlots) move the appropriate operand from stack to next register
