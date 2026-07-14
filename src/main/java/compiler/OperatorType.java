@@ -1,5 +1,5 @@
 package compiler;
 
 public enum OperatorType {
-    ADD,
+    FUNCTION, SPECIAL_FORM,
 }
