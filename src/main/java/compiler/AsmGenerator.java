@@ -82,7 +82,7 @@ public class AsmGenerator {
         // Static strings for things like messages
         myAsm += """
                 _error_msg:
-                    .asciz \"ERROR\"""";
+                    .asciz \"ERROR (incorrect value type)\\n\"""";
         return myAsm;
     }
 
