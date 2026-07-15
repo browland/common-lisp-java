@@ -36,7 +36,6 @@ public class AsmContext {
 
     public void pushInt(int i) {
         getCurrentFunction().pushInt(i);
-
     }
 
     public void withOperator(String operatorSymbol) {

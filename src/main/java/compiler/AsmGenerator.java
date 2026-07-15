@@ -68,7 +68,7 @@ public class AsmGenerator {
     }
 
     private static String generateGlobals(AsmContext context) {
-        // String literals ...
+        // Anon. string literals, will be needed when we use string literals in code
         String myAsm = "";
         List<StringLiteral> stringLiterals = context.getStringLiterals();
         if (! stringLiterals.isEmpty()) {
@@ -78,6 +78,11 @@ public class AsmGenerator {
                 myAsm += "   .asciz \"" + stringLiteral.value() + "\"\n";
             }
         }
+
+        // Static strings for things like messages
+        myAsm += """
+                _error_msg:
+                    .asciz \"ERROR\"""";
         return myAsm;
     }
 
@@ -112,7 +117,7 @@ public class AsmGenerator {
         Operator operator = thisForm.getOperator();
         if (operator.getOperatorType() == OperatorType.FUNCTION) {
             // We always evaluate arguments for function calls, so reserve the stack needed
-            myAsm += reserveSpaceForArgs(thisForm);
+            myAsm += copyArgsToStack(thisForm);
             myAsm += moveOperandsFromStackToRegisters(numStackSlots);
         }
 
@@ -149,7 +154,7 @@ public class AsmGenerator {
         throw new UnsupportedOperationException("not implemented yet");
     }
 
-    private static String reserveSpaceForArgs(Form form) {
+    private static String copyArgsToStack(Form form) {
         // Reserve space on the stack for our operands which we need to figure out as we go
         // 0th part is the operator; we don't need that until the very end.
         // We also treat Function operands as just space on the stack for its return value and recurse to generate THAT function.
@@ -171,8 +176,9 @@ public class AsmGenerator {
             // if an int then generate instructions for mov immediate value and ldr
             // if a function then generate instructions to call the function, then ldr x0 to appropriate stack pos
             Object part = parts.get(i);
-            if (part instanceof Integer) {
-                myAsm += "mov x0, #" + part + "\n";
+            if (part instanceof Integer intPart) {
+                long fixNum = createFixNum(intPart);
+                myAsm += "mov x0, #" + fixNum + "\n";
             } else if (part instanceof Form fxn) {
                 myAsm += "bl " + fxn.getAsmFunctionName() + "\n";
             }
@@ -181,6 +187,12 @@ public class AsmGenerator {
         }
 
         return myAsm;
+    }
+
+    private static long createFixNum(int intPart) {
+        // Shift bits left by 3 places and tag the low 3 bits as 001 to indicate this is a fixnum.
+        long fixNum = (long) intPart << 3;
+        return fixNum | 0x1;
     }
 
     private static String moveOperandsFromStackToRegisters(int numStackSlots) {
