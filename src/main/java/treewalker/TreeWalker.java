@@ -22,7 +22,7 @@ public class TreeWalker {
         TreeWalker walker = new TreeWalker();
 
         // String atom
-        String program = "(+ 1 (+ (+ 1 1) 2))";
+        String program = "(+ 1 2)";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
     }

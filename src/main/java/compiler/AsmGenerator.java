@@ -50,20 +50,20 @@ public class AsmGenerator {
                 .p2align 3
                 _main:\n""";
         // Store frame pointer and link register
-        myAsm += "stp x29, x30, [sp, #-16]!\n";
+        myAsm += "  stp x29, x30, [sp, #-16]!\n";
         // Set our frame pointer to stack pointer
-        myAsm += "mov x29, sp\n";
+        myAsm += "  mov x29, sp\n";
 
-        myAsm += "bl " + context.getFunctions().getFirst().getAsmFunctionName() + "\n";
+        myAsm += "  bl " + context.getFunctions().getFirst().getAsmFunctionName() + "\n";
 
         // Restore function pointer and link register
-        myAsm += "ldp x29, x30, [x29]\n";
+        myAsm += "  ldp x29, x30, [x29]\n";
 
         // Free space from stack (16 bytes for the FP and LR)
-        myAsm += "add sp, sp, #16\n";
+        myAsm += "  add sp, sp, #16\n";
 
         // Return from _main
-        myAsm += "ret\n";
+        myAsm += "  ret\n";
         return myAsm;
     }
 
@@ -75,14 +75,14 @@ public class AsmGenerator {
             myAsm += ".cstring\n";
             for (StringLiteral stringLiteral : stringLiterals) {
                 myAsm += stringLiteral.name() + ":\n";
-                myAsm += "   .asciz \"" + stringLiteral.value() + "\"\n";
+                myAsm += "  .asciz \"" + stringLiteral.value() + "\"\n";
             }
         }
 
         // Static strings for things like messages
         myAsm += """
-                _error_msg:
-                    .asciz \"ERROR (incorrect value type)\\n\"""";
+_error_msg:
+  .asciz \"ERROR (incorrect value type)\\n\"""";
         return myAsm;
     }
 
@@ -105,9 +105,9 @@ public class AsmGenerator {
         myAsm += name + ":\n";
 
         // Store frame pointer and link register
-        myAsm += "stp x29, x30, [sp, #-16]!\n";
+        myAsm += "  stp x29, x30, [sp, #-16]!\n";
         // Set our frame pointer to stack pointer
-        myAsm += "mov x29, sp\n";
+        myAsm += "  mov x29, sp\n";
 
         // Needed only for function case; should extract out function handling
         List<Object> parts = thisForm.getRawParts();
@@ -125,15 +125,18 @@ public class AsmGenerator {
             myAsm += new AddAsm().generate(thisForm);
         }
 
-        if (operator.getOperatorType() == OperatorType.FUNCTION) {
-            // Free space from stack (local variables for this function only)
-            myAsm += "add sp, sp, #" + stackBytes + "\n";
-        }
 
         // Restore function pointer and link register and free stack space we used to stash them
-        myAsm += "ldp x29, x30, [sp], #16\n";
+        myAsm += name + "_exit:\n";
 
-        myAsm += "ret\n";
+        if (operator.getOperatorType() == OperatorType.FUNCTION) {
+            // Free space from stack (local variables for this function only)
+            myAsm += "  add sp, sp, #" + stackBytes + "\n";
+        }
+        // else for other types of values we'd recover the right amount of stack
+
+        myAsm += "  ldp x29, x30, [sp], #16\n";
+        myAsm += "  ret\n";
 
         // If Function parts exist, recurse to generate those too, concat'ing their output to myAsm
         for (Object part : parts) {
@@ -169,7 +172,7 @@ public class AsmGenerator {
 
         int stackBytes = 8 * numStackSlots;
 
-        String myAsm = "sub sp, sp, #" + stackBytes + "\n";
+        String myAsm = "  sub sp, sp, #" + stackBytes + "\n";
 
         // Move operands to stack
         for (int i = 1; i < parts.size(); i++) {
@@ -178,12 +181,12 @@ public class AsmGenerator {
             Object part = parts.get(i);
             if (part instanceof Integer intPart) {
                 long fixNum = createFixNum(intPart);
-                myAsm += "mov x0, #" + fixNum + "\n";
+                myAsm += "  mov x0, #" + fixNum + "\n";
             } else if (part instanceof Form fxn) {
-                myAsm += "bl " + fxn.getAsmFunctionName() + "\n";
+                myAsm += "  bl " + fxn.getAsmFunctionName() + "\n";
             }
             // so far this always works
-            myAsm += "str x0, [x29, #-" + (i * 8) + "]\n";  // i starts from 1 so the SP moves down in 8 byte chunks like 8, 16, 24 etc.
+            myAsm += "  str x0, [x29, #-" + (i * 8) + "]\n";  // i starts from 1 so the SP moves down in 8 byte chunks like 8, 16, 24 etc.
         }
 
         return myAsm;
@@ -205,7 +208,7 @@ public class AsmGenerator {
         for (int i = 0; i < numStackSlots; i++) {
             stackOffset = (i + 1) * -8;
             register = "x" + i;
-            myAsm += "ldr " + register + ", [x29, #" + stackOffset + "]\n";
+            myAsm += "  ldr " + register + ", [x29, #" + stackOffset + "]\n";
         }
         return myAsm;
     }
