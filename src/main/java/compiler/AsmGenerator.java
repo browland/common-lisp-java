@@ -36,7 +36,15 @@ public class AsmGenerator {
         List<Form> forms = context.getFunctions();
         Form form = forms.getFirst();
 
-        myAsm += generateNextFormAsmForFunctionCall(form);
+        // TODO call either code for apply function or special form and keep them separate
+        //      I also don't like that we recurse within the method; might be more intuitive to recurse here, e.g. by
+        //      returning next node but appending to asm held in the context
+        if (form.getOperator().getOperatorType() == OperatorType.FUNCTION) {
+            myAsm += generateNextFormAsmForFunctionCall(form);
+        }
+        else if (form.getOperator().getOperatorType() == OperatorType.SPECIAL_FORM) {
+            myAsm += generateNextFormAsmForSpecialForm(form);
+        }
         myAsm += generateGlobals(context);
 
         return myAsm;
@@ -115,11 +123,10 @@ _error_msg:
         int stackBytes = 8 * numStackSlots;
 
         Operator operator = thisForm.getOperator();
-        if (operator.getOperatorType() == OperatorType.FUNCTION) {
-            // We always evaluate arguments for function calls, so reserve the stack needed
-            myAsm += copyArgsToStack(thisForm);
-            myAsm += moveOperandsFromStackToRegisters(numStackSlots);
-        }
+        // We always evaluate arguments for function calls, so reserve the stack needed
+        // TODO should be eval args and copy to stack
+        myAsm += copyArgsToStack(thisForm);
+        myAsm += moveOperandsFromStackToRegisters(numStackSlots);
 
         if (OperatorName.ADD.equals(operator.getOperator())) {
             myAsm += new AddAsm().generate(thisForm);
@@ -129,10 +136,8 @@ _error_msg:
         // Restore function pointer and link register and free stack space we used to stash them
         myAsm += name + "_exit:\n";
 
-        if (operator.getOperatorType() == OperatorType.FUNCTION) {
-            // Free space from stack (local variables for this function only)
-            myAsm += "  add sp, sp, #" + stackBytes + "\n";
-        }
+        // Free space from stack (local variables for this function only)
+        myAsm += "  add sp, sp, #" + stackBytes + "\n";
         // else for other types of values we'd recover the right amount of stack
 
         myAsm += "  ldp x29, x30, [sp], #16\n";
