@@ -1,6 +1,8 @@
 package treewalker;
 
 import compiler.AsmGenerator;
+import compiler.Operator;
+import compiler.OperatorType;
 import reader.NodeBuilder;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -82,8 +84,30 @@ public class TreeWalker {
     }
 
     private void walkTree(RList rlist) throws IOException {
+        if (rlist.nodes().getFirst() instanceof Atom operatorAtom) {
+            TypedAtom<?> ta = TypedAtom.fromAtom(operatorAtom);
+            if (ta instanceof SymbolAtom sa) {
+                Operator op = Operator.fromSymbol(sa.getValue());
+                if (op.getOperatorType() == OperatorType.FUNCTION) {
+                    walkTreeForFunction(rlist, op);
+                }
+                else {
+                    throw new UnsupportedOperationException("can only do functions for now");
+                }
+            }
+            else {
+                throw new UnsupportedOperationException("can't coerce type of operator atom");
+            }
+
+        }
+        else {
+            throw new UnsupportedOperationException("possibly trying to eval a lambda; we're not ready yet");
+        }
+    }
+
+    private void walkTreeForFunction(RList rlist, Operator operator) throws IOException {
         // We're evaluating a form.
-        // Prepare FP and LR and reserve enough stack for our operands
+        // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;
         // We need 16 bytes for each 2 operands; ensure we always reserve a multiple of 16 bytes
         int stackBytes = (int)(16 * Math.ceil(numOperands/2f));
@@ -111,7 +135,7 @@ public class TreeWalker {
             asmGenerator.loadOperandFromStackIntoRegister(i, bw);
         }
 
-        asmGenerator.callFunction(bw);
+        asmGenerator.callFunction(bw, operator.getOperatorName());
         asmGenerator.freeSpaceOnStack(stackBytes, bw);
     }
 }

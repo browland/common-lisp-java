@@ -130,7 +130,7 @@ _error_msg:
         myAsm += copyArgsToStack(thisForm);
         myAsm += moveOperandsFromStackToRegisters(numStackSlots);
 
-        if (OperatorName.ADD.equals(operator.getOperator())) {
+        if (OperatorName.ADD.equals(operator.getOperatorName())) {
             myAsm += new AddAsm().generate(thisForm);
         }
 
@@ -287,10 +287,10 @@ _error_msg:
     """.formatted(operandNum, operandNum*8));
     }
 
-    public void callFunction(BufferedWriter bw)  throws  IOException {
+    public void callFunction(BufferedWriter bw, OperatorName operatorName)  throws  IOException {
         bw.write("""
-      bl _add                ;; call operator; this leaves the result in x0 for our caller
-    """);
+      bl %s                ;; call operator; this leaves the result in x0 for our caller
+    """.formatted(operatorName.getAsmName()));
     }
 
     public void freeSpaceOnStack(int stackBytes, BufferedWriter bw) throws IOException {

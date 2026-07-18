@@ -9,7 +9,7 @@ public class Operator {
         this.operatorType = operatorType;
     }
 
-    public OperatorName getOperator() {
+    public OperatorName getOperatorName() {
         return operatorName;
     }
 
