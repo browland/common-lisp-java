@@ -75,7 +75,7 @@ public class AsmGenerator {
         return myAsm;
     }
 
-    private static String generateGlobals(AsmContext context) {
+    static String generateGlobals(AsmContext context) {
         // Anon. string literals, will be needed when we use string literals in code
         String myAsm = "";
         List<StringLiteral> stringLiterals = context.getStringLiterals();
