@@ -171,6 +171,8 @@ _no_match:  ;; no match
 
     // MacOS has a weird thing where making a call to printf requires the numeric argument to be on the stack at [sp]
     // while the string pointer is in x0 as usual.
+    // More generally, any functions accepting variadic arguments (printf is a good example) require the "optional"
+    // args to be on the stack.
     private void generatePrintResultAsm() throws IOException {
         bw.write("""
 .global _printResult
