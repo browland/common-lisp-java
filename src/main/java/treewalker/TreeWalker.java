@@ -69,11 +69,13 @@ _main:
             walkTree(node);
         }
         bw.write("""
+  bl _printResult
   ldp x29, x30, [x29]
   add sp, sp, #16
   ret
 """);
         generateAddAsm();
+        generatePrintResultAsm();
         generateGlobals();
         bw.close();
     }
@@ -107,8 +109,8 @@ _main:
         for (Node childNode : rlist.nodes()) {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
-                if (typedAtom.getValue() instanceof Integer atomInt) {
-                    long fixNum = createFixNum(atomInt);
+                if (typedAtom instanceof  IntAtom intAtom) {
+                    long fixNum = intAtom.getFixNum();
                     bw.write("""
     mov x0, #%d          ;; move operand (fixnum) to x0
     str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
@@ -136,12 +138,6 @@ _main:
       bl _add                ;; call operator; this leaves the result in x0 for our caller
       add sp, sp, #%d
     """.formatted(stackBytes));
-    }
-
-    private static long createFixNum(int intPart) {
-        // Shift bits left by 3 places and tag the low 3 bits as 001 to indicate this is a fixnum.
-        long fixNum = (long) intPart << 3;
-        return fixNum | 0x1;
     }
 
     private void generateAddAsm() throws IOException {
@@ -173,12 +169,45 @@ _no_match:  ;; no match
 """);
     }
 
+    // MacOS has a weird thing where making a call to printf requires the numeric argument to be on the stack at [sp]
+    // while the string pointer is in x0 as usual.
+    private void generatePrintResultAsm() throws IOException {
+        bw.write("""
+.global _printResult
+_printResult:
+  mov x2, #0x7    ; bit mask to select out the low 3 bits only
+  and x3, x0, x2  ; store result of masking x0 in x3
+  sub x3, x3, #1  ; check that the masked bits are equal to 1
+  cbnz x3, _pR_no_match
+_pR_match:
+  stp x29, x30, [sp, #-16]!  ;; allocate stack and store frame pointer and link register
+  lsr x0, x0, #3  ; logical shift right x0 to remove type tag bits
+  sub sp, sp, #16
+  str x0, [sp]
+  adrp x0, _printed_result@PAGE
+  add x0, x0, _printed_result@PAGEOFF
+  bl _printf
+  add sp, sp, #16
+  ldp x29, x30, [sp], #16
+  ret
+  
+_pR_no_match:  ;; no match
+  adrp x0, _error_msg@PAGE
+  add x0, x0, _error_msg@PAGEOFF
+  bl _printf
+  bl _exit
+""");
+    }
+
     void generateGlobals() throws IOException {
         // Static strings for things like messages
         bw.write("""
 
 .cstring:
 _error_msg:
-  .asciz \"ERROR (incorrect value type)\\n\"""");
+  .asciz \"ERROR (incorrect value type)\\n\"
+_printed_result:
+  .asciz \"result: %d\\n\"
+""");
     }
 }

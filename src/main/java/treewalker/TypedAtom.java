@@ -4,7 +4,7 @@ import syntaxtree.Atom;
 
 public sealed class TypedAtom<T> implements ProcessedNode permits StringAtom, IntAtom, FloatAtom, CharAtom, SymbolAtom  {
     private Atom atom;
-    private T value;
+    protected T value;
 
     public TypedAtom(Atom atom, T value) {
         this.atom = atom;
@@ -18,4 +18,5 @@ public sealed class TypedAtom<T> implements ProcessedNode permits StringAtom, In
     static TypedAtom<?> fromAtom(Atom atom) {
         return TypeCoercer.coerceType(atom);
     }
+
 }
