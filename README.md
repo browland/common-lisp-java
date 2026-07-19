@@ -138,3 +138,21 @@ On mac, with readline support for command-line history etc:
 % brew install sbcl rlwrap
 % rlwrap sbcl
 ```
+# Compiler
+
+This is under the very early stages of development.  We have a rough outline of a tree walking compiler, supporting 
+ARM64 on Mac only, which has code for primitive evaluation of an add function call, and the startings of a symbol table 
+containing "t".  We are using pointer tagging to allow determination of type of things at runtime.
+
+Next steps:
+1. The "runtime" (built-in functions, code to eval forms, symbol lookups etc) should be written in C.  The generated
+   code from compilation should still be assembly as it's easier to generate.  We can link the C and asm together into
+   the built executable.
+2. Implementation of symbol table lookup: use "compact index" project?  Would need to switch to doing a lexicographical
+   ordering of the array elements rather than a 'hash' of sorts.  This would involve a predicate for determining position
+   (i.e. considering each character from first onwards) to determine whether one string is larger than the other.  This
+   is different from the current approach where we determine position in the array using a deterministic hash.
+3. Implement special forms.  Need reference back to TreeWalker when calling the specialised compilation handler for each
+   one?  Since e.g. for `if` we'd need to call into walkTree() from within the special form handling code.
+4. Clean up old code if no longer needed (we've moved to a simpler, less abstracted approach).
+5. Look into TBI (built-in pointer tagging for ARM).  Lose portability but interesting to look into?
