@@ -54,6 +54,7 @@ public class TreeWalker {
     // evolve the design.
     private void walkTopLevelNodes(List<Node> nodes) throws IOException {
         asmGenerator.initMainFunction(bw);
+        asmGenerator.setUpSymbolTable(bw);
 
         for (Node node : nodes) {
             walkTree(node);

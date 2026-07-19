@@ -369,6 +369,58 @@ _error_msg:
   .asciz \"ERROR (incorrect value type)\\n\"
 _printed_result:
   .asciz \"result: %d\\n\"
+_t:
+  .asciz \"t\\n\"
+  
+.data
+.p2align 3
+; Number of entries in the symbol table
+sym_size:
+  .quad 0
+; Capacity of symbol table (can grow at runtime)
+sym_capacity:
+  .quad 100
+; Pointer to symbol table
+sym_ptr:
+  .quad 0
+""");
+    }
+
+    public void setUpSymbolTable(BufferedWriter bw) throws IOException {
+        bw.write("""
+  ; load ptrs to var to hold sym table ptr, and to capacity
+  adrp x0, sym_capacity@PAGE
+  add x0, x0, sym_capacity@PAGEOFF
+  
+  ; Allocate symbol table
+  ; 3 slots in table for each symbol (1. ptr to or value of symbol, 2. ptr to variable, 3. ptr to function)
+  ; 8 bytes for each slot in symbol table
+  ; so multiply sym table capacity by 24
+  ldr x0, [x0]   ; load capacity num into x0
+  mov x2, #24    ; set up bytes multiplier
+  mul x0, x0, x2 ; set total bytes for sym table into x0
+  bl _malloc     ; allocate symbol table
+  adrp x1, sym_ptr@PAGE
+  add x1, x1, sym_ptr@PAGEOFF
+  str x0, [x1]   ; store ptr to sym table in its slot (sym_ptr variable)
+  
+  ;;;;;;;;;;;;
+  ; Set up "t"
+  ;;;;;;;;;;;;
+  ; Our symbols are tagged with low 3 bits 100
+  ; Remember symbols themselves are null-terminated C strings, but here we just manage pointers, it will matter though when we come to searching the table.
+  ; load ptr to "t"
+  adrp x1, _t@PAGE
+  add x1, x1, _t@PAGEOFF
+  adrp x2, sym_ptr@PAGE
+  add x2, x2, sym_ptr@PAGEOFF
+  ; write "t" symbol ptr to first slot in sym table
+  str x1, [x2]
+  ; make "t" self-evaluating; its variable slot will hold itself
+  str x1, [x2, #8]
+  ; we leave the function slot empty for now
+  
+                
 """);
     }
 }
