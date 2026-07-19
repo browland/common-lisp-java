@@ -27,6 +27,7 @@ public class TreeWalker {
 
         // String atom
         String program = "(+ 1 (+ 1 2))";
+//        String program = "t";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
@@ -79,9 +80,16 @@ public class TreeWalker {
         }
     }
 
-    // TODO unused currently
-    private TypedAtom<?> handleAtom(Atom atom) {
+    private TypedAtom<?> handleAtom(Atom atom) throws IOException {
         TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
+        if (typedAtom instanceof SymbolAtom symbolAtom) {
+            // generate asm to do sym table lookup and the result is what's in the variable (namespace) slot
+            asmGenerator.generateSymbolLookup(symbolAtom.getValue(), bw);
+        }
+        else {
+            throw new UnsupportedOperationException("unsupported to eval other types of atoms");
+
+        }
         return typedAtom;
     }
 

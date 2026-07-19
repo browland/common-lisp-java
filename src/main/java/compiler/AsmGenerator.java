@@ -392,8 +392,9 @@ _fixnum_output:
   .asciz \"%d\\n\"
 _symbol_output:
   .asciz \"%s\\n\"
+.p2align 3
 _t:
-  .asciz \"t\\n\"
+  .asciz \"t\"
   
 .data
 .p2align 3
@@ -436,7 +437,8 @@ sym_ptr:
   ; load ptrs to our "t" string and to the var which holds our pointer table ptr
   adrp x1, _t@PAGE         ; get address of our "t" string
   add x1, x1, _t@PAGEOFF
-  and x1, x1, #4           ; tag the pointer with 100 for symbol; we know low 3 bits are always 000 due to 8 bit memory alignment so they're spare (no need for left shift)
+  mov x2, #4
+  orr x1, x1, x2           ; tag the pointer with 100 for symbol; we know low 3 bits are always 000 due to 8 bit memory alignment so they're spare (no need for left shift)
   adrp x2, sym_ptr@PAGE
   add x2, x2, sym_ptr@PAGEOFF
   ; write "t" symbol ptr to first slot in sym table
@@ -456,5 +458,13 @@ _get_t:
   ldr x0, [x0]
   ret
 """);
+    }
+
+    public void generateSymbolLookup(String value, BufferedWriter bw) throws IOException {
+        // todo very stub code for now to force lookup of t
+        bw.write("""
+  bl _get_t                            ; puts ptr to "t" from symbol table in x0 which is our result
+""");
+
     }
 }
