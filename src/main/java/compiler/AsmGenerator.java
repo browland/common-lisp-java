@@ -338,18 +338,39 @@ _no_match:  ;; no match
 _printResult:
   mov x2, #0x7    ; bit mask to select out the low 3 bits only
   and x3, x0, x2  ; store result of masking x0 in x3
-  sub x3, x3, #1  ; check that the masked bits are equal to 1
-  cbnz x3, _pR_no_match
-_pR_match:
+  ; check for fixnum
+  sub x4, x3, #1  ; if the masked bits are equal to 1 (001) then we are printing a fixnum
+  cbz x4, _print_fixNum
+  ; check for symbol
+  sub x4, x3, #4  ; if the masked bits are equal to 4 (100) then we are printing a symbol
+  cbz x4, _print_symbol
+  
+  ; otherwise no matching type
+  b _pR_no_match
+_print_fixNum:
   stp x29, x30, [sp, #-16]!  ;; allocate stack and store frame pointer and link register
   lsr x0, x0, #3  ; logical shift right x0 to remove type tag bits
   sub sp, sp, #16
   str x0, [sp]
-  adrp x0, _printed_result@PAGE
-  add x0, x0, _printed_result@PAGEOFF
+  adrp x0, _fixnum_output@PAGE
+  add x0, x0, _fixnum_output@PAGEOFF
   bl _printf
   add sp, sp, #16
   ldp x29, x30, [sp], #16
+  ret
+  
+_print_symbol:
+  stp x29, x30, [sp, #-16]!           ; allocate stack and store frame pointer and link register
+  movn x1, #7                         ; reset low 3 bits from 100 to 000 to untag the pointer; we use movn which is the
+                                      ; bitwise complement of the value we want due to aarch64 limitations in immediate values
+  and x0, x0, x1
+  sub sp, sp, #16                     ; allocate stack to store variadic param to printf
+  str x0, [sp]                        ; store ptr to string on stack
+  adrp x0, _symbol_output@PAGE        ; get format string ready in x0 for printf call
+  add x0, x0, _symbol_output@PAGEOFF
+  bl _printf                          ; print output
+  add sp, sp, #16                     ; free space on stack
+  ldp x29, x30, [sp], #16             ; reset FP, LR
   ret
   
 _pR_no_match:  ;; no match
@@ -367,8 +388,10 @@ _pR_no_match:  ;; no match
 .cstring:
 _error_msg:
   .asciz \"ERROR (incorrect value type)\\n\"
-_printed_result:
-  .asciz \"result: %d\\n\"
+_fixnum_output:
+  .asciz \"%d\\n\"
+_symbol_output:
+  .asciz \"%s\\n\"
 _t:
   .asciz \"t\\n\"
   
@@ -407,11 +430,13 @@ sym_ptr:
   ;;;;;;;;;;;;
   ; Set up "t"
   ;;;;;;;;;;;;
-  ; Our symbols are tagged with low 3 bits 100
+  ; We can always easily reference symbol "t" as it will be at the very top of the symbol table.
+  ; TODO Our symbol ptrs should be tagged with low 3 bits 100
   ; Remember symbols themselves are null-terminated C strings, but here we just manage pointers, it will matter though when we come to searching the table.
-  ; load ptr to "t"
-  adrp x1, _t@PAGE
+  ; load ptrs to our "t" string and to the var which holds our pointer table ptr
+  adrp x1, _t@PAGE         ; get address of our "t" string
   add x1, x1, _t@PAGEOFF
+  and x1, x1, #4           ; tag the pointer with 100 for symbol; we know low 3 bits are always 000 due to 8 bit memory alignment so they're spare (no need for left shift)
   adrp x2, sym_ptr@PAGE
   add x2, x2, sym_ptr@PAGEOFF
   ; write "t" symbol ptr to first slot in sym table
@@ -419,8 +444,17 @@ sym_ptr:
   ; make "t" self-evaluating; its variable slot will hold itself
   str x1, [x2, #8]
   ; we leave the function slot empty for now
-  
-                
+""");
+    }
+
+    public void generateSymbolFunctions(BufferedWriter bw) throws IOException {
+        bw.write("""
+_get_t:
+  ; we get t from the symbol table to be 100% sure it's been tagged
+  adrp x0, sym_ptr@PAGE
+  add x0, x0, sym_ptr@PAGEOFF
+  ldr x0, [x0]
+  ret
 """);
     }
 }

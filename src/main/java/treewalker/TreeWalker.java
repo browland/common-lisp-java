@@ -63,6 +63,7 @@ public class TreeWalker {
         asmGenerator.printResultAndCleanUpMainFunction(bw);
         asmGenerator.generateAddAsm(bw);
         asmGenerator.generatePrintResultAsm(bw);
+        asmGenerator.generateSymbolFunctions(bw);
         asmGenerator.generateGlobals(bw);
 
         bw.close();
