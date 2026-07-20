@@ -14,7 +14,7 @@ import java.util.List;
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
-    private final BufferedWriter bw = new BufferedWriter(new FileWriter(new File("my-asm.s")));
+    private final BufferedWriter bw = new BufferedWriter(new FileWriter("./src/main/asm/my-asm.s"));
     private final AsmGenerator asmGenerator = new AsmGenerator();
 
     public TreeWalker() throws IOException {
@@ -26,16 +26,24 @@ public class TreeWalker {
         TreeWalker walker = new TreeWalker();
 
         // String atom
-        String program = "(+ 1 (+ 1 2))";
-//        String program = "t";
+//        String program = "(+ 1 (+ 1 2))";
+        String program = "t";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
         // Assemble
-        Process p1 = Runtime.getRuntime().exec(new String[] {"clang", "./my-asm.s"});
+        Process p1 = Runtime.getRuntime().exec(new String[] {"clang", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
+        InputStream is1 = p1.getErrorStream();
+        InputStreamReader isr1 = new InputStreamReader(is1);
+        BufferedReader br1 = new BufferedReader(isr1);
+        String line1;
+        while ((line1 = br1.readLine()) != null) {
+            System.out.println(line1);
+        }
         int clangExitCode = p1.waitFor();
         if (clangExitCode != 0) {
             System.out.println("assemble step failed, exit code: " + clangExitCode);
+            System.exit(0);
         }
         else {
             System.out.println("assemble step successful");
@@ -43,10 +51,13 @@ public class TreeWalker {
 
         // Run and print result
         Process p2 = Runtime.getRuntime().exec(new String[] {"./a.out"});
-        InputStream is = p2.getInputStream();
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader br = new BufferedReader(isr);
-        System.out.println(br.readLine());
+        InputStream is2 = p2.getInputStream();
+        InputStreamReader isr2 = new InputStreamReader(is2);
+        BufferedReader br2 = new BufferedReader(isr2);
+        String line2;
+        while ((line2 = br2.readLine()) != null) {
+            System.out.println(line2);
+        }
     }
 
     // We walk through each node in turn at this level, recursing for any list encountered in any of the Node positions.
@@ -55,17 +66,17 @@ public class TreeWalker {
     // evolve the design.
     private void walkTopLevelNodes(List<Node> nodes) throws IOException {
         asmGenerator.initMainFunction(bw);
-        asmGenerator.setUpSymbolTable(bw);
+        //asmGenerator.setUpSymbolTable(bw);
 
         for (Node node : nodes) {
             walkTree(node);
         }
 
         asmGenerator.printResultAndCleanUpMainFunction(bw);
-        asmGenerator.generateAddAsm(bw);
-        asmGenerator.generatePrintResultAsm(bw);
-        asmGenerator.generateSymbolFunctions(bw);
-        asmGenerator.generateGlobals(bw);
+        //asmGenerator.generateAddAsm(bw);
+        //asmGenerator.generatePrintResultAsm(bw);
+        //asmGenerator.generateSymbolFunctions(bw);
+        //asmGenerator.generateGlobals(bw);
 
         bw.close();
     }
