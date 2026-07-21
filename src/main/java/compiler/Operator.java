@@ -20,6 +20,7 @@ public class Operator {
     public static Operator fromSymbol(String symbol) {
         switch (symbol) {
             case "+": return new Operator(OperatorName.ADD, OperatorType.FUNCTION);
+            case "if": return new Operator(OperatorName.IF, OperatorType.SPECIAL_FORM);
             default: throw new UnsupportedOperationException("unsupported operator");
         }
     }

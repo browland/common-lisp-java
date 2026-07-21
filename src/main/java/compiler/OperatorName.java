@@ -1,7 +1,8 @@
 package compiler;
 
 public enum OperatorName {
-    ADD("_add");
+    ADD("_add"),
+    IF("TODO");
 
     private final String asmName;
 

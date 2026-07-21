@@ -2,7 +2,9 @@ package treewalker;
 
 import compiler.AsmGenerator;
 import compiler.Operator;
+import compiler.OperatorName;
 import compiler.OperatorType;
+import compiler.specialform.IfSpecialForm;
 import reader.NodeBuilder;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -27,7 +29,7 @@ public class TreeWalker {
 
         // String atom
 //        String program = "(+ 1 (+ 1 2))";
-        String program = "t";
+        String program = "(if t)";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
@@ -64,25 +66,20 @@ public class TreeWalker {
     // Once we end up with the evaluated list of nodes, then we evaluate the "flattened" list at this level as a form.
     // We call into our NodeListener for individual atoms as well as the overall form at each level while we still
     // evolve the design.
-    private void walkTopLevelNodes(List<Node> nodes) throws IOException {
+    void walkTopLevelNodes(List<Node> nodes) throws IOException {
         asmGenerator.initMainFunction(bw);
-        //asmGenerator.setUpSymbolTable(bw);
 
         for (Node node : nodes) {
             walkTree(node);
         }
 
         asmGenerator.printResultAndCleanUpMainFunction(bw);
-        //asmGenerator.generateAddAsm(bw);
-        //asmGenerator.generatePrintResultAsm(bw);
-        //asmGenerator.generateSymbolFunctions(bw);
-        //asmGenerator.generateGlobals(bw);
 
         bw.close();
     }
 
 
-    private void walkTree(Node node) throws IOException {
+    public void walkTree(Node node) throws IOException {
         if (node instanceof Atom atom) {
             handleAtom(atom);
         }
@@ -113,7 +110,12 @@ public class TreeWalker {
                     walkTreeForFunction(rlist, op);
                 }
                 else {
-                    throw new UnsupportedOperationException("can only do functions for now");
+                    if (OperatorName.IF.equals(op.getOperatorName())) {
+                        new IfSpecialForm().walkTree(rlist, this);
+                    }
+                    else {
+                        throw new UnsupportedOperationException("can only do if special form for now");
+                    }
                 }
             }
             else {
