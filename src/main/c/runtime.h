@@ -1,0 +1,9 @@
+#define TYPE_FIXNUM 1
+#define TYPE_SYMBOL 2
+#define TYPE_UNKNOWN 999
+
+#define TYPE_MASK 0x7
+#define TYPE_TAG_FIXNUM 1L
+#define TYPE_TAG_SYMBOL 4L
+
+typedef int RUNTIME_TYPE;
