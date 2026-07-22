@@ -312,4 +312,25 @@ _error_msg:
                 bl _typecheck_symbol
                 """);
     }
+
+    public void generateCheckForT(BufferedWriter bw) throws IOException {
+        bw.write("""
+                bl _is_t
+                """);
+    }
+
+    public void generateJumpInstructionForIf(BufferedWriter bw, String falseLabel) throws IOException {
+        bw.write("""
+                cbnz x0, %s
+                """.formatted(falseLabel));
+    }
+
+    public void generateLabel(BufferedWriter bw, String label) throws IOException {
+        bw.write("""
+                .global %s
+                %s:
+                """.formatted(label, label));
+
+
+    }
 }

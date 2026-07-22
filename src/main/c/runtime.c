@@ -109,3 +109,13 @@ uintptr_t get_t() {
     return t_symbol_ptr;
 }
 
+// returns 0 if val is t; for example allows a subsequent cbz or cbnz instruction to react to zero when the last result
+// was t.
+// This is made easier since we intern t by always using the same pointer for it.
+long is_t(uintptr_t val) {
+    if (val == t_symbol_ptr) {
+        return 0;
+    }
+    return -1;
+}
+

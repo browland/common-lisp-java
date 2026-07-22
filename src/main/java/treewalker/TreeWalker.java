@@ -29,7 +29,7 @@ public class TreeWalker {
 
         // String atom
 //        String program = "(+ 1 (+ 1 2))";
-        String program = "(if t)";
+        String program = "(if t (+ 1 1) (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
