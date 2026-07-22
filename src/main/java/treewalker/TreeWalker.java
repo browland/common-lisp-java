@@ -34,15 +34,15 @@ public class TreeWalker {
         walker.walkTopLevelNodes(nodes);
 
         // Assemble
-        Process p1 = Runtime.getRuntime().exec(new String[] {"clang", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
-        InputStream is1 = p1.getErrorStream();
-        InputStreamReader isr1 = new InputStreamReader(is1);
-        BufferedReader br1 = new BufferedReader(isr1);
-        String line1;
-        while ((line1 = br1.readLine()) != null) {
-            System.out.println(line1);
+        Process clangProcess = Runtime.getRuntime().exec(new String[] {"clang", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
+        InputStream clangStandardError = clangProcess.getErrorStream();
+        InputStreamReader clangStandardErrorReader = new InputStreamReader(clangStandardError);
+        BufferedReader clangStandardErrorBufferedReader = new BufferedReader(clangStandardErrorReader);
+        String line;
+        while ((line = clangStandardErrorBufferedReader.readLine()) != null) {
+            System.out.println(line);
         }
-        int clangExitCode = p1.waitFor();
+        int clangExitCode = clangProcess.waitFor();
         if (clangExitCode != 0) {
             System.out.println("assemble step failed, exit code: " + clangExitCode);
             System.exit(0);
@@ -52,13 +52,29 @@ public class TreeWalker {
         }
 
         // Run and print result
-        Process p2 = Runtime.getRuntime().exec(new String[] {"./a.out"});
-        InputStream is2 = p2.getInputStream();
-        InputStreamReader isr2 = new InputStreamReader(is2);
-        BufferedReader br2 = new BufferedReader(isr2);
-        String line2;
-        while ((line2 = br2.readLine()) != null) {
-            System.out.println(line2);
+        Process execProcess = Runtime.getRuntime().exec(new String[] {"./a.out"});
+
+        InputStream execStandardOut = execProcess.getInputStream();
+        InputStreamReader execStandardOutReader = new InputStreamReader(execStandardOut);
+        BufferedReader execStandardOutBufferedReader = new BufferedReader(execStandardOutReader);
+
+        InputStream execStandardError = execProcess.getErrorStream();
+        InputStreamReader execStandardErrorReader = new InputStreamReader(execStandardError);
+        BufferedReader execStandardErrorBufferedReader = new BufferedReader(execStandardErrorReader);
+
+        int execExitCode = execProcess.waitFor();
+        if (execExitCode != 0) {
+            System.out.printf("executable failed to run, exit code: %d, run directly to get output%n", execExitCode);
+            // It's actually some kind of signal(?) and the shell is what's printing something like zsh: bus error ./a.out
+//            while ((line = execStandardOutBufferedReader.readLine()) != null) {
+//                System.out.println(line);
+//            }
+        }
+        else {
+            System.out.println("executable ran successfully, output:");
+            while ((line = execStandardOutBufferedReader.readLine()) != null) {
+                System.out.println(line);
+            }
         }
     }
 
@@ -111,7 +127,7 @@ public class TreeWalker {
                 }
                 else {
                     if (OperatorName.IF.equals(op.getOperatorName())) {
-                        new IfSpecialForm().walkTree(rlist, this);
+                        new IfSpecialForm().walkTree(rlist, this, bw, asmGenerator);
                     }
                     else {
                         throw new UnsupportedOperationException("can only do if special form for now");

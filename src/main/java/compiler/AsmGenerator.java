@@ -273,10 +273,10 @@ _error_msg:
   """.formatted(fixNum, pos*8));
     }
 
-    public void storeResultToStack(int pos, BufferedWriter bw) throws IOException {
+    public void storeResultToStack(int operandNum, BufferedWriter bw) throws IOException {
         bw.write("""
   str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
-""".formatted(pos*8));
+""".formatted(operandNum*8));
     }
 
     /**
@@ -305,6 +305,11 @@ _error_msg:
         bw.write("""
   bl _get_t                            ; puts ptr to "t" from symbol table in x0 which is our result
 """);
+    }
 
+    public void generateTypeCheckForSymbol(BufferedWriter bw) throws IOException {
+        bw.write("""
+                bl _typecheck_symbol
+                """);
     }
 }

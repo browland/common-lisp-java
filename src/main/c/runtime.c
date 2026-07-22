@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "runtime.h"
 
 int sym_capacity = 100;
 int sym_size = 0;  // todo will eventually need
 
-char *t = "t";
 uintptr_t t_symbol_ptr;
 
 // We use uintptr_t due to tagged pointers.  We can't modify a char* for example by tagging it, so we fall back to raw uintptr_t.
@@ -22,8 +22,10 @@ int init() {
     // allocate symbol table
     symbolTable = malloc(sym_capacity * sizeof(struct SymbolEntry));
 
+    char *t_on_heap = strdup("t");
+
     // init "t" symbol tagged pointer
-    t_symbol_ptr = (uintptr_t)t;
+    t_symbol_ptr = (uintptr_t)t_on_heap;
     t_symbol_ptr = t_symbol_ptr | 0x4;
     
     // put tagged t pointer to first two slots of symbol table (symbol and its value in variable namespace)
@@ -72,7 +74,7 @@ void printResult(uintptr_t result) {
 void typecheck_fixnum(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
 
-    if (type != TYPE_TAG_FIXNUM) {
+    if (type != TYPE_FIXNUM) {
         printf("Type error; expect fixnum for value %ld", val);
         exit(-1);
     }
@@ -81,7 +83,7 @@ void typecheck_fixnum(uintptr_t val) {
 void typecheck_symbol(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
 
-    if (type != TYPE_TAG_SYMBOL) {
+    if (type != TYPE_SYMBOL) {
         printf("Type error; expect symbol for value %ld", val);
         exit(-1);
     }
