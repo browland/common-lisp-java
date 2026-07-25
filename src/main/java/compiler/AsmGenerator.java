@@ -2,6 +2,8 @@ package compiler;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -10,75 +12,16 @@ import java.util.List;
  * So we need a context to hold the state about what we're working on currently - call this AsmContext.
  */
 public class AsmGenerator {
-    private int stringLiteralIndex;
-    private int formFunctionIndex;
-    private static AsmContext asmContext = new AsmContext();
+    private AsmContext context = new AsmContext();
+    private Deque<AsmContext> asmContexts = new LinkedList<>();
+    // TODO generated functions
+//    private static Map<String,
 
-    public void startForm(AsmContext context) {
-        String asmFunctionName = "_fxn_" + formFunctionIndex++;
-        Form form = new Form(asmFunctionName);
-        context.startForm(form);
+    public AsmGenerator() {
+        asmContexts.push(context);
     }
 
-    public void endForm(AsmContext context) {
-        context.endForm();
-    }
-
-    public String generateStartTextRegion() {
-        return """
-                    .text
-                    .global _main
-                    """;
-    }
-
-    //public String generate(AsmContext context) {
-    //    String myAsm = generateStartTextRegion();
-
-    //    myAsm += generateMainFunction(context);
-
-    //    List<Form> forms = context.getFunctions();
-    //    Form form = forms.getFirst();
-
-    //    // TODO call either code for apply function or special form and keep them separate
-    //    //      I also don't like that we recurse within the method; might be more intuitive to recurse here, e.g. by
-    //    //      returning next node but appending to asm held in the context
-    //    if (form.getOperator().getOperatorType() == OperatorType.FUNCTION) {
-    //        myAsm += generateNextFormAsmForFunctionCall(form);
-    //    }
-    //    else if (form.getOperator().getOperatorType() == OperatorType.SPECIAL_FORM) {
-    //        myAsm += generateNextFormAsmForSpecialForm(form);
-    //    }
-    //    myAsm += generateGlobals(context);
-
-    //    return myAsm;
-    //}
-
-    /**
-     * The main function essentially just calls the function which implements the first top-level form.
-     */
-    private static String generateMainFunction(AsmContext context) {
-        String myAsm = """
-                .p2align 3
-                _main:\n""";
-        // Store frame pointer and link register
-        myAsm += "  stp x29, x30, [sp, #-16]!\n";
-        // Set our frame pointer to stack pointer
-        myAsm += "  mov x29, sp\n";
-
-        myAsm += "  bl " + context.getFunctions().getFirst().getAsmFunctionName() + "\n";
-
-        // Restore function pointer and link register
-        myAsm += "  ldp x29, x30, [x29]\n";
-
-        // Free space from stack (16 bytes for the FP and LR)
-        myAsm += "  add sp, sp, #16\n";
-
-        // Return from _main
-        myAsm += "  ret\n";
-        return myAsm;
-    }
-
-    public static void generateGlobals(BufferedWriter bw) throws IOException {
+    public void generateGlobals() throws IOException {
         // Anon. string literals, will be needed when we use string literals in code
         //String myAsm = "";
         //List<StringLiteral> stringLiterals = context.getStringLiterals();
@@ -95,160 +38,21 @@ public class AsmGenerator {
 //_error_msg:
 //  .asciz \"ERROR (incorrect value type)\\n\"""";
 
-        bw.write("""
+        context.write("""
 .data
 .p2align 3
 """);
-        List<String> taggedSymbolNames = asmContext.getTaggedSymbolNames();
+        List<String> taggedSymbolNames = context.getTaggedSymbolNames();
         for (String taggedSymbolName : taggedSymbolNames) {
-            bw.write(""" 
+            context.write(""" 
 %s:
     .quad 0
 """.formatted(taggedSymbolName));
         }
     }
 
-    /**
-     * Generates asm for next form encountered in the tree.  We generate the declaration, and if any other
-     * forms are evaluated we make the calls to functions implementing them, and then we generate each of their
-     * declarations by making a recursive call to this method.
-     *
-     * So far we evaluate operands supplied in the form of function calls but no other evaluation takes place.
-     *
-     * TODO consider we don't always want to recurse into inner forms.  E.g. if this form is (if ...) then we evaluate
-     *      the first operand then evaluate one or the other of remaining operands and return its result.
-     */
-    private static String generateNextFormAsmForFunctionCall(Form thisForm) {
-        String myAsm = "";
-        myAsm += "\n";
-        String name = thisForm.getAsmFunctionName();
-        myAsm += ".p2align 3\n";
-        myAsm += ".global " + name + "\n";
-        myAsm += name + ":\n";
-
-        // Store frame pointer and link register
-        myAsm += "  stp x29, x30, [sp, #-16]!\n";
-        // Set our frame pointer to stack pointer
-        myAsm += "  mov x29, sp\n";
-
-        // Needed only for function case; should extract out function handling
-        List<Object> parts = thisForm.getRawParts();
-        int numStackSlots = parts.size() - 1;
-        int stackBytes = 8 * numStackSlots;
-
-        Operator operator = thisForm.getOperator();
-        // We always evaluate arguments for function calls, so reserve the stack needed
-        // TODO should be eval args and copy to stack
-        myAsm += copyArgsToStack(thisForm);
-        myAsm += moveOperandsFromStackToRegisters(numStackSlots);
-
-        if (OperatorName.ADD.equals(operator.getOperatorName())) {
-            myAsm += new AddAsm().generate(thisForm);
-        }
-
-
-        // Restore function pointer and link register and free stack space we used to stash them
-        myAsm += name + "_exit:\n";
-
-        // Free space from stack (local variables for this function only)
-        myAsm += "  add sp, sp, #" + stackBytes + "\n";
-        // else for other types of values we'd recover the right amount of stack
-
-        myAsm += "  ldp x29, x30, [sp], #16\n";
-        myAsm += "  ret\n";
-
-        // If Function parts exist, recurse to generate those too, concat'ing their output to myAsm
-        for (Object part : parts) {
-            if (part instanceof Form form) {
-                if (form.getOperator().getOperatorType() == OperatorType.FUNCTION) {
-                    myAsm += generateNextFormAsmForFunctionCall(form);
-                }
-                else if (form.getOperator().getOperatorType() == OperatorType.SPECIAL_FORM) {
-                    myAsm += generateNextFormAsmForSpecialForm(form);
-                }
-            }
-        }
-
-        return myAsm;
-    }
-
-    private static String generateNextFormAsmForSpecialForm(Form form) {
-        throw new UnsupportedOperationException("not implemented yet");
-    }
-
-    private static String copyArgsToStack(Form form) {
-        // Reserve space on the stack for our operands which we need to figure out as we go
-        // 0th part is the operator; we don't need that until the very end.
-        // We also treat Function operands as just space on the stack for its return value and recurse to generate THAT function.
-        // So we need to reserve len(parts)-1 slots on the stack.
-        List<Object> parts = form.getRawParts();
-        int numStackSlots = parts.size() - 1;
-
-        // add 1 more slot if needed so we're 16 bytes aligned
-        if (numStackSlots % 2 != 0) {
-            numStackSlots++;
-        }
-
-        int stackBytes = 8 * numStackSlots;
-
-        String myAsm = "  sub sp, sp, #" + stackBytes + "\n";
-
-        // Move operands to stack
-        for (int i = 1; i < parts.size(); i++) {
-            // if an int then generate instructions for mov immediate value and ldr
-            // if a function then generate instructions to call the function, then ldr x0 to appropriate stack pos
-            Object part = parts.get(i);
-            if (part instanceof Integer intPart) {
-                long fixNum = createFixNum(intPart);
-                myAsm += "  mov x0, #" + fixNum + "\n";
-            } else if (part instanceof Form fxn) {
-                myAsm += "  bl " + fxn.getAsmFunctionName() + "\n";
-            }
-            // so far this always works
-            myAsm += "  str x0, [x29, #-" + (i * 8) + "]\n";  // i starts from 1 so the SP moves down in 8 byte chunks like 8, 16, 24 etc.
-        }
-
-        return myAsm;
-    }
-
-    private static long createFixNum(int intPart) {
-        // Shift bits left by 3 places and tag the low 3 bits as 001 to indicate this is a fixnum.
-        long fixNum = (long) intPart << 3;
-        return fixNum | 0x1;
-    }
-
-    private static String moveOperandsFromStackToRegisters(int numStackSlots) {
-        String myAsm = "";
-        // for each operand (numStackSlots) move the appropriate operand from stack to next register
-
-        // Stack offset relative to frame pointer (e.g. -8 is the highest 8-byte value, with -16 below it and so on).
-        int stackOffset;
-        String register;
-        for (int i = 0; i < numStackSlots; i++) {
-            stackOffset = (i + 1) * -8;
-            register = "x" + i;
-            myAsm += "  ldr " + register + ", [x29, #" + stackOffset + "]\n";
-        }
-        return myAsm;
-    }
-
-    public void pushInt(int i, AsmContext context) {
-        context.pushInt(i);
-    }
-
-    public void withOperator(String operatorSymbol, AsmContext context) {
-        context.withOperator(operatorSymbol);
-    }
-
-    StringLiteral addStringLiteral(String value, AsmContext context) {
-        String name = "l_str_" + stringLiteralIndex++;
-        StringLiteral stringLiteral = new StringLiteral(value, name);
-        context.addStringLiteral(stringLiteral);
-        return stringLiteral;
-    }
-
-    public void initMainFunction(BufferedWriter bw) throws IOException {
-        bw.write(
+    public void initMainFunction() throws IOException {
+        context.write(
                 """
         .text
         .global _main
@@ -260,8 +64,8 @@ public class AsmGenerator {
         """);
     }
 
-    public void printResultAndCleanUpMainFunction(BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void printResultAndCleanUpMainFunction() throws IOException {
+        context.write("""
   bl _printResult
   ldp x29, x30, [x29]
   add sp, sp, #16
@@ -269,8 +73,8 @@ public class AsmGenerator {
 """);
     }
 
-    public void reserveSpaceOnStack(int stackBytes, BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void reserveSpaceOnStack(int stackBytes) throws IOException {
+        context.write("""
     sub sp, sp, #%d           ;; reserve space for operands
   """.formatted(stackBytes));
     }
@@ -278,15 +82,15 @@ public class AsmGenerator {
     /**
      * pos starts from 0 and is used to determine the stack offset
      */
-    public void pushFixNumToStack(int pos, long fixNum, BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void pushFixNumToStack(int pos, long fixNum) throws IOException {
+        context.write("""
     mov x0, #%d          ;; move operand (fixnum) to x0
     str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
   """.formatted(fixNum, pos*8));
     }
 
-    public void storeResultToStack(int operandNum, BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void storeResultToStack(int operandNum) throws IOException {
+        context.write("""
   str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
 """.formatted(operandNum*8));
     }
@@ -294,25 +98,25 @@ public class AsmGenerator {
     /**
      * operandNum starts from 0
      */
-    public void loadOperandFromStackIntoRegister(int operandNum, BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void loadOperandFromStackIntoRegister(int operandNum) throws IOException {
+        context.write("""
       ldr x%d, [sp, #%d]   ;; load evaluated operand into register ready for operator call
     """.formatted(operandNum, operandNum*8));
     }
 
-    public void callFunction(BufferedWriter bw, OperatorName operatorName)  throws  IOException {
-        bw.write("""
+    public void callFunction(OperatorName operatorName)  throws  IOException {
+        context.write("""
       bl %s                ;; call operator; this leaves the result in x0 for our caller
     """.formatted(operatorName.getAsmName()));
     }
 
-    public void freeSpaceOnStack(int stackBytes, BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void freeSpaceOnStack(int stackBytes) throws IOException {
+        context.write("""
                   add sp, sp, #%d
                 """.formatted(stackBytes));
     }
 
-    public void generateLoadSymbolTaggedPtr(String symbolName, BufferedWriter bw) throws IOException {
+    public void generateLoadSymbolTaggedPtr(String symbolName) throws IOException {
         //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
         //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
         //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
@@ -322,14 +126,14 @@ public class AsmGenerator {
 
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_symbol_ptr";
-        bw.write("""
+        context.write("""
   adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
   add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
   ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
 """.formatted(symPointerName, symPointerName));
     }
 
-    public void generateSymbolLookup(String symbolName, BufferedWriter bw) throws IOException {
+    public void generateSymbolLookup(String symbolName) throws IOException {
         //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
         //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
         //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
@@ -339,7 +143,7 @@ public class AsmGenerator {
 
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_symbol_ptr";
-        bw.write("""
+        context.write("""
   adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
   add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
   ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
@@ -351,47 +155,53 @@ public class AsmGenerator {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_symbol_ptr";
 
-        asmContext.addTaggedSymbolName(symPointerName);
+        context.addTaggedSymbolName(symPointerName);
     }
 
-    public void generateSymbolExists(BufferedWriter bw) throws IOException {
+    public void generateSymbolExists() throws IOException {
         // Similar to generateSymbolLookup() but allows for case where symbol is not in the table yet, e.g. for defvar to determine whether it's the first
         // time we've encountered defvar for this symbol (else no-op).
-        bw.write("""
+        context.write("""
   bl _symbol_exists                    ; look up value of this symbol in variable namespace; else NULL
 """);
     }
 
-    public void generateTypeCheckForSymbol(BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void generateTypeCheckForSymbol() throws IOException {
+        context.write("""
                 bl _typecheck_symbol
                 """);
     }
 
-    public void generateCheckForT(BufferedWriter bw) throws IOException {
-        bw.write("""
+    public void generateCheckForT() throws IOException {
+        context.write("""
                 bl _is_t
                 """);
     }
 
-    public void generateJumpInstructionForNonZeroReturnValue(BufferedWriter bw, String jumpLabel) throws IOException {
-        bw.write("""
+    public void generateJumpInstructionForNonZeroReturnValue(String jumpLabel) throws IOException {
+        context.write("""
                 cbnz x0, %s
                 """.formatted(jumpLabel));
     }
 
-    public void generateUnconditionalJump(BufferedWriter bw, String jumpLabel) throws IOException {
-        bw.write("""
+    public void generateUnconditionalJump(String jumpLabel) throws IOException {
+        context.write("""
                 b %s
                 """.formatted(jumpLabel));
     }
 
-    public void generateLabel(BufferedWriter bw, String label) throws IOException {
-        bw.write("""
+    public void generateLabel(String label) throws IOException {
+        context.write("""
                 .global %s
                 %s:
                 """.formatted(label, label));
+    }
 
+    public void write(String asm) {
+        context.write(asm);
+    }
 
+    public void dumpAsm(BufferedWriter bw) throws IOException {
+        context.dumpAsm(bw);
     }
 }

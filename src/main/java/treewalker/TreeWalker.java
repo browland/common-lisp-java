@@ -16,7 +16,6 @@ import java.util.List;
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
-    private final BufferedWriter bw = new BufferedWriter(new FileWriter("./src/main/asm/my-asm.s"));
     private final AsmGenerator asmGenerator = new AsmGenerator();
 
     public TreeWalker() throws IOException {
@@ -32,7 +31,6 @@ public class TreeWalker {
         String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
-
 
         // Assemble
         Process clangProcess = Runtime.getRuntime().exec(new String[] {"clang", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
@@ -84,18 +82,23 @@ public class TreeWalker {
     // We call into our NodeListener for individual atoms as well as the overall form at each level while we still
     // evolve the design.
     void walkTopLevelNodes(List<Node> nodes) throws IOException {
-        asmGenerator.initMainFunction(bw);
+        asmGenerator.initMainFunction();
 
         for (Node node : nodes) {
             walkTree(node);
         }
 
-        asmGenerator.printResultAndCleanUpMainFunction(bw);
+        asmGenerator.printResultAndCleanUpMainFunction();
+
+        // TODO user-defined functions added in here
  
         // Generate data segment
-        asmGenerator.generateGlobals(bw);
+        asmGenerator.generateGlobals();
 
-        bw.close();
+
+        BufferedWriter bw = new BufferedWriter(new FileWriter("./src/main/asm/my-asm.s"));
+
+        asmGenerator.dumpAsm(bw);
     }
 
 
@@ -112,7 +115,7 @@ public class TreeWalker {
         TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
         if (typedAtom instanceof SymbolAtom symbolAtom) {
             // generate asm to do sym table lookup and the result is what's in the variable (namespace) slot
-            asmGenerator.generateSymbolLookup(symbolAtom.getValue(), bw);
+            asmGenerator.generateSymbolLookup(symbolAtom.getValue());
         }
         else {
             throw new UnsupportedOperationException("unsupported to eval other types of atoms");
@@ -131,10 +134,10 @@ public class TreeWalker {
                 }
                 else {
                     if (OperatorName.IF.equals(op.getOperatorName())) {
-                        new IfSpecialForm().walkTree(rlist, this, bw, asmGenerator);
+                        new IfSpecialForm().walkTree(rlist, this, asmGenerator);
                     }
                     else if (OperatorName.DEFVAR.equals(op.getOperatorName())) {
-                        new DefvarSpecialForm().walkTree(rlist, this, bw, asmGenerator);
+                        new DefvarSpecialForm().walkTree(rlist, this, asmGenerator);
                     }
                     else {
                         throw new UnsupportedOperationException("unsupported special form %s".formatted(op.getOperatorName()));
@@ -157,7 +160,7 @@ public class TreeWalker {
         int numOperands = rlist.size()-1;
         // We need 16 bytes for each 2 operands; ensure we always reserve a multiple of 16 bytes
         int stackBytes = (int)(16 * Math.ceil(numOperands/2f));
-        asmGenerator.reserveSpaceOnStack(stackBytes, bw);
+        asmGenerator.reserveSpaceOnStack(stackBytes);
 
         int pos = 0;
         for (Node childNode : rlist.nodes()) {
@@ -165,23 +168,23 @@ public class TreeWalker {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
                     long fixNum = intAtom.getFixNum();
-                    asmGenerator.pushFixNumToStack(pos++, fixNum, bw);
+                    asmGenerator.pushFixNumToStack(pos++, fixNum);
                 }
             }
             else if (childNode instanceof RList innerRList) {
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
                 walkTree(innerRList);
-                asmGenerator.storeResultToStack(pos++, bw);
+                asmGenerator.storeResultToStack(pos++);
             }
         }
 
         // Now the evaluated operands are on the stack, load them into registers ready for our operator call
         for (int i=0; i<numOperands; i++) {
-            asmGenerator.loadOperandFromStackIntoRegister(i, bw);
+            asmGenerator.loadOperandFromStackIntoRegister(i);
         }
 
-        asmGenerator.callFunction(bw, operator.getOperatorName());
-        asmGenerator.freeSpaceOnStack(stackBytes, bw);
+        asmGenerator.callFunction(operator.getOperatorName());
+        asmGenerator.freeSpaceOnStack(stackBytes);
     }
 }
