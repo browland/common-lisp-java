@@ -5,9 +5,10 @@
 #include "runtime.h"
 
 int sym_capacity = 100;
-int sym_size = 0;  // todo will eventually need
+int sym_size = 0;
 
 uintptr_t t_symbol_ptr;
+uintptr_t nil_symbol_ptr;
 
 // We use uintptr_t due to tagged pointers.  We can't modify a char* for example by tagging it, so we fall back to raw uintptr_t.
 struct SymbolEntry {
@@ -18,21 +19,28 @@ struct SymbolEntry {
 
 struct SymbolEntry *symbolTable = NULL;
 
+uintptr_t addSymbol(char *symbolName) {
+    // init symbol tagged pointer
+    char *sym_on_heap = strdup(symbolName);
+    uintptr_t symbol_ptr = (uintptr_t)sym_on_heap;
+    symbol_ptr = symbol_ptr | 0x4;
+    
+    // put tagged t pointer to first two slots of symbol table (symbol and its value in variable namespace)
+    struct SymbolEntry symbol_entry;
+    symbol_entry.symbol = symbol_ptr;
+    symbol_entry.variableSlot = symbol_ptr;
+    symbolTable[sym_size++] = symbol_entry;
+
+    return symbol_ptr;
+}
+
 int init() {
     // allocate symbol table
     symbolTable = malloc(sym_capacity * sizeof(struct SymbolEntry));
 
-    char *t_on_heap = strdup("t");
-
-    // init "t" symbol tagged pointer
-    t_symbol_ptr = (uintptr_t)t_on_heap;
-    t_symbol_ptr = t_symbol_ptr | 0x4;
-    
-    // put tagged t pointer to first two slots of symbol table (symbol and its value in variable namespace)
-    struct SymbolEntry t_symbol_entry;
-    t_symbol_entry.symbol = t_symbol_ptr;
-    t_symbol_entry.variableSlot = t_symbol_ptr;
-    symbolTable[0] = t_symbol_entry;
+    // create built-in symbols
+    t_symbol_ptr = addSymbol("t");
+    nil_symbol_ptr = addSymbol("nil");
 
     return 0;
 }

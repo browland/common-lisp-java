@@ -29,7 +29,7 @@ public class TreeWalker {
 
         // String atom
 //        String program = "(+ 1 (+ 1 2))";
-        String program = "(if t (+ 1 1) (+ 1 2))";
+        String program = "(if nil (+ 1 1) (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
@@ -52,30 +52,30 @@ public class TreeWalker {
         }
 
         // Run and print result
-        Process execProcess = Runtime.getRuntime().exec(new String[] {"./a.out"});
+        //Process execProcess = Runtime.getRuntime().exec(new String[] {"./a.out"});
 
-        InputStream execStandardOut = execProcess.getInputStream();
-        InputStreamReader execStandardOutReader = new InputStreamReader(execStandardOut);
-        BufferedReader execStandardOutBufferedReader = new BufferedReader(execStandardOutReader);
+        //InputStream execStandardOut = execProcess.getInputStream();
+        //InputStreamReader execStandardOutReader = new InputStreamReader(execStandardOut);
+        //BufferedReader execStandardOutBufferedReader = new BufferedReader(execStandardOutReader);
 
-        InputStream execStandardError = execProcess.getErrorStream();
-        InputStreamReader execStandardErrorReader = new InputStreamReader(execStandardError);
-        BufferedReader execStandardErrorBufferedReader = new BufferedReader(execStandardErrorReader);
+        //InputStream execStandardError = execProcess.getErrorStream();
+        //InputStreamReader execStandardErrorReader = new InputStreamReader(execStandardError);
+        //BufferedReader execStandardErrorBufferedReader = new BufferedReader(execStandardErrorReader);
 
-        int execExitCode = execProcess.waitFor();
-        if (execExitCode != 0) {
-            System.out.printf("executable failed to run, exit code: %d, run directly to get output%n", execExitCode);
+        //int execExitCode = execProcess.waitFor();
+        //if (execExitCode != 0) {
+        //    System.out.printf("executable failed to run, exit code: %d, run directly to get output%n", execExitCode);
             // It's actually some kind of signal(?) and the shell is what's printing something like zsh: bus error ./a.out
 //            while ((line = execStandardOutBufferedReader.readLine()) != null) {
 //                System.out.println(line);
 //            }
-        }
-        else {
-            System.out.println("executable ran successfully, output:");
-            while ((line = execStandardOutBufferedReader.readLine()) != null) {
-                System.out.println(line);
-            }
-        }
+        //}
+        //else {
+        //    System.out.println("executable ran successfully, output:");
+        //    while ((line = execStandardOutBufferedReader.readLine()) != null) {
+        //        System.out.println(line);
+        //    }
+        //}
     }
 
     // We walk through each node in turn at this level, recursing for any list encountered in any of the Node positions.

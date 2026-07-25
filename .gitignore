@@ -5,3 +5,5 @@ source-files
 build
 **/*.swp
 tags
+src/main/asm
+a.out
