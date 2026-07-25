@@ -12,6 +12,7 @@ import java.util.List;
 public class AsmGenerator {
     private int stringLiteralIndex;
     private int formFunctionIndex;
+    private static AsmContext asmContext = new AsmContext();
 
     public void startForm(AsmContext context) {
         String asmFunctionName = "_fxn_" + formFunctionIndex++;
@@ -30,27 +31,27 @@ public class AsmGenerator {
                     """;
     }
 
-    public String generate(AsmContext context) {
-        String myAsm = generateStartTextRegion();
+    //public String generate(AsmContext context) {
+    //    String myAsm = generateStartTextRegion();
 
-        myAsm += generateMainFunction(context);
+    //    myAsm += generateMainFunction(context);
 
-        List<Form> forms = context.getFunctions();
-        Form form = forms.getFirst();
+    //    List<Form> forms = context.getFunctions();
+    //    Form form = forms.getFirst();
 
-        // TODO call either code for apply function or special form and keep them separate
-        //      I also don't like that we recurse within the method; might be more intuitive to recurse here, e.g. by
-        //      returning next node but appending to asm held in the context
-        if (form.getOperator().getOperatorType() == OperatorType.FUNCTION) {
-            myAsm += generateNextFormAsmForFunctionCall(form);
-        }
-        else if (form.getOperator().getOperatorType() == OperatorType.SPECIAL_FORM) {
-            myAsm += generateNextFormAsmForSpecialForm(form);
-        }
-        myAsm += generateGlobals(context);
+    //    // TODO call either code for apply function or special form and keep them separate
+    //    //      I also don't like that we recurse within the method; might be more intuitive to recurse here, e.g. by
+    //    //      returning next node but appending to asm held in the context
+    //    if (form.getOperator().getOperatorType() == OperatorType.FUNCTION) {
+    //        myAsm += generateNextFormAsmForFunctionCall(form);
+    //    }
+    //    else if (form.getOperator().getOperatorType() == OperatorType.SPECIAL_FORM) {
+    //        myAsm += generateNextFormAsmForSpecialForm(form);
+    //    }
+    //    myAsm += generateGlobals(context);
 
-        return myAsm;
-    }
+    //    return myAsm;
+    //}
 
     /**
      * The main function essentially just calls the function which implements the first top-level form.
@@ -77,23 +78,34 @@ public class AsmGenerator {
         return myAsm;
     }
 
-    static String generateGlobals(AsmContext context) {
+    public static void generateGlobals(BufferedWriter bw) throws IOException {
         // Anon. string literals, will be needed when we use string literals in code
-        String myAsm = "";
-        List<StringLiteral> stringLiterals = context.getStringLiterals();
-        if (! stringLiterals.isEmpty()) {
-            myAsm += ".cstring\n";
-            for (StringLiteral stringLiteral : stringLiterals) {
-                myAsm += stringLiteral.name() + ":\n";
-                myAsm += "  .asciz \"" + stringLiteral.value() + "\"\n";
-            }
-        }
+        //String myAsm = "";
+        //List<StringLiteral> stringLiterals = context.getStringLiterals();
+        //if (! stringLiterals.isEmpty()) {
+        //    myAsm += ".cstring\n";
+        //    for (StringLiteral stringLiteral : stringLiterals) {
+        //        myAsm += stringLiteral.name() + ":\n";
+        //        myAsm += "  .asciz \"" + stringLiteral.value() + "\"\n";
+        //    }
+        //}
 
-        // Static strings for things like messages
-        myAsm += """
-_error_msg:
-  .asciz \"ERROR (incorrect value type)\\n\"""";
-        return myAsm;
+        //// Static strings for things like messages
+        //myAsm += """
+//_error_msg:
+//  .asciz \"ERROR (incorrect value type)\\n\"""";
+
+        bw.write("""
+.data
+.p2align 3
+""");
+        List<String> taggedSymbolNames = asmContext.getTaggedSymbolNames();
+        for (String taggedSymbolName : taggedSymbolNames) {
+            bw.write(""" 
+%s:
+    .quad 0
+""".formatted(taggedSymbolName));
+        }
     }
 
     /**
@@ -300,9 +312,8 @@ _error_msg:
                 """.formatted(stackBytes));
     }
 
-    public void generateSymbolLookup(String value, BufferedWriter bw) throws IOException {
-        // todo very stub code for now to force lookup of t
-        //      For ech defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
+    public void generateLoadSymbolTaggedPtr(String symbolName, BufferedWriter bw) throws IOException {
+        //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
         //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
         //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
         //      heap, we'd then store that pointer with the appropriate tagged bits in myvar_symbol_ptr.
@@ -310,13 +321,45 @@ _error_msg:
         //      and that's the symbol.  Its symbol table entry would use the same tagged pointer.
 
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String symPointerName = "_" + value + "_symbol_ptr";
+        String symPointerName = "_" + symbolName + "_symbol_ptr";
+        bw.write("""
+  adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
+  add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
+  ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
+""".formatted(symPointerName, symPointerName));
+    }
+
+    public void generateSymbolLookup(String symbolName, BufferedWriter bw) throws IOException {
+        //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
+        //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
+        //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
+        //      heap, we'd then store that pointer with the appropriate tagged bits in myvar_symbol_ptr.
+        //      So for lookup, we can reference the pointer name by its well-defined name, get its value, check its type, remove the tag bits, dereference it, 
+        //      and that's the symbol.  Its symbol table entry would use the same tagged pointer.
+
+        // Generate the well-defined name of the runtime symbol holding the tagged pointer
+        String symPointerName = "_" + symbolName + "_symbol_ptr";
         bw.write("""
   adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
   add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
   ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
   bl _evaluate_symbol                  ; look up value of this symbol in variable namespace
 """.formatted(symPointerName, symPointerName));
+    }
+
+    public void generateTaggedSymbolName(String symbolName) throws IOException{
+        // Generate the well-defined name of the runtime symbol holding the tagged pointer
+        String symPointerName = "_" + symbolName + "_symbol_ptr";
+
+        asmContext.addTaggedSymbolName(symPointerName);
+    }
+
+    public void generateSymbolExists(BufferedWriter bw) throws IOException {
+        // Similar to generateSymbolLookup() but allows for case where symbol is not in the table yet, e.g. for defvar to determine whether it's the first
+        // time we've encountered defvar for this symbol (else no-op).
+        bw.write("""
+  bl _symbol_exists                    ; look up value of this symbol in variable namespace; else NULL
+""");
     }
 
     public void generateTypeCheckForSymbol(BufferedWriter bw) throws IOException {
@@ -331,10 +374,16 @@ _error_msg:
                 """);
     }
 
-    public void generateJumpInstructionForIf(BufferedWriter bw, String falseLabel) throws IOException {
+    public void generateJumpInstructionForNonZeroReturnValue(BufferedWriter bw, String jumpLabel) throws IOException {
         bw.write("""
                 cbnz x0, %s
-                """.formatted(falseLabel));
+                """.formatted(jumpLabel));
+    }
+
+    public void generateUnconditionalJump(BufferedWriter bw, String jumpLabel) throws IOException {
+        bw.write("""
+                b %s
+                """.formatted(jumpLabel));
     }
 
     public void generateLabel(BufferedWriter bw, String label) throws IOException {

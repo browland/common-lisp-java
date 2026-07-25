@@ -21,6 +21,7 @@ public class Operator {
         switch (symbol) {
             case "+": return new Operator(OperatorName.ADD, OperatorType.FUNCTION);
             case "if": return new Operator(OperatorName.IF, OperatorType.SPECIAL_FORM);
+            case "defvar": return new Operator(OperatorName.DEFVAR, OperatorType.SPECIAL_FORM);
             default: throw new UnsupportedOperationException("unsupported operator");
         }
     }

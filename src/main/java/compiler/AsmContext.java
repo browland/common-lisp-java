@@ -7,11 +7,16 @@ import java.util.List;
 
 public class AsmContext {
     private List<StringLiteral> stringLiterals = new ArrayList<>();
+    private List<String> taggedSymbolNames = new ArrayList<>();
     private Deque<Form> formStack = new LinkedList<>();
     private List<Form> forms = new ArrayList<>();
 
     void addStringLiteral(StringLiteral stringLiteral) {
         stringLiterals.add(stringLiteral);
+    }
+
+    void addTaggedSymbolName(String taggedSymbolName) {
+        taggedSymbolNames.add(taggedSymbolName);
     }
 
     void startForm(Form form) {
@@ -48,5 +53,9 @@ public class AsmContext {
 
     public List<Form> getFunctions() {
         return forms;
+    }
+
+    public List<String> getTaggedSymbolNames() {
+        return new ArrayList(taggedSymbolNames);
     }
 }

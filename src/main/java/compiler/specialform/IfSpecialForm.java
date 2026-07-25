@@ -41,17 +41,17 @@ public class IfSpecialForm implements SpecialForm {
         String exitLabel = "if_exit" + thisBranchCounter;
 
         // Jump to false if required; we fall through to code for true branch
-        asmGenerator.generateJumpInstructionForIf(bw, falseLabel);
+        asmGenerator.generateJumpInstructionForNonZeroReturnValue(bw, falseLabel);
 
         // generate code for the two branches, each with a label; true first.  We also need an exit label.
         asmGenerator.generateLabel(bw, trueLabel);
         treeWalker.walkTree(trueNode);
-        asmGenerator.generateJumpInstructionForIf(bw, exitLabel);  // jump to exit
+        asmGenerator.generateUnconditionalJump(bw, exitLabel);  // jump to exit
 
         // generate false branch code
         asmGenerator.generateLabel(bw, falseLabel);
         treeWalker.walkTree(falseNode);
-        asmGenerator.generateJumpInstructionForIf(bw, exitLabel);  // jump to exit
+        asmGenerator.generateUnconditionalJump(bw, exitLabel);  // jump to exit
 
         asmGenerator.generateLabel(bw, exitLabel);
 

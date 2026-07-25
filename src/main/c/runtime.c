@@ -141,3 +141,24 @@ uintptr_t evaluate_symbol(uintptr_t taggedPtr) {
     exit(-1);
 }
 
+// Similar to evaluate_symbol but lenient if not exists in symbol table for cases where need to check existence as a valid case
+uintptr_t symbol_exists(uintptr_t taggedPtr) {
+    // We can trust taggedPtr without type-checking it, as it was loaded from a well-defined variable which must have previously been set by our runtime
+    for (int i=0; i<sym_size; i++) {
+        uintptr_t this_symbol_ptr = symbolTable[i].symbol;
+        if (taggedPtr == this_symbol_ptr) {
+            return symbolTable[i].variableSlot;
+        }
+    }
+
+    return (uintptr_t)NULL;
+}
+
+void put_symbol(uintptr_t taggedSymbolPtr, uintptr_t valuePtr) {
+    // Assumption that we've already checked this symbol entry doesn't already exist, so we just add the entry to the next slot
+    struct SymbolEntry symbol_entry;
+    symbol_entry.symbol = taggedSymbolPtr;
+    symbol_entry.variableSlot = valuePtr;
+    symbolTable[sym_size++] = symbol_entry;
+}
+

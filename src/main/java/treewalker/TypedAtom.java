@@ -11,11 +11,11 @@ public sealed class TypedAtom<T> implements ProcessedNode permits StringAtom, In
         this.value = value;
     }
 
-    T getValue() {
+    public T getValue() {
         return value;
     }
 
-    static TypedAtom<?> fromAtom(Atom atom) {
+    public static TypedAtom<?> fromAtom(Atom atom) {
         return TypeCoercer.coerceType(atom);
     }
 

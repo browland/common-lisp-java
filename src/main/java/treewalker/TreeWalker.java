@@ -4,7 +4,7 @@ import compiler.AsmGenerator;
 import compiler.Operator;
 import compiler.OperatorName;
 import compiler.OperatorType;
-import compiler.specialform.IfSpecialForm;
+import compiler.specialform.*;
 import reader.NodeBuilder;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -29,9 +29,10 @@ public class TreeWalker {
 
         // String atom
 //        String program = "(+ 1 (+ 1 2))";
-        String program = "(if nil (+ 1 1) (+ 1 2))";
+        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
+
 
         // Assemble
         Process clangProcess = Runtime.getRuntime().exec(new String[] {"clang", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
@@ -90,6 +91,9 @@ public class TreeWalker {
         }
 
         asmGenerator.printResultAndCleanUpMainFunction(bw);
+ 
+        // Generate data segment
+        asmGenerator.generateGlobals(bw);
 
         bw.close();
     }
@@ -129,8 +133,11 @@ public class TreeWalker {
                     if (OperatorName.IF.equals(op.getOperatorName())) {
                         new IfSpecialForm().walkTree(rlist, this, bw, asmGenerator);
                     }
+                    else if (OperatorName.DEFVAR.equals(op.getOperatorName())) {
+                        new DefvarSpecialForm().walkTree(rlist, this, bw, asmGenerator);
+                    }
                     else {
-                        throw new UnsupportedOperationException("can only do if special form for now");
+                        throw new UnsupportedOperationException("unsupported special form %s".formatted(op.getOperatorName()));
                     }
                 }
             }

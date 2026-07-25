@@ -24,8 +24,8 @@ public class BasicAsmTest {
             generator.endForm(context);
         generator.endForm(context);
 
-        String myAsm = generator.generate(context);
-        writeAssembleRun(myAsm);
+        //String myAsm = generator.generate(context);
+        //writeAssembleRun(myAsm);
     }
 
     private static void writeAssembleRun(String myAsm) throws IOException, InterruptedException {

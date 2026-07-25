@@ -53,7 +53,8 @@ public class NodeHandler implements NodeListener {
     // TODO should return something more general (to handle interpreter mode) OR make the context which we're passing
     //      around more general.
     public String endTree() {
-        return generator.generate(context);
+        //return generator.generate(context);
+        return null;  // TODO dead code
     }
 
     private void handleStringAtom(StringAtom stringAtom, int pos) {
