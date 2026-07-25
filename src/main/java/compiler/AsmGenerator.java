@@ -12,16 +12,22 @@ import java.util.List;
  * So we need a context to hold the state about what we're working on currently - call this AsmContext.
  */
 public class AsmGenerator {
-    private AsmContext context = new AsmContext();
-    private Deque<AsmContext> asmContexts = new LinkedList<>();
-    // TODO generated functions
-//    private static Map<String,
+    // Current generation context (represents main or a function).
+    private AsmContext context;
 
     public AsmGenerator() {
-        asmContexts.push(context);
+        context = new AsmContext();
+        contextStack.push(context);
     }
 
-    public void generateGlobals() throws IOException {
+    // Probably will only have depth of 2 max?  Usually main context unless we're defining a function when we're 2 deep.
+    // We always pop back to get to main context and then push one function at a time while we're compiling it.
+    private Deque<AsmContext> contextStack = new LinkedList<>();
+
+    // All contexts generated, ready for when we dump at the end.
+    private List<AsmContext> allContexts = new LinkedList<>();
+
+    public void generateGlobals() {
         // Anon. string literals, will be needed when we use string literals in code
         //String myAsm = "";
         //List<StringLiteral> stringLiterals = context.getStringLiterals();
@@ -51,7 +57,7 @@ public class AsmGenerator {
         }
     }
 
-    public void initMainFunction() throws IOException {
+    public void initMainFunction() {
         context.write(
                 """
         .text
@@ -64,7 +70,7 @@ public class AsmGenerator {
         """);
     }
 
-    public void printResultAndCleanUpMainFunction() throws IOException {
+    public void printResultAndCleanUpMainFunction() {
         context.write("""
   bl _printResult
   ldp x29, x30, [x29]
@@ -73,7 +79,7 @@ public class AsmGenerator {
 """);
     }
 
-    public void reserveSpaceOnStack(int stackBytes) throws IOException {
+    public void reserveSpaceOnStack(int stackBytes) {
         context.write("""
     sub sp, sp, #%d           ;; reserve space for operands
   """.formatted(stackBytes));
@@ -82,14 +88,14 @@ public class AsmGenerator {
     /**
      * pos starts from 0 and is used to determine the stack offset
      */
-    public void pushFixNumToStack(int pos, long fixNum) throws IOException {
+    public void pushFixNumToStack(int pos, long fixNum) {
         context.write("""
     mov x0, #%d          ;; move operand (fixnum) to x0
     str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
   """.formatted(fixNum, pos*8));
     }
 
-    public void storeResultToStack(int operandNum) throws IOException {
+    public void storeResultToStack(int operandNum) {
         context.write("""
   str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
 """.formatted(operandNum*8));
@@ -98,25 +104,25 @@ public class AsmGenerator {
     /**
      * operandNum starts from 0
      */
-    public void loadOperandFromStackIntoRegister(int operandNum) throws IOException {
+    public void loadOperandFromStackIntoRegister(int operandNum) {
         context.write("""
       ldr x%d, [sp, #%d]   ;; load evaluated operand into register ready for operator call
     """.formatted(operandNum, operandNum*8));
     }
 
-    public void callFunction(OperatorName operatorName)  throws  IOException {
+    public void callFunction(OperatorName operatorName) {
         context.write("""
       bl %s                ;; call operator; this leaves the result in x0 for our caller
     """.formatted(operatorName.getAsmName()));
     }
 
-    public void freeSpaceOnStack(int stackBytes) throws IOException {
+    public void freeSpaceOnStack(int stackBytes) {
         context.write("""
                   add sp, sp, #%d
                 """.formatted(stackBytes));
     }
 
-    public void generateLoadSymbolTaggedPtr(String symbolName) throws IOException {
+    public void generateLoadSymbolTaggedPtr(String symbolName) {
         //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
         //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
         //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
@@ -133,7 +139,7 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName));
     }
 
-    public void generateSymbolLookup(String symbolName) throws IOException {
+    public void generateSymbolLookup(String symbolName) {
         //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
         //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
         //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
@@ -151,14 +157,14 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName));
     }
 
-    public void generateTaggedSymbolName(String symbolName) throws IOException{
+    public void generateTaggedSymbolName(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_symbol_ptr";
 
         context.addTaggedSymbolName(symPointerName);
     }
 
-    public void generateSymbolExists() throws IOException {
+    public void generateSymbolExists() {
         // Similar to generateSymbolLookup() but allows for case where symbol is not in the table yet, e.g. for defvar to determine whether it's the first
         // time we've encountered defvar for this symbol (else no-op).
         context.write("""
@@ -166,31 +172,31 @@ public class AsmGenerator {
 """);
     }
 
-    public void generateTypeCheckForSymbol() throws IOException {
+    public void generateTypeCheckForSymbol() {
         context.write("""
                 bl _typecheck_symbol
                 """);
     }
 
-    public void generateCheckForT() throws IOException {
+    public void generateCheckForT() {
         context.write("""
                 bl _is_t
                 """);
     }
 
-    public void generateJumpInstructionForNonZeroReturnValue(String jumpLabel) throws IOException {
+    public void generateJumpInstructionForNonZeroReturnValue(String jumpLabel) {
         context.write("""
                 cbnz x0, %s
                 """.formatted(jumpLabel));
     }
 
-    public void generateUnconditionalJump(String jumpLabel) throws IOException {
+    public void generateUnconditionalJump(String jumpLabel) {
         context.write("""
                 b %s
                 """.formatted(jumpLabel));
     }
 
-    public void generateLabel(String label) throws IOException {
+    public void generateLabel(String label) {
         context.write("""
                 .global %s
                 %s:
@@ -203,5 +209,17 @@ public class AsmGenerator {
 
     public void dumpAsm(BufferedWriter bw) throws IOException {
         context.dumpAsm(bw);
+    }
+
+    public void startFunctionDef() {
+        AsmContext functionContext = new AsmContext();
+        contextStack.push(functionContext);
+        allContexts.add(functionContext);
+        context = functionContext;
+    }
+
+    public void endFunctionDef() {
+        contextStack.pop();
+        context = contextStack.peek();
     }
 }

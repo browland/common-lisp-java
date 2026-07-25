@@ -5,14 +5,13 @@ import syntaxtree.Node;
 import syntaxtree.RList;
 import treewalker.TreeWalker;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 
 public class IfSpecialForm implements SpecialForm {
     private static long BRANCH_COUNTER = 0L;
 
     @Override
-    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator) throws IOException {
+    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator) {
         // generate asm to evaluate first operand; this involves recursing back into TreeWalker
         // if we eval the first form then we'll end up with the result in x0.
         Node conditionNode = rlist.get(1);

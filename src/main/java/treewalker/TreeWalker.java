@@ -18,9 +18,6 @@ import java.util.List;
 public class TreeWalker {
     private final AsmGenerator asmGenerator = new AsmGenerator();
 
-    public TreeWalker() throws IOException {
-    }
-
     public static void main(String[] args) throws IOException, InterruptedException {
         NodeBuilder nodeBuilder = new NodeBuilder();
 
@@ -28,7 +25,8 @@ public class TreeWalker {
 
         // String atom
 //        String program = "(+ 1 (+ 1 2))";
-        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
+        String program = "(defun foo) (defvar x (+ 1 1)) (if t x (+ 1 2))";
+//        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
@@ -102,7 +100,7 @@ public class TreeWalker {
     }
 
 
-    public void walkTree(Node node) throws IOException {
+    public void walkTree(Node node) {
         if (node instanceof Atom atom) {
             handleAtom(atom);
         }
@@ -111,7 +109,7 @@ public class TreeWalker {
         }
     }
 
-    private TypedAtom<?> handleAtom(Atom atom) throws IOException {
+    private TypedAtom<?> handleAtom(Atom atom) {
         TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
         if (typedAtom instanceof SymbolAtom symbolAtom) {
             // generate asm to do sym table lookup and the result is what's in the variable (namespace) slot
@@ -124,7 +122,7 @@ public class TreeWalker {
         return typedAtom;
     }
 
-    private void walkTree(RList rlist) throws IOException {
+    private void walkTree(RList rlist) {
         if (rlist.nodes().getFirst() instanceof Atom operatorAtom) {
             TypedAtom<?> ta = TypedAtom.fromAtom(operatorAtom);
             if (ta instanceof SymbolAtom sa) {
@@ -138,6 +136,9 @@ public class TreeWalker {
                     }
                     else if (OperatorName.DEFVAR.equals(op.getOperatorName())) {
                         new DefvarSpecialForm().walkTree(rlist, this, asmGenerator);
+                    }
+                    else if (OperatorName.DEFUN.equals(op.getOperatorName())) {
+                        new DefunSpecialForm().walkTree(rlist, this, asmGenerator);
                     }
                     else {
                         throw new UnsupportedOperationException("unsupported special form %s".formatted(op.getOperatorName()));
@@ -154,7 +155,7 @@ public class TreeWalker {
         }
     }
 
-    private void walkTreeForFunction(RList rlist, Operator operator) throws IOException {
+    private void walkTreeForFunction(RList rlist, Operator operator) {
         // We're evaluating a form.
         // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;

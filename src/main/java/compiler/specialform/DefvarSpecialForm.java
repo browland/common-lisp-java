@@ -6,14 +6,11 @@ import syntaxtree.Atom;
 import syntaxtree.RList;
 import treewalker.*;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-
 public class DefvarSpecialForm implements SpecialForm {
     private static long LABEL_COUNTER = 0L;
 
     @Override
-    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator) throws IOException {
+    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator) {
         // generate asm to determine tagged symbol ptr for symbol in node 1.  We know there'll be a runtime symbol for it as we'll 
         // generate one as part of defvar.  So generate the code to retrieve the tagged ptr from this variable, and pass that into 
         // _get_sym which we'll define in runtime.c
