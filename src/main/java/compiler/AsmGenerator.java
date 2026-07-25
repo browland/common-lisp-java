@@ -302,9 +302,21 @@ _error_msg:
 
     public void generateSymbolLookup(String value, BufferedWriter bw) throws IOException {
         // todo very stub code for now to force lookup of t
+        //      For ech defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
+        //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
+        //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
+        //      heap, we'd then store that pointer with the appropriate tagged bits in myvar_symbol_ptr.
+        //      So for lookup, we can reference the pointer name by its well-defined name, get its value, check its type, remove the tag bits, dereference it, 
+        //      and that's the symbol.  Its symbol table entry would use the same tagged pointer.
+
+        // Generate the well-defined name of the runtime symbol holding the tagged pointer
+        String symPointerName = "_" + value + "_symbol_ptr";
         bw.write("""
-  bl _get_t                            ; puts ptr to "t" from symbol table in x0 which is our result
-""");
+  adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
+  add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
+  ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
+  bl _evaluate_symbol                  ; look up value of this symbol in variable namespace
+""".formatted(symPointerName, symPointerName));
     }
 
     public void generateTypeCheckForSymbol(BufferedWriter bw) throws IOException {

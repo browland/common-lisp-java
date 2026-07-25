@@ -127,3 +127,17 @@ long is_t(uintptr_t val) {
     return -1;
 }
 
+uintptr_t evaluate_symbol(uintptr_t taggedPtr) {
+    // We can trust taggedPtr without type-checking it, as it was loaded from a well-defined variable which must have previously been set by our runtime
+    for (int i=0; i<sym_size; i++) {
+        uintptr_t this_symbol_ptr = symbolTable[i].symbol;
+        if (taggedPtr == this_symbol_ptr) {
+            return symbolTable[i].variableSlot;
+        }
+    }
+
+    // We created the variable for this symbol but it's not in the symbol table, programming error
+    printf("Could not find symbol for tagged symbol ptr %ld", taggedPtr);
+    exit(-1);
+}
+
