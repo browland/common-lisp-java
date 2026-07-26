@@ -38,8 +38,8 @@ void addSymbol(uintptr_t taggedSymbolPtr, uintptr_t taggedVariablePtr, uintptr_t
     symbolTable[sym_size++] = symbol_entry;
 }
 
-
 uintptr_t add(uintptr_t val1, uintptr_t val2);
+
 int init() {
     // allocate symbol table
     symbolTable = malloc(sym_capacity * sizeof(struct SymbolEntry));
@@ -147,12 +147,12 @@ long is_t(uintptr_t val) {
     return -1;
 }
 
-uintptr_t evaluate_symbol(uintptr_t taggedPtr) {
+uintptr_t evaluate_symbol(uintptr_t taggedPtr, NAMESPACE_TYPE namespaceType) {
     // We can trust taggedPtr without type-checking it, as it was loaded from a well-defined variable which must have previously been set by our runtime
     for (int i=0; i<sym_size; i++) {
         uintptr_t this_symbol_ptr = symbolTable[i].symbol;
         if (taggedPtr == this_symbol_ptr) {
-            return symbolTable[i].variableSlot;
+            return namespaceType == NAMESPACE_VARIABLE ? symbolTable[i].variableSlot : symbolTable[i].functionSlot;
         }
     }
 
@@ -206,6 +206,10 @@ void put_function(char *rawSymbol, uintptr_t rawFunctionPtr) {
 uintptr_t get_add_function_ptr() {
     // untag
     uintptr_t taggedFxnPtr = symbolTable[2].functionSlot;  // for now hardcoding to `add`
+    return taggedFxnPtr & 0xFFFFFFFFFFFFFFF8;
+}
+
+uintptr_t untag_fxn_ptr(uintptr_t taggedFxnPtr) {
     return taggedFxnPtr & 0xFFFFFFFFFFFFFFF8;
 }
 

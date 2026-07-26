@@ -35,4 +35,20 @@ public sealed class TypedAtom<T> implements ProcessedNode permits StringAtom, In
         }
     }
 
+    // TODO needed?
+    public static IntAtom toIntAtom(Node node) {
+        if (node instanceof Atom atom) {
+            TypedAtom<?> typedAtom = fromAtom(atom);
+            if (typedAtom instanceof IntAtom intAtom) {
+                return intAtom;
+            }
+            else {
+                throw new IllegalArgumentException("Expected IntAtom but was " + typedAtom);
+            }
+        }
+        else {
+            throw new IllegalArgumentException("Expected Atom but was " + node);
+        }
+    }
+
 }

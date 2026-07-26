@@ -6,4 +6,8 @@
 #define TYPE_TAG_FIXNUM 1L
 #define TYPE_TAG_SYMBOL 4L
 
+#define NAMESPACE_VARIABLE 0
+#define NAMESPACE_FUNCTION 1
+
 typedef int RUNTIME_TYPE;
+typedef int NAMESPACE_TYPE;

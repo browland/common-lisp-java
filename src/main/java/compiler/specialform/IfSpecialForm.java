@@ -28,7 +28,7 @@ public class IfSpecialForm implements SpecialForm {
         asmGenerator.generateTypeCheckForSymbol();
 
         // return result (t which is our condition) back off stack again
-        asmGenerator.loadOperandFromStackIntoRegister(0);
+        asmGenerator.loadOperandFromStackIntoRegister(0, 0);
 
         // check for t, will set x0 to 0 if result was true
         asmGenerator.generateCheckForT();

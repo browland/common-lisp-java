@@ -46,7 +46,7 @@ public class DefvarSpecialForm implements SpecialForm {
         asmGenerator.write("  mov x1, x0  ; move result of evaluating defvar value into second arg before calling _put_symbol\n");
 
         // Load tagged symbol ptr back off stack into x0
-        asmGenerator.loadOperandFromStackIntoRegister(0);
+        asmGenerator.loadOperandFromStackIntoRegister(0, 0);
 
         // Call into runtime put_symbol
         asmGenerator.write("  bl _put_symbol \n");

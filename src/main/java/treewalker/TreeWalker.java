@@ -1,9 +1,6 @@
 package treewalker;
 
-import compiler.AsmGenerator;
-import compiler.Operator;
-import compiler.OperatorName;
-import compiler.OperatorType;
+import compiler.*;
 import compiler.specialform.*;
 import reader.NodeBuilder;
 import syntaxtree.Atom;
@@ -24,7 +21,7 @@ public class TreeWalker {
         TreeWalker walker = new TreeWalker();
 
         // String atom
-        String program = "(+ 1 2)";
+        String program = "(add 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
 //        String program = "(defun foo (+ 1 1)) (defvar x (+ 1 1)) (if t x (+ 1 2))";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
@@ -32,7 +29,10 @@ public class TreeWalker {
         walker.walkTopLevelNodes(nodes);
 
         // Assemble
-        Process clangProcess = Runtime.getRuntime().exec(new String[] {"clang", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
+        // We use -falign-functions=8 to ensure we can use pointer tagging for our built-in functions.  We could mark
+        // each function with __attribute__((aligned(8))) but this seems a cleaner option and less likely to forget
+        // a case.  At the cost of a larger executable due to the extra padding needed.
+        Process clangProcess = Runtime.getRuntime().exec(new String[] {"clang", "-falign-functions=8", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
         InputStream clangStandardError = clangProcess.getErrorStream();
         InputStreamReader clangStandardErrorReader = new InputStreamReader(clangStandardError);
         BufferedReader clangStandardErrorBufferedReader = new BufferedReader(clangStandardErrorReader);
@@ -113,8 +113,7 @@ public class TreeWalker {
     private TypedAtom<?> handleAtom(Atom atom) {
         TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
         if (typedAtom instanceof SymbolAtom symbolAtom) {
-            // generate asm to do sym table lookup and the result is what's in the variable (namespace) slot
-            asmGenerator.generateSymbolLookup(symbolAtom.getValue());
+            asmGenerator.generateSymbolLookup(symbolAtom.getValue(), Namespace.VARIABLE);
         }
         else {
             throw new UnsupportedOperationException("unsupported to eval other types of atoms");
@@ -166,42 +165,50 @@ public class TreeWalker {
         int stackBytes = (int)(16 * Math.ceil(numOperands+1/2f));
         asmGenerator.reserveSpaceOnStack(stackBytes);
 
-        int stackSlot = 0;
+        // This doubles as the stack slot index, and also the node index of the list we're walking
+        int slot = 0;
+
         for (Node childNode : rlist.nodes()) {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
                     long fixNum = intAtom.getFixNum();
-                    asmGenerator.pushFixNumToStack(stackSlot++, fixNum);
+                    asmGenerator.pushFixNumToStack(slot++, fixNum);
+                }
+                else if (typedAtom instanceof SymbolAtom symbolAtom) {
+                    String symbol = symbolAtom.getValue();
+                    if (slot == 0) {
+                        // operator position; look up symbol from function namespace.  This will return a function ptr.
+                        // we'll then write the function pointer after the operands (stackSlot was already post-incremented on last operand)
+                        asmGenerator.generateSymbolLookup(symbol, Namespace.FUNCTION);
+                        asmGenerator.untagFunctionPtr();
+                        asmGenerator.storeResultToStack(slot++);
+                    }
+                    else {
+                        throw new UnsupportedOperationException("not ready for symbol eval in operand pos quite yet");
+                    }
                 }
             }
             else if (childNode instanceof RList innerRList) {
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
                 walkTree(innerRList);
-                asmGenerator.storeResultToStack(stackSlot++);
+                asmGenerator.storeResultToStack(slot++);
             }
         }
 
-        // we'll write the function pointer after the operands (stackSlot was already post-incremented on last operand)
-        asmGenerator.loadFunctionPtr();
-        asmGenerator.storeResultToStack(stackSlot);
-
         // Now the evaluated operands are on the stack, load them into registers ready for our operator call
         // Operands will be stored in registers in incrementing order as per usual calling convention
-        int operandNum = 0;
-        for (; operandNum<numOperands; operandNum++) {
-            asmGenerator.loadOperandFromStackIntoRegister(operandNum);
+        for (int operandNum = 0; operandNum<numOperands; operandNum++) {
+            // Zero-indexed operands are aligned with registers, but stack pos is one pos higher (above the function ptr slot)
+            asmGenerator.loadOperandFromStackIntoRegister(operandNum+1, operandNum);
         }
 
         // Load function ptr into next available register
         // We use operandNum as it's already incremented to next register num (it's not an operand but we need it in
         // some register for the jump).
-        int functionPtrRegister = operandNum;
-        asmGenerator.loadOperandFromStackIntoRegister(functionPtrRegister);
-
-        // TODO callFunction() probably correctly jumps into add, but we clobbered the first arg in x0.  Need to get the
-        //      function ptr before loading operands and put it on stack then load it into say x2 and br x2.
+        int functionPtrRegister = numOperands; // Function ptr will be stored in the next register after those used by the operands
+        asmGenerator.loadOperandFromStackIntoRegister(0, functionPtrRegister);
 
         asmGenerator.callFunction(functionPtrRegister);
         asmGenerator.freeSpaceOnStack(stackBytes);

@@ -130,16 +130,22 @@ public class AsmGenerator {
     /**
      * operandNum starts from 0
      */
-    public void loadOperandFromStackIntoRegister(int operandNum) {
+    public void loadOperandFromStackIntoRegister(int stackPos, int regNum) {
         context.write("""
       ldr x%d, [sp, #%d]   ;; load evaluated operand into register ready for operator call
-    """.formatted(operandNum, operandNum*8));
+    """.formatted(regNum, stackPos*8));
     }
 
     public void loadFunctionPtr() {
         // TODO hardcoded to `add` for now
         context.write("""
       bl _get_add_function_ptr
+    """);
+    }
+
+    public void untagFunctionPtr() {
+        context.write("""
+      bl _untag_fxn_ptr
     """);
     }
 
@@ -172,7 +178,7 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName));
     }
 
-    public void generateSymbolLookup(String symbolName) {
+    public void generateSymbolLookup(String symbolName, Namespace namespace) {
         //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
         //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
         //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
@@ -182,12 +188,14 @@ public class AsmGenerator {
 
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_symbol_ptr";
+        int namespaceId = namespace.getIdentifier();
         context.write("""
   adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
   add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
   ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
+  mov x1, %d                           ; indicate which namespace
   bl _evaluate_symbol                  ; look up value of this symbol in variable namespace
-""".formatted(symPointerName, symPointerName));
+""".formatted(symPointerName, symPointerName, namespaceId));
     }
 
     public void generateDataSectionQuadWordForSymbolPtr(String symbolName) {
