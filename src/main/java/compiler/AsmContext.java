@@ -19,6 +19,7 @@ public class AsmContext {
 //    }
 
     void addTaggedSymbolName(String taggedSymbolName) {
+
         taggedSymbolNames.add(taggedSymbolName);
     }
 
@@ -35,6 +36,5 @@ public class AsmContext {
         for (String line : lines) {
             bw.write(line + "\n");
         }
-        bw.close();
     }
 }

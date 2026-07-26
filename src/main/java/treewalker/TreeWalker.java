@@ -24,8 +24,9 @@ public class TreeWalker {
         TreeWalker walker = new TreeWalker();
 
         // String atom
+        String program = "(+ 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
-        String program = "(defun foo) (defvar x (+ 1 1)) (if t x (+ 1 2))";
+//        String program = "(defun foo (+ 1 1)) (defvar x (+ 1 1)) (if t x (+ 1 2))";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
@@ -91,7 +92,7 @@ public class TreeWalker {
         // TODO user-defined functions added in here
  
         // Generate data segment
-        asmGenerator.generateGlobals();
+//        asmGenerator.generateGlobals();
 
 
         BufferedWriter bw = new BufferedWriter(new FileWriter("./src/main/asm/my-asm.s"));
@@ -184,6 +185,9 @@ public class TreeWalker {
         for (int i=0; i<numOperands; i++) {
             asmGenerator.loadOperandFromStackIntoRegister(i);
         }
+
+        // TODO callFunction() probably correctly jumps into add, but we clobbered the first arg in x0.  Need to get the
+        //      function ptr before loading operands and put it on stack then load it into say x2 and br x2.
 
         asmGenerator.callFunction(operator.getOperatorName());
         asmGenerator.freeSpaceOnStack(stackBytes);

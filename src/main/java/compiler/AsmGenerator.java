@@ -18,15 +18,23 @@ public class AsmGenerator {
     public AsmGenerator() {
         context = new AsmContext();
         contextStack.push(context);
+
+        // TODO refactor this
+        dataSegmentContext.write(".data\n");
+        cstringContext.write(".cstring\n");
     }
 
     // Probably will only have depth of 2 max?  Usually main context unless we're defining a function when we're 2 deep.
     // We always pop back to get to main context and then push one function at a time while we're compiling it.
     private Deque<AsmContext> contextStack = new LinkedList<>();
 
-    // All contexts generated, ready for when we dump at the end.
-    private List<AsmContext> allContexts = new LinkedList<>();
+    // All function contexts - main, and all user defined functions
+    private List<AsmContext> functionContexts = new LinkedList<>();
 
+    private AsmContext dataSegmentContext = new AsmContext();
+    private AsmContext cstringContext = new AsmContext();
+
+    // TODO keeping this around for code for string literals
     public void generateGlobals() {
         // Anon. string literals, will be needed when we use string literals in code
         //String myAsm = "";
@@ -70,6 +78,24 @@ public class AsmGenerator {
         """);
     }
 
+    public void initFunction(String name) {
+        context.write("""
+  .p2align 3                 ;; Align to 8 bytes so we can use our low 3 bit tagging scheme
+  _%s:
+  stp x29, x30, [sp, #-16]!  ;; allocate stack and store frame pointer and link register
+  mov x29, sp                ;; set frame pointer
+""".formatted(name));
+
+    }
+
+    public void endFunction() {
+        context.write("""
+  ldp x29, x30, [x29]
+  ret
+""");
+
+    }
+
     public void printResultAndCleanUpMainFunction() {
         context.write("""
   bl _printResult
@@ -111,8 +137,11 @@ public class AsmGenerator {
     }
 
     public void callFunction(OperatorName operatorName) {
+        // TODO only works for add
         context.write("""
-      bl %s                ;; call operator; this leaves the result in x0 for our caller
+      ;bl %s                ;; call operator; this leaves the result in x0 for our caller
+      bl _get_add_function_ptr
+      br x0
     """.formatted(operatorName.getAsmName()));
     }
 
@@ -157,11 +186,26 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName));
     }
 
-    public void generateTaggedSymbolName(String symbolName) {
+    public void generateDataSectionQuadWordForSymbolPtr(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_symbol_ptr";
 
-        context.addTaggedSymbolName(symPointerName);
+        switchToDataSegmentContext();
+        context.write("""
+%s:
+    .quad 0
+                """.formatted(symPointerName));
+        switchFromDataSegmentContext();
+    }
+
+    public void generateCStringForSymbol(String symbolName) {
+        // Generate the well-defined name of the runtime symbol holding the tagged pointer
+        String symPointerName = "_" + symbolName + "_symbol_ptr";
+
+        switchToCStringContext();
+        context.write(symPointerName + ":\n");
+        context.write("  .asciz \"" + symbolName + "\"\n");
+        switchFromCStringContext();
     }
 
     public void generateSymbolExists() {
@@ -174,26 +218,26 @@ public class AsmGenerator {
 
     public void generateTypeCheckForSymbol() {
         context.write("""
-                bl _typecheck_symbol
-                """);
+  bl _typecheck_symbol
+""");
     }
 
     public void generateCheckForT() {
         context.write("""
-                bl _is_t
-                """);
+  bl _is_t
+""");
     }
 
     public void generateJumpInstructionForNonZeroReturnValue(String jumpLabel) {
         context.write("""
-                cbnz x0, %s
-                """.formatted(jumpLabel));
+  cbnz x0, %s
+""".formatted(jumpLabel));
     }
 
     public void generateUnconditionalJump(String jumpLabel) {
         context.write("""
-                b %s
-                """.formatted(jumpLabel));
+  b %s
+""".formatted(jumpLabel));
     }
 
     public void generateLabel(String label) {
@@ -209,17 +253,55 @@ public class AsmGenerator {
 
     public void dumpAsm(BufferedWriter bw) throws IOException {
         context.dumpAsm(bw);
+        for (AsmContext functionContext : functionContexts) {
+            functionContext.dumpAsm(bw);
+        }
+        dataSegmentContext.dumpAsm(bw);
+        cstringContext.dumpAsm(bw);
+        bw.close();
     }
 
     public void startFunctionDef() {
         AsmContext functionContext = new AsmContext();
         contextStack.push(functionContext);
-        allContexts.add(functionContext);
+        functionContexts.add(functionContext);
         context = functionContext;
     }
 
     public void endFunctionDef() {
         contextStack.pop();
         context = contextStack.peek();
+    }
+
+    public void switchToDataSegmentContext() {
+        contextStack.push(dataSegmentContext);
+        context = dataSegmentContext;
+    }
+
+    public void switchFromDataSegmentContext() {
+        contextStack.pop();
+        context = contextStack.peek();
+    }
+
+    public void switchToCStringContext() {
+        contextStack.push(cstringContext);
+        context = cstringContext;
+    }
+
+    public void switchFromCStringContext() {
+        contextStack.pop();
+        context = contextStack.peek();
+    }
+
+    public void putFunction(String name) {
+        String symbolPointerName = "_" + name + "_symbol_ptr";
+        String functionLabel = "_" + name;
+        context.write("""
+  adrp x0, %s@PAGE
+  add x0, x0, %s@PAGEOFF
+  adrp x1, %s@PAGE
+  add x1, x1, %s@PAGEOFF
+  bl _put_function
+""".formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
     }
 }
