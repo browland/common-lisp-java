@@ -160,36 +160,50 @@ public class TreeWalker {
         // We're evaluating a form.
         // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;
-        // We need 16 bytes for each 2 operands; ensure we always reserve a multiple of 16 bytes
-        int stackBytes = (int)(16 * Math.ceil(numOperands/2f));
+
+        // We need 16 bytes for each operand plus one for the function pointer; but ensure we always reserve a multiple
+        // of 16 bytes
+        int stackBytes = (int)(16 * Math.ceil(numOperands+1/2f));
         asmGenerator.reserveSpaceOnStack(stackBytes);
 
-        int pos = 0;
+        int stackSlot = 0;
         for (Node childNode : rlist.nodes()) {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
                     long fixNum = intAtom.getFixNum();
-                    asmGenerator.pushFixNumToStack(pos++, fixNum);
+                    asmGenerator.pushFixNumToStack(stackSlot++, fixNum);
                 }
             }
             else if (childNode instanceof RList innerRList) {
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
                 walkTree(innerRList);
-                asmGenerator.storeResultToStack(pos++);
+                asmGenerator.storeResultToStack(stackSlot++);
             }
         }
 
+        // we'll write the function pointer after the operands (stackSlot was already post-incremented on last operand)
+        asmGenerator.loadFunctionPtr();
+        asmGenerator.storeResultToStack(stackSlot);
+
         // Now the evaluated operands are on the stack, load them into registers ready for our operator call
-        for (int i=0; i<numOperands; i++) {
-            asmGenerator.loadOperandFromStackIntoRegister(i);
+        // Operands will be stored in registers in incrementing order as per usual calling convention
+        int operandNum = 0;
+        for (; operandNum<numOperands; operandNum++) {
+            asmGenerator.loadOperandFromStackIntoRegister(operandNum);
         }
+
+        // Load function ptr into next available register
+        // We use operandNum as it's already incremented to next register num (it's not an operand but we need it in
+        // some register for the jump).
+        int functionPtrRegister = operandNum;
+        asmGenerator.loadOperandFromStackIntoRegister(functionPtrRegister);
 
         // TODO callFunction() probably correctly jumps into add, but we clobbered the first arg in x0.  Need to get the
         //      function ptr before loading operands and put it on stack then load it into say x2 and br x2.
 
-        asmGenerator.callFunction(operator.getOperatorName());
+        asmGenerator.callFunction(functionPtrRegister);
         asmGenerator.freeSpaceOnStack(stackBytes);
     }
 }

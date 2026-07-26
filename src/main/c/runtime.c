@@ -205,7 +205,7 @@ void put_function(char *rawSymbol, uintptr_t rawFunctionPtr) {
 
 uintptr_t get_add_function_ptr() {
     // untag
-    uintptr_t taggedFxnPtr = symbolTable[2].functionSlot;
+    uintptr_t taggedFxnPtr = symbolTable[2].functionSlot;  // for now hardcoding to `add`
     return taggedFxnPtr & 0xFFFFFFFFFFFFFFF8;
 }
 

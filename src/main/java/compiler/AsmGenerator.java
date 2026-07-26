@@ -136,13 +136,17 @@ public class AsmGenerator {
     """.formatted(operandNum, operandNum*8));
     }
 
-    public void callFunction(OperatorName operatorName) {
-        // TODO only works for add
+    public void loadFunctionPtr() {
+        // TODO hardcoded to `add` for now
         context.write("""
-      ;bl %s                ;; call operator; this leaves the result in x0 for our caller
       bl _get_add_function_ptr
-      br x0
-    """.formatted(operatorName.getAsmName()));
+    """);
+    }
+
+    public void callFunction(int functionPtrRegister) {
+        context.write("""
+      blr x%d
+    """.formatted(functionPtrRegister));
     }
 
     public void freeSpaceOnStack(int stackBytes) {
