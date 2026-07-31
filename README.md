@@ -160,3 +160,10 @@ Next steps:
    Heap allocation would certainly slow down and complicate things.  The compiler would need to generate instructions to 
    look up the address of numeric literals each time.  And if we used the .rodata section it could be massive.
    Reminds me of Java's integer pool.
+
+Issues:
+1. When we use a non-existent symbol e.g. + instead of add when we have only stored `add` in the symbol table, then we
+   get an error from clang (as the symbol name string isn't there) but we should have an error out of the compiler as
+   we should know we have no mapping for it.
+2. Bindings for defun
+3. Handle user-defined functions in operator position

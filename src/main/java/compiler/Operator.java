@@ -23,6 +23,10 @@ public class Operator {
             case "if": return new Operator(OperatorName.IF, OperatorType.SPECIAL_FORM);
             case "defvar": return new Operator(OperatorName.DEFVAR, OperatorType.SPECIAL_FORM);
             case "defun": return new Operator(OperatorName.DEFUN, OperatorType.SPECIAL_FORM);
+
+            // not a built-in operator; generate asm to look up
+            // for now we just assume a function has been defined and we treat it as such but should have more guarantees
+            // e.g. by keeping a table of defined functions around purely in the compiler as we walk the tree
             default: throw new UnsupportedOperationException("unsupported operator");
         }
     }

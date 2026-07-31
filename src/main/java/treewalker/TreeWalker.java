@@ -8,12 +8,25 @@ import syntaxtree.Node;
 import syntaxtree.RList;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
     private final AsmGenerator asmGenerator = new AsmGenerator();
+    private final Map<String, SpecialForm> specialForms = new HashMap<>();
+    private final Map<String, Function> functions = new HashMap<>();
+
+    public TreeWalker() {
+        specialForms.put("if", new IfSpecialForm());
+        specialForms.put("defun", new DefunSpecialForm());
+        specialForms.put("devar", new DefvarSpecialForm());
+
+        functions.put("add", new Function("_add"));
+        functions.put("+", new Function("_add"));
+    }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         NodeBuilder nodeBuilder = new NodeBuilder();
@@ -21,9 +34,11 @@ public class TreeWalker {
         TreeWalker walker = new TreeWalker();
 
         // String atom
-        String program = "(add 1 2)";
+//        String program = "(add 1 2)";
+        String program = "(+ 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
-//        String program = "(defun foo (+ 1 1)) (defvar x (+ 1 1)) (if t x (+ 1 2))";
+//        String program = "(defun foo (add 1 1)) (defvar x (add 1 1)) (if t x (add 1 2))";
+//        String program = "(defun foo (add 1 1)) (foo)";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
@@ -126,22 +141,25 @@ public class TreeWalker {
         if (rlist.nodes().getFirst() instanceof Atom operatorAtom) {
             TypedAtom<?> ta = TypedAtom.fromAtom(operatorAtom);
             if (ta instanceof SymbolAtom sa) {
+                // First check operator symbol for match on special forms which are statically defined.
                 Operator op = Operator.fromSymbol(sa.getValue());
-                if (op.getOperatorType() == OperatorType.FUNCTION) {
-                    walkTreeForFunction(rlist, op);
+                SpecialForm specialForm = specialForms.get(sa.getValue());
+                if (specialForm != null) {
+                    specialForm.walkTree(rlist, this, asmGenerator);
                 }
+//                if (OperatorName.IF.equals(op.getOperatorName())) {
+//                    new IfSpecialForm().walkTree(rlist, this, asmGenerator);
+//                }
+//                else if (OperatorName.DEFVAR.equals(op.getOperatorName())) {
+//                    new DefvarSpecialForm().walkTree(rlist, this, asmGenerator);
+//                }
+//                else if (OperatorName.DEFUN.equals(op.getOperatorName())) {
+//                    new DefunSpecialForm().walkTree(rlist, this, asmGenerator);
+//                }
                 else {
-                    if (OperatorName.IF.equals(op.getOperatorName())) {
-                        new IfSpecialForm().walkTree(rlist, this, asmGenerator);
-                    }
-                    else if (OperatorName.DEFVAR.equals(op.getOperatorName())) {
-                        new DefvarSpecialForm().walkTree(rlist, this, asmGenerator);
-                    }
-                    else if (OperatorName.DEFUN.equals(op.getOperatorName())) {
-                        new DefunSpecialForm().walkTree(rlist, this, asmGenerator);
-                    }
-                    else {
-                        throw new UnsupportedOperationException("unsupported special form %s".formatted(op.getOperatorName()));
+                    Function function = functions.get(sa.getValue());
+                    if (function != null) {
+                        walkTreeForFunction(rlist);
                     }
                 }
             }
@@ -155,7 +173,7 @@ public class TreeWalker {
         }
     }
 
-    private void walkTreeForFunction(RList rlist, Operator operator) {
+    private void walkTreeForFunction(RList rlist) {
         // We're evaluating a form.
         // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;

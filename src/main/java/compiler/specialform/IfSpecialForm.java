@@ -5,8 +5,6 @@ import syntaxtree.Node;
 import syntaxtree.RList;
 import treewalker.TreeWalker;
 
-import java.io.IOException;
-
 public class IfSpecialForm implements SpecialForm {
     private static long BRANCH_COUNTER = 0L;
 
