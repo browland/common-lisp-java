@@ -328,14 +328,17 @@ public class AsmGenerator {
     }
 
     public void putFunction(String name) {
-        String symbolPointerName = "_" + name + "_symbol_ptr";
+        // Can't (?) call putFunction in C as we have the dynamically-generated name of the symbol but not obvious to me
+        // how to reach it by calling into C.
+        String symbolPointerName = "_" + name + "_sym";
         String functionLabel = "_" + name;
         context.write("""
   adrp x0, %s@PAGE
   add x0, x0, %s@PAGEOFF
   adrp x1, %s@PAGE
   add x1, x1, %s@PAGEOFF
-  bl _put_function
+  orr x1, x1, #0x2           ; tag the function ptr
+  str x1, [x0, #16]          ; store function ptr to function slot for the symbol
 """.formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
     }
 

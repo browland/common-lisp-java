@@ -7,7 +7,7 @@
 struct SymbolEntry {
     char *symbol;
     uintptr_t variableSlot;
-    void *functionSlot;
+    uintptr_t functionSlot;
 };
 
 // TODO need to implement a mangling scheme for symbols which we can't represent as C/asm variable names.  We'll hit this
@@ -15,9 +15,9 @@ struct SymbolEntry {
 
 uintptr_t add(uintptr_t val1, uintptr_t val2);
 
-struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, NULL};
-struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, NULL};
-struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, &add};
+struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
+struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
+struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, (uintptr_t)&add};
 
 uintptr_t createTaggedSymbolPtr(char *symbolName) {
     // init symbol tagged pointer

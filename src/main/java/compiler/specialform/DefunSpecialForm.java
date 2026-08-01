@@ -20,6 +20,11 @@ public class DefunSpecialForm implements SpecialForm {
         Node nameNode = rlist.nodes().get(1);
         SymbolAtom nameSymbolAtom = TypedAtom.toSymbolAtom(nameNode);
         String name = nameSymbolAtom.getValue();
+
+        // Generate the global variable for this symbol
+        asmGenerator.generateDataSectionQuadWordForSymbolPtr(name);
+        asmGenerator.generateCStringForSymbol(name);
+
         asmGenerator.initFunction(name);
 
         // Bindings
@@ -45,22 +50,24 @@ public class DefunSpecialForm implements SpecialForm {
             asmGenerator.storeOperandFromRegisterToStack(pos++);
         }
 
-        pos = 0;
-        for (Node bindingNode : bindingsList) {
-            Atom symbolAtom = Atom.expectAtom(bindingNode);
-            System.out.println("defun: writing binding from stack to register, then calling _put_symbol for " + symbolAtom.value());
-            // load operand (value ptr) into x1 to leave x0 free for the symbol ptr we'll need ready to call _put_symbol
-            asmGenerator.loadOperandFromStackIntoRegister(pos, 1);
-            asmGenerator.putSymbol(symbolAtom.value());
-            pos++;
-        }
+        // TODO we should just leave our bindings on our stack and figure out how to map symbol to stack offset
+//        pos = 0;
+//        for (Node bindingNode : bindingsList) {
+//            Atom symbolAtom = Atom.expectAtom(bindingNode);
+//            System.out.println("defun: writing binding from stack to register, then calling _put_symbol for " + symbolAtom.value());
+//            // load operand (value ptr) into x1 to leave x0 free for the symbol ptr we'll need ready to call _put_symbol
+//            asmGenerator.loadOperandFromStackIntoRegister(pos, 1);
+//
+////            asmGenerator.putSymbol(symbolAtom.value());
+//            pos++;
+//        }
 
         // Function impl
         Node bodyNode = rlist.nodes().get(3);
         treeWalker.walkTree(bodyNode);
 
-        // TODO Free space on stack
-        asmGenerator.freeSpaceOnStack(stackBytes);
+        // We need to free an additional 16 bytes for the stored x29 and x30 regs
+        asmGenerator.freeSpaceOnStack(stackBytes + 16);
 
         asmGenerator.endFunction();
 
@@ -69,7 +76,7 @@ public class DefunSpecialForm implements SpecialForm {
         asmGenerator.endFunctionDef();
 
         // associate symbol for this function with the tagged function ptr for it
-        String cStringNameSymPtr = asmGenerator.generateCStringForSymbol(name);
+        //String cStringNameSymPtr = asmGenerator.generateCStringForSymbol(name);
 
         asmGenerator.putFunction(name);
 

@@ -39,10 +39,12 @@ public class TreeWalker {
 //        String program = "(add 1 2)";
 //        String program = "(+ 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
+        String program = "(defun foo () 2) (foo)";
 //        String program = "(defun foo (add 1 1)) (defvar x (add 1 1)) (if t x (add 1 2))";
 //        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
+//        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
-        String program = "(defvar x 2) (if nil nil x)";
+//        String program = "(defvar x 2) (if nil nil x)";
 
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
