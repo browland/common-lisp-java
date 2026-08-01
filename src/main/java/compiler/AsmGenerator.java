@@ -211,7 +211,6 @@ public class AsmGenerator {
   adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
   add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
   ldr x0, [x0, #%d]                    ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
-  ;bl _tag_symbol_val                   ; tag the symbol value
 """.formatted(symPointerName, symPointerName, offset));
     }
 

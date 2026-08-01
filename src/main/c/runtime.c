@@ -6,7 +6,7 @@
 
 struct SymbolEntry {
     char *symbol;
-    void *variableSlot;
+    uintptr_t variableSlot;
     void *functionSlot;
 };
 
@@ -15,9 +15,9 @@ struct SymbolEntry {
 
 uintptr_t add(uintptr_t val1, uintptr_t val2);
 
-struct SymbolEntry t_sym = {"t", &t_sym, NULL};
-struct SymbolEntry nil_sym = {"nil", &nil_sym, NULL};
-struct SymbolEntry add_sym = {"add", NULL, &add};
+struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, NULL};
+struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, NULL};
+struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, &add};
 
 uintptr_t createTaggedSymbolPtr(char *symbolName) {
     // init symbol tagged pointer
@@ -50,6 +50,18 @@ uintptr_t createTaggedSymbolPtr(char *symbolName) {
 //     addSymbol(add_symbol_ptr, (uintptr_t)NULL, add_fxn_ptr);
 // }
 
+void tag_symbol_val(struct SymbolEntry *symbolEntry) {
+    // Check for alignment issues before tagging our static values
+    uintptr_t sym_addr = (uintptr_t)symbolEntry;
+    if ((sym_addr & 0x7) != 0) {
+        printf("Init error: symbol struct for %s not aligned to 8 bytes\n", symbolEntry->symbol);
+        exit(-1);
+    }
+
+    // Now tag the value of the symbol value
+    symbolEntry->variableSlot |= 0x4L;
+}
+
 int init() {
 //     // allocate symbol table
 //     symbolTable = malloc(sym_capacity * sizeof(struct SymbolEntry));
@@ -65,6 +77,19 @@ int init() {
 //     // duplicate code for `+`
 //     addFunction("add", &add);
 //     addFunction("+", &add);
+
+    // Check for alignment issues before tagging our static values
+//     uintptr_t t_sym_addr = (uintptr_t)&t_sym;
+//     if ((t_sym_addr & 0x7) != 0) {
+//         printf("Init error: t_sym symbol struct not aligned to 8 bytes");
+//         exit(-1);
+//     }
+//
+//     // Now tag the value of t
+//     t_sym.variableSlot |= 0x4L;
+
+    tag_symbol_val(&t_sym);
+    tag_symbol_val(&nil_sym);
 
     return 0;
 }
@@ -109,7 +134,7 @@ void typecheck_fixnum(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
 
     if (type != TYPE_FIXNUM) {
-        printf("Type error; expect fixnum for value %ld\n", val);
+        printf("Type error; expect fixnum for value 0x%lx\n", val);
         exit(-1);
     }
 }
@@ -118,14 +143,14 @@ void typecheck_symbol(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
 
     if (type != TYPE_SYMBOL) {
-        printf("Type error; expect symbol for value %ld\n", val);
+        printf("Type error; expect symbol for value 0x%lx\n", val);
         exit(-1);
     }
 }
 
-uintptr_t tag_symbol_val(void *symbol_ptr) {
-    return (uintptr_t)symbol_ptr | 0x4;
-}
+// uintptr_t tag_symbol_val(void *symbol_ptr) {
+//     return (uintptr_t)symbol_ptr | 0x4;
+// }
 
 long tagged_ptr_to_fixnum(uintptr_t val) {
     typecheck_fixnum(val);
