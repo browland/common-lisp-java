@@ -188,7 +188,7 @@ public class AsmGenerator {
         //      and that's the symbol.  Its symbol table entry would use the same tagged pointer.
 
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String symPointerName = "_" + symbolName + "_symbol_ptr";
+        String symPointerName = "_" + symbolName + "_sym";
         context.write("""
   adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
   add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
@@ -205,39 +205,42 @@ public class AsmGenerator {
         //      and that's the symbol.  Its symbol table entry would use the same tagged pointer.
 
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String symPointerName = "_" + symbolName + "_symbol_ptr";
-        int namespaceId = namespace.getIdentifier();
+        String symPointerName = "_" + symbolName + "_sym";
+        int offset = namespace == Namespace.VARIABLE ? 8 : 16;
         context.write("""
   adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
   add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
-  ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
-  mov x1, %d                           ; indicate which namespace
-  bl _evaluate_symbol                  ; look up value of this symbol in variable namespace
-""".formatted(symPointerName, symPointerName, namespaceId));
+  ldr x0, [x0, #%d]                    ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
+  ;bl _tag_symbol_val                   ; tag the symbol value
+""".formatted(symPointerName, symPointerName, offset));
     }
 
     public void generateDataSectionQuadWordForSymbolPtr(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String symPointerName = "_" + symbolName + "_symbol_ptr";
+        String symPointerName = "_" + symbolName + "_sym";
+        String strPointerName = "_" + symbolName + "_str";
 
         switchToDataSegmentContext();
         context.write("""
+.p2align 3
 %s:
+    .quad %s
     .quad 0
-                """.formatted(symPointerName));
+    .quad 0
+                """.formatted(symPointerName, strPointerName));
         switchFromDataSegmentContext();
     }
 
     // Returns name of pointer to symbol name cstring
     public String generateCStringForSymbol(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String symPointerName = "_" + symbolName + "_symbol_ptr";
+        String strPointerName = "_" + symbolName + "_str";
 
         switchToCStringContext();
-        context.write(symPointerName + ":\n");
+        context.write(strPointerName + ":\n");
         context.write("  .asciz \"" + symbolName + "\"\n");
         switchFromCStringContext();
-        return symPointerName;
+        return strPointerName;
     }
 
     public void generateSymbolExists() {
@@ -338,6 +341,7 @@ public class AsmGenerator {
     }
 
     // Expects the tagged value ptr already in x1
+    @Deprecated
     public void putSymbol(String symbolName) {
         // put value to symbol table into variable namespace
         // we use x8 for our own internal work to avoid clobbering x0 to x7 in which we assume our values may be
@@ -347,5 +351,17 @@ public class AsmGenerator {
   add x0, x0, %s@PAGEOFF
   bl _put_symbol
 """.formatted(symbolPointerName, symbolPointerName));
+    }
+
+    public void writeRegisterToSymbolValue(int registerNum, String symbolValue) {
+        // put value to symbol table into variable namespace
+        // we use x8 for our own internal work to avoid clobbering x0 to x7 in which we assume our values may be
+        String symbolPointerName = "_" + symbolValue + "_sym";
+        // TODO hardcoded to offset 8
+        context.write("""
+  adrp x8, %s@PAGE
+  add x8, x8, %s@PAGEOFF
+  str x%d, [x8, #8]
+""".formatted(symbolPointerName, symbolPointerName, registerNum));
     }
 }

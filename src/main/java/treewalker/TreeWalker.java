@@ -34,13 +34,15 @@ public class TreeWalker {
         TreeWalker walker = new TreeWalker();
 
         // String atom
+//        String program = "1";
+//        String program = "(if t 1 2)";
 //        String program = "(add 1 2)";
 //        String program = "(+ 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
 //        String program = "(defun foo (add 1 1)) (defvar x (add 1 1)) (if t x (add 1 2))";
-        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
+//        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
-//        String program = "(defvar x 2) x";
+        String program = "(defvar x 2) x";
 
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
