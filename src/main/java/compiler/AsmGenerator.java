@@ -121,6 +121,15 @@ public class AsmGenerator {
   """.formatted(fixNum, pos*8));
     }
 
+    /**
+     * pos starts from 0 and is used to determine the register
+     */
+    public void writeFixNumToRegister(int pos, long fixNum) {
+        context.write("""
+    mov x%d, #%d          ;; move operand (fixnum) to provided register
+  """.formatted(pos, fixNum));
+    }
+
     public void storeResultToStack(int operandNum) {
         context.write("""
   str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing

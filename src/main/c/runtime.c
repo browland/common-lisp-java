@@ -40,6 +40,18 @@ void addSymbol(uintptr_t taggedSymbolPtr, uintptr_t taggedVariablePtr, uintptr_t
 
 uintptr_t add(uintptr_t val1, uintptr_t val2);
 
+void addFunction(char *name, uintptr_t (*raw_fxn_ptr)(uintptr_t, uintptr_t)) {
+    // symbol for this function
+    add_symbol_ptr = createTaggedSymbolPtr(name);
+
+    // prep. tagged function pointer
+    uintptr_t add_fxn_ptr = (uintptr_t)raw_fxn_ptr;
+    add_fxn_ptr = add_fxn_ptr | 0x4;
+
+    // add to symbol table
+    addSymbol(add_symbol_ptr, (uintptr_t)NULL, add_fxn_ptr);
+}
+
 int init() {
     // allocate symbol table
     symbolTable = malloc(sym_capacity * sizeof(struct SymbolEntry));
@@ -53,18 +65,21 @@ int init() {
 
     // create symbol for `add`
     // duplicate code for `+`
-    add_symbol_ptr = createTaggedSymbolPtr("add");
+    addFunction("add", &add);
+    addFunction("+", &add);
+
+    //add_symbol_ptr = createTaggedSymbolPtr("add");
 
     // allocate function pointer
-    uintptr_t (*raw_fxn_ptr)(uintptr_t, uintptr_t);
+    //uintptr_t (*raw_fxn_ptr)(uintptr_t, uintptr_t);
 
     // set it to address of `add` function within this file
-    raw_fxn_ptr = &add;
+    //raw_fxn_ptr = &add;
 
     // now we create a tagged function pointer from raw_fxn_ptr, tag it and put it into symbol table
-    uintptr_t add_fxn_ptr = (uintptr_t)raw_fxn_ptr;
-    add_fxn_ptr = add_fxn_ptr | 0x4;
-    addSymbol(add_symbol_ptr, (uintptr_t)NULL, add_fxn_ptr);
+    //uintptr_t add_fxn_ptr = (uintptr_t)raw_fxn_ptr;
+    //add_fxn_ptr = add_fxn_ptr | 0x4;
+    //addSymbol(add_symbol_ptr, (uintptr_t)NULL, add_fxn_ptr);
 
     return 0;
 }

@@ -22,10 +22,10 @@ public class TreeWalker {
     public TreeWalker() {
         specialForms.put("if", new IfSpecialForm());
         specialForms.put("defun", new DefunSpecialForm());
-        specialForms.put("devar", new DefvarSpecialForm());
+        specialForms.put("defvar", new DefvarSpecialForm());
 
-        functions.put("add", new Function("_add"));
-        functions.put("+", new Function("_add"));
+        functions.put("add", new Function("_add", "add"));
+        functions.put("+", new Function("_add", "add"));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -35,11 +35,13 @@ public class TreeWalker {
 
         // String atom
 //        String program = "(add 1 2)";
-        String program = "(+ 1 2)";
+//        String program = "(+ 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
 //        String program = "(defun foo (add 1 1)) (defvar x (add 1 1)) (if t x (add 1 2))";
 //        String program = "(defun foo (add 1 1)) (foo)";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
+        String program = "(defvar x 2) x";
+
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
@@ -130,6 +132,9 @@ public class TreeWalker {
         if (typedAtom instanceof SymbolAtom symbolAtom) {
             asmGenerator.generateSymbolLookup(symbolAtom.getValue(), Namespace.VARIABLE);
         }
+        else if (typedAtom instanceof IntAtom intAtom) {
+            asmGenerator.writeFixNumToRegister(0, intAtom.getFixNum());
+        }
         else {
             throw new UnsupportedOperationException("unsupported to eval other types of atoms");
 
@@ -159,7 +164,7 @@ public class TreeWalker {
                 else {
                     Function function = functions.get(sa.getValue());
                     if (function != null) {
-                        walkTreeForFunction(rlist);
+                        walkTreeForFunction(rlist, function);
                     }
                 }
             }
@@ -173,7 +178,7 @@ public class TreeWalker {
         }
     }
 
-    private void walkTreeForFunction(RList rlist) {
+    private void walkTreeForFunction(RList rlist, Function function) {
         // We're evaluating a form.
         // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;
@@ -198,7 +203,7 @@ public class TreeWalker {
                     if (slot == 0) {
                         // operator position; look up symbol from function namespace.  This will return a function ptr.
                         // we'll then write the function pointer after the operands (stackSlot was already post-incremented on last operand)
-                        asmGenerator.generateSymbolLookup(symbol, Namespace.FUNCTION);
+                        asmGenerator.generateSymbolLookup(function.getSymbolStringName(), Namespace.FUNCTION);
                         asmGenerator.untagFunctionPtr();
                         asmGenerator.storeResultToStack(slot++);
                     }
