@@ -154,6 +154,14 @@ public class AsmGenerator {
     """.formatted(regNum, stackPos*8));
     }
 
+    /**
+     */
+    public void loadOperandFromStackOffsetIntoRegister(int stackOffset, int regNum) {
+        context.write("""
+      ldr x%d, [fp, #%d]   ;; load binding from stack into register
+    """.formatted(regNum, stackOffset));
+    }
+
     public void loadFunctionPtr() {
         // TODO hardcoded to `add` for now
         context.write("""

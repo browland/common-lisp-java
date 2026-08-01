@@ -9,7 +9,7 @@ public class DefvarSpecialForm implements SpecialForm {
     private static long LABEL_COUNTER = 0L;
 
     @Override
-    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator) {
+    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunction) {
         // generate asm to determine tagged symbol ptr for symbol in node 1.  We know there'll be a runtime symbol for it as we'll 
         // generate one as part of defvar.  So generate the code to retrieve the tagged ptr from this variable, and pass that into 
         // _get_sym which we'll define in runtime.c
@@ -41,7 +41,7 @@ public class DefvarSpecialForm implements SpecialForm {
 
         // Evaluate value node; the result will end up in x0
         Node valueNode = rlist.nodes().get(2);
-        treeWalker.walkTree(valueNode);
+        treeWalker.walkTree(valueNode, null);
 
         // value is now in x0, so update value of symbol
         asmGenerator.writeRegisterToSymbolValue(0, symbolValue);

@@ -1,6 +1,7 @@
 package compiler.specialform;
 
 import compiler.AsmGenerator;
+import treewalker.Function;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import treewalker.TreeWalker;
@@ -9,14 +10,14 @@ public class IfSpecialForm implements SpecialForm {
     private static long BRANCH_COUNTER = 0L;
 
     @Override
-    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator) {
+    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunction) {
         // generate asm to evaluate first operand; this involves recursing back into TreeWalker
         // if we eval the first form then we'll end up with the result in x0.
         Node conditionNode = rlist.get(1);
         Node trueNode = rlist.get(2);
         Node falseNode = rlist.get(3);
 
-        treeWalker.walkTree(conditionNode);
+        treeWalker.walkTree(conditionNode, currentFunction);
 
         asmGenerator.reserveSpaceOnStack(16);
         asmGenerator.storeResultToStack(0);
@@ -42,12 +43,12 @@ public class IfSpecialForm implements SpecialForm {
 
         // generate code for the two branches, each with a label; true first.  We also need an exit label.
         asmGenerator.generateLabel(trueLabel);
-        treeWalker.walkTree(trueNode);
+        treeWalker.walkTree(trueNode, currentFunction);
         asmGenerator.generateUnconditionalJump(exitLabel);  // jump to exit
 
         // generate false branch code
         asmGenerator.generateLabel(falseLabel);
-        treeWalker.walkTree(falseNode);
+        treeWalker.walkTree(falseNode, currentFunction);
         asmGenerator.generateUnconditionalJump(exitLabel);  // jump to exit
 
         asmGenerator.generateLabel(exitLabel);

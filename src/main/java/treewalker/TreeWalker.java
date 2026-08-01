@@ -24,8 +24,8 @@ public class TreeWalker {
         specialForms.put("defun", new DefunSpecialForm());
         specialForms.put("defvar", new DefvarSpecialForm());
 
-        functions.put("add", new Function("_add", "add"));
-        functions.put("+", new Function("_add", "add"));
+        functions.put("add", new Function("add", Map.of()));
+        functions.put("+", new Function("add", Map.of()));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -39,10 +39,9 @@ public class TreeWalker {
 //        String program = "(add 1 2)";
 //        String program = "(+ 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
-        String program = "(defun foo () 2) (foo)";
-//        String program = "(defun foo (add 1 1)) (defvar x (add 1 1)) (if t x (add 1 2))";
-//        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
-//        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
+//        String program = "(defun foo () 2) (foo)";
+//        String program = "(defun foo () (add 1 1)) (if t (foo) (add 1 2))";
+        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
 //        String program = "(defvar x 2) (if nil nil x)";
 
@@ -105,7 +104,7 @@ public class TreeWalker {
         asmGenerator.initMainFunction();
 
         for (Node node : nodes) {
-            walkTree(node);
+            walkTree(node, null);
         }
 
         asmGenerator.printResultAndCleanUpMainFunction();
@@ -121,19 +120,19 @@ public class TreeWalker {
         asmGenerator.dumpAsm(bw);
     }
 
-
-    public void walkTree(Node node) {
+    public void walkTree(Node node, Function currentFunction) {
         if (node instanceof Atom atom) {
-            handleAtom(atom);
+            handleAtom(atom, currentFunction);
         }
         else if (node instanceof RList rlist) {
-            walkTree(rlist);
+            walkTree(rlist, currentFunction);
         }
     }
 
-    private TypedAtom<?> handleAtom(Atom atom) {
+    private TypedAtom<?> handleAtom(Atom atom, Function currentFunction) {
         TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
         if (typedAtom instanceof SymbolAtom symbolAtom) {
+            // check our mappings to stack offsets first (bindings for the current function)
             asmGenerator.generateSymbolLookup(symbolAtom.getValue(), Namespace.VARIABLE);
         }
         else if (typedAtom instanceof IntAtom intAtom) {
@@ -146,28 +145,19 @@ public class TreeWalker {
         return typedAtom;
     }
 
-    private void walkTree(RList rlist) {
+    private void walkTree(RList rlist, Function currentFunctionScope) {
         if (rlist.nodes().getFirst() instanceof Atom operatorAtom) {
             TypedAtom<?> ta = TypedAtom.fromAtom(operatorAtom);
             if (ta instanceof SymbolAtom sa) {
                 // First check operator symbol for match on special forms which are statically defined.
                 SpecialForm specialForm = specialForms.get(sa.getValue());
                 if (specialForm != null) {
-                    specialForm.walkTree(rlist, this, asmGenerator);
+                    specialForm.walkTree(rlist, this, asmGenerator, currentFunctionScope);
                 }
-//                if (OperatorName.IF.equals(op.getOperatorName())) {
-//                    new IfSpecialForm().walkTree(rlist, this, asmGenerator);
-//                }
-//                else if (OperatorName.DEFVAR.equals(op.getOperatorName())) {
-//                    new DefvarSpecialForm().walkTree(rlist, this, asmGenerator);
-//                }
-//                else if (OperatorName.DEFUN.equals(op.getOperatorName())) {
-//                    new DefunSpecialForm().walkTree(rlist, this, asmGenerator);
-//                }
                 else {
                     Function function = functions.get(sa.getValue());
                     if (function != null) {
-                        walkTreeForFunction(rlist, function);
+                        walkTreeForFunctionCall(rlist, function, currentFunctionScope);
                     }
                 }
             }
@@ -181,7 +171,7 @@ public class TreeWalker {
         }
     }
 
-    private void walkTreeForFunction(RList rlist, Function function) {
+    private void walkTreeForFunctionCall(RList rlist, Function functionToCall, Function currentFunctionScope) {
         // We're evaluating a form.
         // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;
@@ -205,17 +195,23 @@ public class TreeWalker {
                     if (slot == 0) {
                         // operator position; look up symbol from function namespace.  This will return a function ptr.
                         // we'll then write the function pointer after the operands (stackSlot was already post-incremented on last operand)
-                        asmGenerator.generateSymbolLookup(function.getSymbolStringName(), Namespace.FUNCTION);
+                        asmGenerator.generateSymbolLookup(functionToCall.getSymbolStringName(), Namespace.FUNCTION);
                         asmGenerator.untagFunctionPtr();
                         asmGenerator.storeResultToStack(slot++);
                     }
                     else {
                         String symbol = symbolAtom.getValue();
-                        // Generate the global variable for this symbol
-                        asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbol);
-                        // TODO don't add same symbol to asm .cstring segment more than once; sort and uniq them while flushing to asm output for e.g.
+                        if (currentFunctionScope.containsBinding(symbol)) {
+                            int stackOffset = currentFunctionScope.getStackOffsets().get(symbol);
+                            asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
+                        }
+                        else {
+                            // Generate the global variable for this symbol
+                            asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbol);
+                            // TODO don't add same symbol to asm .cstring segment more than once; sort and uniq them while flushing to asm output for e.g.
 
-                        asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
+                            asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
+                        }
                         asmGenerator.storeResultToStack(slot++);  // TODO code smell
                     }
                 }
@@ -223,7 +219,7 @@ public class TreeWalker {
             else if (childNode instanceof RList innerRList) {
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
-                walkTree(innerRList);
+                walkTree(innerRList, currentFunctionScope);
                 asmGenerator.storeResultToStack(slot++);
             }
         }
