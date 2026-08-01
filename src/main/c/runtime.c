@@ -19,37 +19,6 @@ struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
 struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, (uintptr_t)&add};
 
-uintptr_t createTaggedSymbolPtr(char *symbolName) {
-    // init symbol tagged pointer
-    char *sym_on_heap = strdup(symbolName);
-    uintptr_t symbol_ptr = (uintptr_t)sym_on_heap;
-    return symbol_ptr | 0x4;
-}
-
-// TODO needs adapting for non-self-evaluating symbols
-//      Need to think a bit as we pass in raw symbol string which we'll tag; the value should probably be tagged already,
-//      so we end up with tagging in the caller and here too
-// void addSymbol(uintptr_t taggedSymbolPtr, uintptr_t taggedVariablePtr, uintptr_t taggedFxnPtr) {
-//     struct SymbolEntry symbol_entry;
-//     symbol_entry.symbol = taggedSymbolPtr;
-//     symbol_entry.variableSlot = taggedVariablePtr;
-//     symbol_entry.functionSlot = taggedFxnPtr;
-//     symbolTable[sym_size++] = symbol_entry;
-// }
-
-
-// void addFunction(char *name, uintptr_t (*raw_fxn_ptr)(uintptr_t, uintptr_t)) {
-//     // symbol for this function
-//     add_symbol_ptr = createTaggedSymbolPtr(name);
-//
-//     // prep. tagged function pointer
-//     uintptr_t add_fxn_ptr = (uintptr_t)raw_fxn_ptr;
-//     add_fxn_ptr = add_fxn_ptr | 0x4;
-//
-//     // add to symbol table
-//     addSymbol(add_symbol_ptr, (uintptr_t)NULL, add_fxn_ptr);
-// }
-
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
     uintptr_t sym_addr = (uintptr_t)symbolEntry;
@@ -63,31 +32,6 @@ void tag_symbol_val(struct SymbolEntry *symbolEntry) {
 }
 
 int init() {
-//     // allocate symbol table
-//     symbolTable = malloc(sym_capacity * sizeof(struct SymbolEntry));
-//
-//     // create built-in symbols
-//     t_symbol_ptr = createTaggedSymbolPtr("t");
-//     addSymbol(t_symbol_ptr, t_symbol_ptr, (uintptr_t)NULL);
-//
-//     nil_symbol_ptr = createTaggedSymbolPtr("nil");
-//     addSymbol(nil_symbol_ptr, nil_symbol_ptr, (uintptr_t)NULL);
-//
-//     // create symbol for `add`
-//     // duplicate code for `+`
-//     addFunction("add", &add);
-//     addFunction("+", &add);
-
-    // Check for alignment issues before tagging our static values
-//     uintptr_t t_sym_addr = (uintptr_t)&t_sym;
-//     if ((t_sym_addr & 0x7) != 0) {
-//         printf("Init error: t_sym symbol struct not aligned to 8 bytes");
-//         exit(-1);
-//     }
-//
-//     // Now tag the value of t
-//     t_sym.variableSlot |= 0x4L;
-
     tag_symbol_val(&t_sym);
     tag_symbol_val(&nil_sym);
 
@@ -107,7 +51,7 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
 }
 
 void printResult(uintptr_t result) {
-    printf("printResult: %lu\n", result);
+    printf("printResult: 0x%lx\n", result);
     // result is a tagged pointer
     long tagMask = 0x7;
     long tag = result & tagMask;
@@ -148,10 +92,6 @@ void typecheck_symbol(uintptr_t val) {
     }
 }
 
-// uintptr_t tag_symbol_val(void *symbol_ptr) {
-//     return (uintptr_t)symbol_ptr | 0x4;
-// }
-
 long tagged_ptr_to_fixnum(uintptr_t val) {
     typecheck_fixnum(val);
     return val >> 3;
@@ -167,11 +107,6 @@ uintptr_t add(uintptr_t val1, uintptr_t val2) {
     return res;
 }
 
-// uintptr_t get_t() {
-//     uintptr_t t_symbol_ptr = symbolTable[0].symbol;
-//     return t_symbol_ptr;
-// }
-
 // returns 0 if val is t; for example allows a subsequent cbz or cbnz instruction to react to zero when the last result
 // was t.
 // This is made easier since we intern t by always using the same pointer for it.
@@ -181,82 +116,6 @@ long is_t(uintptr_t val) {
         return 0;
     }
     return -1;
-}
-
-uintptr_t evaluate_symbol(uintptr_t taggedPtr, NAMESPACE_TYPE namespaceType) {
-//     char *namespaceTypeStr = namespaceType == NAMESPACE_VARIABLE ? "Variable" : "Function";
-//     printf("evaluate_symbol: taggedPtr: %lu, namespaceType: %s\n", taggedPtr, namespaceTypeStr);
-//
-//     RUNTIME_TYPE rType = determineType(taggedPtr);
-//     if (rType == TYPE_UNKNOWN) {
-//         printf("Unknown type for likely untagged symbol ptr %ld\n", taggedPtr);
-//         exit(-1);
-//     }
-//
-//     // We can trust taggedPtr without type-checking it, as it was loaded from a well-defined variable which must have previously been set by our runtime
-//     for (int i=0; i<sym_size; i++) {
-//         uintptr_t this_symbol_ptr = symbolTable[i].symbol;
-//         if (taggedPtr == this_symbol_ptr) {
-//             return namespaceType == NAMESPACE_VARIABLE ? symbolTable[i].variableSlot : symbolTable[i].functionSlot;
-//         }
-//     }
-
-    // We created the variable for this symbol but it's not in the symbol table, programming error
-    printf("Could not find symbol for tagged symbol ptr %ld\n", taggedPtr);
-    exit(-1);
-}
-
-// Similar to evaluate_symbol but lenient if not exists in symbol table for cases where need to check existence as a valid case
-uintptr_t symbol_exists(uintptr_t taggedPtr) {
-    // We can trust taggedPtr without type-checking it, as it was loaded from a well-defined variable which must have previously been set by our runtime
-//     for (int i=0; i<sym_size; i++) {
-//         uintptr_t this_symbol_ptr = symbolTable[i].symbol;
-//         if (taggedPtr == this_symbol_ptr) {
-//             return symbolTable[i].variableSlot;
-//         }
-//     }
-
-    return (uintptr_t)NULL;
-}
-
-void put_symbol(uintptr_t taggedSymbolPtr, uintptr_t taggedValuePtr) {
-//     printf("put_symbol: taggedSymbolPtr: %lu, taggedValuePtr: %lu\n", taggedSymbolPtr, taggedValuePtr);
-//
-//     // Assumption that we've already checked this symbol entry doesn't already exist, so we just add the entry to the next slot
-//     struct SymbolEntry symbol_entry;
-//     symbol_entry.symbol = taggedSymbolPtr;
-//     symbol_entry.variableSlot = taggedValuePtr;
-//     symbolTable[sym_size++] = symbol_entry;
-}
-
-void put_function(char *rawSymbol, uintptr_t rawFunctionPtr) {
-    // TODO keep it v. simple and just add to the end of the symbol table
-//     printf("put_function: raw symbol: %s, raw function ptr: %lu\n", rawSymbol, rawFunctionPtr);
-//
-//     // init symbol tagged pointer; needed for now to ensure we're aligned to 8 bytes to make tagging work
-//     // TODO drawback here is always re-alloc'ing the string; problem when redefining as we'll have multiple of same symbol
-//     //      Needs interning somehow.
-//     char *sym_on_heap = strdup(rawSymbol);
-//     uintptr_t symbol_ptr = (uintptr_t)sym_on_heap;
-//     symbol_ptr = symbol_ptr | TYPE_TAG_SYMBOL;
-//
-//     // tag the function pointer - let's just go with a tag of 2 for now.
-//     // We can assume it's aligned to 8 bytes due to the alignment we always use for user-defined functions
-//     uintptr_t tagged_fxn_ptr = rawFunctionPtr | TYPE_TAG_FUNCTION;
-//
-//     // put tagged t pointer to first two slots of symbol table (symbol and its value in variable namespace)
-//     printf("put_function: making symbol entry for %s, tagged symbol ptr: %lu, tagged function ptr: %lu\n", rawSymbol, symbol_ptr, tagged_fxn_ptr);
-//     struct SymbolEntry symbol_entry;
-//     symbol_entry.symbol = symbol_ptr;
-//     symbol_entry.functionSlot = tagged_fxn_ptr;
-//     symbolTable[sym_size++] = symbol_entry;
-}
-
-uintptr_t get_add_function_ptr() {
-    // untag
-//     uintptr_t taggedFxnPtr = symbolTable[2].functionSlot;  // for now hardcoding to `add`
-//     return taggedFxnPtr & 0xFFFFFFFFFFFFFFF8;
-    return ((uintptr_t)(add_sym.symbol)) & 0xFFFFFFFFFFFFFFF8;
 }
 
 uintptr_t untag_fxn_ptr(uintptr_t taggedFxnPtr) {

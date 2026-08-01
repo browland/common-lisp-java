@@ -34,37 +34,6 @@ public class AsmGenerator {
     private AsmContext dataSegmentContext = new AsmContext();
     private AsmContext cstringContext = new AsmContext();
 
-    // TODO keeping this around for code for string literals
-    public void generateGlobals() {
-        // Anon. string literals, will be needed when we use string literals in code
-        //String myAsm = "";
-        //List<StringLiteral> stringLiterals = context.getStringLiterals();
-        //if (! stringLiterals.isEmpty()) {
-        //    myAsm += ".cstring\n";
-        //    for (StringLiteral stringLiteral : stringLiterals) {
-        //        myAsm += stringLiteral.name() + ":\n";
-        //        myAsm += "  .asciz \"" + stringLiteral.value() + "\"\n";
-        //    }
-        //}
-
-        //// Static strings for things like messages
-        //myAsm += """
-//_error_msg:
-//  .asciz \"ERROR (incorrect value type)\\n\"""";
-
-        context.write("""
-.data
-.p2align 3
-""");
-        List<String> taggedSymbolNames = context.getTaggedSymbolNames();
-        for (String taggedSymbolName : taggedSymbolNames) {
-            context.write(""" 
-%s:
-    .quad 0
-""".formatted(taggedSymbolName));
-        }
-    }
-
     public void initMainFunction() {
         context.write(
                 """
@@ -162,13 +131,6 @@ public class AsmGenerator {
     """.formatted(regNum, stackOffset));
     }
 
-    public void loadFunctionPtr() {
-        // TODO hardcoded to `add` for now
-        context.write("""
-      bl _get_add_function_ptr
-    """);
-    }
-
     public void untagFunctionPtr() {
         context.write("""
       bl _untag_fxn_ptr
@@ -185,23 +147,6 @@ public class AsmGenerator {
         context.write("""
                   add sp, sp, #%d
                 """.formatted(stackBytes));
-    }
-
-    public void generateLoadSymbolTaggedPtr(String symbolName) {
-        //      For each defined symbol we'll have a global with a well-defined name.  So far we're calling them t_symbol_ptr and nil_symbol_ptr and so on
-        //      The built-in symbols will be defined in runtime.c and any user-defined ones will be added to the .cstring section of generated asm.
-        //      E.g. for a user-defined symbol myvar, we'd generate a 'quad' data with name myvar_symbol_ptr, we'd strdup the char* symbol name so it's on the
-        //      heap, we'd then store that pointer with the appropriate tagged bits in myvar_symbol_ptr.
-        //      So for lookup, we can reference the pointer name by its well-defined name, get its value, check its type, remove the tag bits, dereference it, 
-        //      and that's the symbol.  Its symbol table entry would use the same tagged pointer.
-
-        // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String symPointerName = "_" + symbolName + "_sym";
-        context.write("""
-  adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
-  add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
-  ldr x0, [x0]                         ; dereference pointer so we return (in x0) the actual tagged (symbol) pointer
-""".formatted(symPointerName, symPointerName));
     }
 
     public void generateSymbolLookup(String symbolName, Namespace namespace) {
@@ -250,14 +195,6 @@ public class AsmGenerator {
         return strPointerName;
     }
 
-    public void generateSymbolExists() {
-        // Similar to generateSymbolLookup() but allows for case where symbol is not in the table yet, e.g. for defvar to determine whether it's the first
-        // time we've encountered defvar for this symbol (else no-op).
-        context.write("""
-  bl _symbol_exists                    ; look up value of this symbol in variable namespace; else NULL
-""");
-    }
-
     public void generateTypeCheckForSymbol() {
         context.write("""
   bl _typecheck_symbol
@@ -287,10 +224,6 @@ public class AsmGenerator {
                 .global %s
                 %s:
                 """.formatted(label, label));
-    }
-
-    public void write(String asm) {
-        context.write(asm);
     }
 
     public void dumpAsm(BufferedWriter bw) throws IOException {
@@ -350,24 +283,11 @@ public class AsmGenerator {
 """.formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
     }
 
-    // Expects the tagged value ptr already in x1
-    @Deprecated
-    public void putSymbol(String symbolName) {
-        // put value to symbol table into variable namespace
-        // we use x8 for our own internal work to avoid clobbering x0 to x7 in which we assume our values may be
-        String symbolPointerName = "_" + symbolName + "_symbol_ptr";
-        context.write("""
-  adrp x0, %s@PAGE
-  add x0, x0, %s@PAGEOFF
-  bl _put_symbol
-""".formatted(symbolPointerName, symbolPointerName));
-    }
-
     public void writeRegisterToSymbolValue(int registerNum, String symbolValue) {
         // put value to symbol table into variable namespace
         // we use x8 for our own internal work to avoid clobbering x0 to x7 in which we assume our values may be
         String symbolPointerName = "_" + symbolValue + "_sym";
-        // TODO hardcoded to offset 8
+        // TODO hardcoded to offset 8 which is the value slot for the symbol; needs namespace passing in
         context.write("""
   adrp x8, %s@PAGE
   add x8, x8, %s@PAGEOFF

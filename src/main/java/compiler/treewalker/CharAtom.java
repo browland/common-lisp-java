@@ -1,4 +1,4 @@
-package treewalker;
+package compiler.treewalker;
 
 import syntaxtree.Atom;
 

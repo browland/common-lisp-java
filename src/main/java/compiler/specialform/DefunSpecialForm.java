@@ -4,10 +4,10 @@ import compiler.AsmGenerator;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
-import treewalker.Function;
-import treewalker.SymbolAtom;
-import treewalker.TreeWalker;
-import treewalker.TypedAtom;
+import compiler.treewalker.Function;
+import compiler.treewalker.SymbolAtom;
+import compiler.treewalker.TreeWalker;
+import compiler.treewalker.TypedAtom;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class DefunSpecialForm implements SpecialForm {
     @Override
-    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunction) {
+    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunctionScope) {
         // put the AsmGenerator into new function scope
         asmGenerator.startFunctionDef();
 
@@ -38,21 +38,15 @@ public class DefunSpecialForm implements SpecialForm {
         int stackBytes = (int)(16 * Math.ceil(numBindings/2f));
         asmGenerator.reserveSpaceOnStack(stackBytes);
 
-        // TODO think about bindings and scopes ...
-        //      Generate code to (i) create new symbol table scope (linked list), then copy each runtime arg (from register)
-        //      into matching symbol in that new scope.  E.g. if bindings are (x,y,z) then we set x to x0, y to x1 etc.
-        // TODO for now just add into the existing symbol table blindly
-        //      e.g. put_symbol from each register for each binding
-        //      But we have to first put each arg onto the stack so they're not still in calling convention position, so we can
-        //      call into our runtime to add each symbol mapping one-by-one.
         int pos = 0;
         Map<String, Integer> stackOffsets = new HashMap<>();
         for (Node bindingNode : bindingsList) {
             Atom symbolAtom = Atom.expectAtom(bindingNode);
             System.out.printf("defun: storing binding for %s to stack%n", symbolAtom.value());
             asmGenerator.storeOperandFromRegisterToStack(pos);
-            // Stack offset is relative to the frame pointer; values will be {-8, -16, ...}.
-            stackOffsets.put(symbolAtom.value(), (pos+1)*-8);
+            // Stack offset is relative to the frame pointer and starting from low value; values will be e.g. {-16, -8, ...}.
+            int stackOffset = -1*stackBytes + (pos*8);
+            stackOffsets.put(symbolAtom.value(), stackOffset);
             pos++;
         }
 
@@ -75,7 +69,5 @@ public class DefunSpecialForm implements SpecialForm {
 
         // add this function to our compile-time Map
         treeWalker.getFunctions().put(name, function);
-
-        // TODO update Function with stack offsets of our bindings, then pass it around
     }
 }
