@@ -68,24 +68,8 @@ int init() {
     addFunction("add", &add);
     addFunction("+", &add);
 
-    //add_symbol_ptr = createTaggedSymbolPtr("add");
-
-    // allocate function pointer
-    //uintptr_t (*raw_fxn_ptr)(uintptr_t, uintptr_t);
-
-    // set it to address of `add` function within this file
-    //raw_fxn_ptr = &add;
-
-    // now we create a tagged function pointer from raw_fxn_ptr, tag it and put it into symbol table
-    //uintptr_t add_fxn_ptr = (uintptr_t)raw_fxn_ptr;
-    //add_fxn_ptr = add_fxn_ptr | 0x4;
-    //addSymbol(add_symbol_ptr, (uintptr_t)NULL, add_fxn_ptr);
-
     return 0;
 }
-
-// before tagging function ptr        0x000000016fdfef98
-// after calling get_add_function_ptr 0x000000016fdfef98
 
 RUNTIME_TYPE determineType(uintptr_t taggedVal) {
     long tag = taggedVal & TYPE_MASK;
@@ -170,6 +154,15 @@ long is_t(uintptr_t val) {
 }
 
 uintptr_t evaluate_symbol(uintptr_t taggedPtr, NAMESPACE_TYPE namespaceType) {
+    char *namespaceTypeStr = namespaceType == NAMESPACE_VARIABLE ? "Variable" : "Function";
+    printf("evaluate_symbol: taggedPtr: %lu, namespaceType: %s\n", taggedPtr, namespaceTypeStr);
+
+    RUNTIME_TYPE rType = determineType(taggedPtr);
+    if (rType == TYPE_UNKNOWN) {
+        printf("Unknown type for likely untagged symbol ptr %ld\n", taggedPtr);
+        exit(-1);
+    }
+
     // We can trust taggedPtr without type-checking it, as it was loaded from a well-defined variable which must have previously been set by our runtime
     for (int i=0; i<sym_size; i++) {
         uintptr_t this_symbol_ptr = symbolTable[i].symbol;
@@ -196,11 +189,13 @@ uintptr_t symbol_exists(uintptr_t taggedPtr) {
     return (uintptr_t)NULL;
 }
 
-void put_symbol(uintptr_t taggedSymbolPtr, uintptr_t valuePtr) {
+void put_symbol(uintptr_t taggedSymbolPtr, uintptr_t taggedValuePtr) {
+    printf("put_symbol: taggedSymbolPtr: %lu, taggedValuePtr: %lu\n", taggedSymbolPtr, taggedValuePtr);
+
     // Assumption that we've already checked this symbol entry doesn't already exist, so we just add the entry to the next slot
     struct SymbolEntry symbol_entry;
     symbol_entry.symbol = taggedSymbolPtr;
-    symbol_entry.variableSlot = valuePtr;
+    symbol_entry.variableSlot = taggedValuePtr;
     symbolTable[sym_size++] = symbol_entry;
 }
 
@@ -208,16 +203,19 @@ void put_function(char *rawSymbol, uintptr_t rawFunctionPtr) {
     // TODO keep it v. simple and just add to the end of the symbol table
     printf("put_function: raw symbol: %s, raw function ptr: %lu\n", rawSymbol, rawFunctionPtr);
 
-    // init symbol tagged pointer
+    // init symbol tagged pointer; needed for now to ensure we're aligned to 8 bytes to make tagging work
+    // TODO drawback here is always re-alloc'ing the string; problem when redefining as we'll have multiple of same symbol
+    //      Needs interning somehow.
     char *sym_on_heap = strdup(rawSymbol);
     uintptr_t symbol_ptr = (uintptr_t)sym_on_heap;
-    symbol_ptr = symbol_ptr | 0x4;  // TODO use runtime.h constant
+    symbol_ptr = symbol_ptr | TYPE_TAG_SYMBOL;
 
     // tag the function pointer - let's just go with a tag of 2 for now.
     // We can assume it's aligned to 8 bytes due to the alignment we always use for user-defined functions
-    uintptr_t tagged_fxn_ptr = rawFunctionPtr | 0x2;  // TODO put in runtime.h when happy
+    uintptr_t tagged_fxn_ptr = rawFunctionPtr | TYPE_TAG_FUNCTION;
 
     // put tagged t pointer to first two slots of symbol table (symbol and its value in variable namespace)
+    printf("put_function: making symbol entry for %s, tagged symbol ptr: %lu, tagged function ptr: %lu\n", rawSymbol, symbol_ptr, tagged_fxn_ptr);
     struct SymbolEntry symbol_entry;
     symbol_entry.symbol = symbol_ptr;
     symbol_entry.functionSlot = tagged_fxn_ptr;

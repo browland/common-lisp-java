@@ -62,4 +62,11 @@ public final class RList implements Node {
     public void setParent(RList parent) {
         this.parent = parent;
     }
+
+    public static RList expectRList(Node node) {
+        if (node instanceof RList rlist) {
+            return rlist;
+        }
+        throw new RuntimeException("Expected RList but was " + node);
+    }
 }

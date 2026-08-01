@@ -4,6 +4,7 @@
 
 #define TYPE_MASK 0x7
 #define TYPE_TAG_FIXNUM 1L
+#define TYPE_TAG_FUNCTION 2L
 #define TYPE_TAG_SYMBOL 4L
 
 #define NAMESPACE_VARIABLE 0

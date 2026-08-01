@@ -132,8 +132,17 @@ public class AsmGenerator {
 
     public void storeResultToStack(int operandNum) {
         context.write("""
-  str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
+  str x0, [sp, #%d]  ;; store result from x0 to stack to free x0 for further operand processing
 """.formatted(operandNum*8));
+    }
+
+    /**
+     * operandNum starts from 0
+     */
+    public void storeOperandFromRegisterToStack(int pos) {
+        context.write("""
+      str x%d, [sp, #%d]   ;; load evaluated operand into register ready for operator call
+    """.formatted(pos, pos*8));
     }
 
     /**
@@ -219,7 +228,8 @@ public class AsmGenerator {
         switchFromDataSegmentContext();
     }
 
-    public void generateCStringForSymbol(String symbolName) {
+    // Returns name of pointer to symbol name cstring
+    public String generateCStringForSymbol(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_symbol_ptr";
 
@@ -227,6 +237,7 @@ public class AsmGenerator {
         context.write(symPointerName + ":\n");
         context.write("  .asciz \"" + symbolName + "\"\n");
         switchFromCStringContext();
+        return symPointerName;
     }
 
     public void generateSymbolExists() {
@@ -324,5 +335,17 @@ public class AsmGenerator {
   add x1, x1, %s@PAGEOFF
   bl _put_function
 """.formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
+    }
+
+    // Expects the tagged value ptr already in x1
+    public void putSymbol(String symbolName) {
+        // put value to symbol table into variable namespace
+        // we use x8 for our own internal work to avoid clobbering x0 to x7 in which we assume our values may be
+        String symbolPointerName = "_" + symbolName + "_symbol_ptr";
+        context.write("""
+  adrp x0, %s@PAGE
+  add x0, x0, %s@PAGEOFF
+  bl _put_symbol
+""".formatted(symbolPointerName, symbolPointerName));
     }
 }

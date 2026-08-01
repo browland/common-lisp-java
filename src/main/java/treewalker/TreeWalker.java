@@ -38,9 +38,9 @@ public class TreeWalker {
 //        String program = "(+ 1 2)";
 //        String program = "(+ 1 (+ 1 2))";
 //        String program = "(defun foo (add 1 1)) (defvar x (add 1 1)) (if t x (add 1 2))";
-//        String program = "(defun foo (add 1 1)) (foo)";
+        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
-        String program = "(defvar x 2) x";
+//        String program = "(defvar x 2) x";
 
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
@@ -147,7 +147,6 @@ public class TreeWalker {
             TypedAtom<?> ta = TypedAtom.fromAtom(operatorAtom);
             if (ta instanceof SymbolAtom sa) {
                 // First check operator symbol for match on special forms which are statically defined.
-                Operator op = Operator.fromSymbol(sa.getValue());
                 SpecialForm specialForm = specialForms.get(sa.getValue());
                 if (specialForm != null) {
                     specialForm.walkTree(rlist, this, asmGenerator);
@@ -199,7 +198,6 @@ public class TreeWalker {
                     asmGenerator.pushFixNumToStack(slot++, fixNum);
                 }
                 else if (typedAtom instanceof SymbolAtom symbolAtom) {
-                    String symbol = symbolAtom.getValue();
                     if (slot == 0) {
                         // operator position; look up symbol from function namespace.  This will return a function ptr.
                         // we'll then write the function pointer after the operands (stackSlot was already post-incremented on last operand)
@@ -208,7 +206,13 @@ public class TreeWalker {
                         asmGenerator.storeResultToStack(slot++);
                     }
                     else {
-                        throw new UnsupportedOperationException("not ready for symbol eval in operand pos quite yet");
+                        String symbol = symbolAtom.getValue();
+                        // Generate the global variable for this symbol
+                        asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbol);
+                        // TODO don't add same symbol to asm .cstring segment more than once; sort and uniq them while flushing to asm output for e.g.
+
+                        asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
+                        asmGenerator.storeResultToStack(slot++);  // TODO code smell
                     }
                 }
             }
@@ -235,5 +239,9 @@ public class TreeWalker {
 
         asmGenerator.callFunction(functionPtrRegister);
         asmGenerator.freeSpaceOnStack(stackBytes);
+    }
+
+    public Map<String,Function> getFunctions() {
+        return functions;
     }
 }
