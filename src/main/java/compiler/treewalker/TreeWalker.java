@@ -23,6 +23,7 @@ public class TreeWalker {
         specialForms.put("if", new IfSpecialForm());
         specialForms.put("defun", new DefunSpecialForm());
         specialForms.put("defvar", new DefvarSpecialForm());
+        specialForms.put("lambda", new LambdaSpecialForm());
 
         functions.put("add", new Function("add", Map.of()));
         functions.put("+", new Function("add", Map.of()));
@@ -41,10 +42,11 @@ public class TreeWalker {
 //        String program = "(+ 1 (+ 1 2))";
 //        String program = "(defun foo () 2) (foo)";
 //        String program = "(defun foo () (add 1 1)) (if t (foo) (add 1 2))";
-        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
 //        String program = "(defun foo (x y) x) (foo 1 2)";
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
 //        String program = "(defvar x 2) (if nil nil x)";
+//        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
+        String program = "((lambda (x) (+ x 1)) 1)";
 
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
@@ -144,7 +146,15 @@ public class TreeWalker {
 
         }
         else {
-            throw new UnsupportedOperationException("possibly trying to eval a lambda; we're not ready yet");
+            // TODO inline lambda application - the only valid case where we can have a list in the first position in a form
+            //      Handle the list recursively - the result of evaluation will be a tagged ptr for the closure value
+            //      and we'll continue evaluating the current form once we unwind back to this level and apply it.
+//            walkTree(rlist.nodes().getFirst(), currentFunctionScope);
+            // TODO how to continue processing the form?  Get Function from functions by name; but we don't know its name ...
+            //      Then walkTreeForFunctionCall.
+            //      For now we know it's called closure_0
+            Function closure = functions.get("closure_0");
+            walkTreeForFunctionCall(rlist, closure, currentFunctionScope);
         }
     }
 
@@ -155,7 +165,7 @@ public class TreeWalker {
 
         // We need 16 bytes for each operand plus one for the function pointer; but ensure we always reserve a multiple
         // of 16 bytes
-        int stackBytes = (int)(16 * Math.ceil(numOperands+1/2f));
+        final int stackBytes = (int)(16 * Math.ceil(numOperands+1/2f));
         asmGenerator.reserveSpaceOnStack(stackBytes);
 
         // This doubles as the stack slot index, and also the node index of the list we're walking
@@ -194,9 +204,15 @@ public class TreeWalker {
                 }
             }
             else if (childNode instanceof RList innerRList) {
+                // We have a form to evaluate.
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
                 walkTree(innerRList, currentFunctionScope);
+                if (slot == 0) {
+                    functionToCall = functions.get("closure_0");  // TODO hacking this in for now
+                    asmGenerator.generateSymbolLookup(functionToCall.getSymbolStringName(), Namespace.FUNCTION);
+                    asmGenerator.untagFunctionPtr();
+                }
                 asmGenerator.storeResultToStack(slot++);
             }
         }
