@@ -1,6 +1,5 @@
 package evaluator
 
-import evaluator.env.Environment;
 import spock.lang.Specification;
 import value.Value;
 
@@ -10,6 +9,7 @@ class LambdaSpec extends Specification {
         given:
         def interpreter = new Interpreter()
 
+        // TODO invalid in Common Lisp (no nested lambdas like this being directly applied!)
         def program = """
             (( (lambda (x) (lambda (y) (+ x y))) 10) 5)
         """

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 public class LambdaSpecialForm implements SpecialForm {
+    private static int num = 0;
+
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunctionScope) {
         // TODO: Generate function in asm, similar to defun.  Name dynamically generated and not exposed anywhere at user program level.
@@ -22,8 +24,7 @@ public class LambdaSpecialForm implements SpecialForm {
         // put the AsmGenerator into new function scope
         asmGenerator.startFunctionDef();
 
-        // TODO
-        String name = "closure_0";
+        String name = "closure_" + num++;
 
         // Generate the global variable for this symbol
         asmGenerator.generateDataSectionQuadWordForSymbolPtr(name);

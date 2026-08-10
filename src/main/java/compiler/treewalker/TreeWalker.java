@@ -46,7 +46,13 @@ public class TreeWalker {
 //        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
 //        String program = "(defvar x 2) (if nil nil x)";
 //        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
-        String program = "((lambda (x) (+ x 1)) 1)";
+//        String program = "((lambda (x) (+ x 1)) 1)";
+        String program = "((lambda (x y) (+ x y)) 1 2)";
+
+        // attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
+        // (defun foo (x) (lambda (y) x))
+        // we'd then need to call it like this though:
+        // (+ (funcall (foo 2) 1) 1)
 
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
@@ -145,16 +151,18 @@ public class TreeWalker {
             }
 
         }
-        else {
-            // TODO inline lambda application - the only valid case where we can have a list in the first position in a form
-            //      Handle the list recursively - the result of evaluation will be a tagged ptr for the closure value
-            //      and we'll continue evaluating the current form once we unwind back to this level and apply it.
-//            walkTree(rlist.nodes().getFirst(), currentFunctionScope);
-            // TODO how to continue processing the form?  Get Function from functions by name; but we don't know its name ...
-            //      Then walkTreeForFunctionCall.
-            //      For now we know it's called closure_0
-            Function closure = functions.get("closure_0");
-            walkTreeForFunctionCall(rlist, closure, currentFunctionScope);
+        else if (rlist.nodes().getFirst() instanceof RList expectedLambda) {
+            if (expectedLambda.nodes().getFirst() instanceof Atom lambdaAtom) {
+                if ("lambda".equals(lambdaAtom.value())) {
+                    walkTreeForLambdaApply(rlist, currentFunctionScope);
+                }
+                else {
+                    throw new IllegalArgumentException("Invalid operator, not a lambda expression: " + expectedLambda);
+                }
+            }
+            else {
+                throw new IllegalArgumentException("Invalid operator, not a lambda expression: " + expectedLambda);
+            }
         }
     }
 
@@ -201,6 +209,67 @@ public class TreeWalker {
                         }
                         asmGenerator.storeResultToStack(slot++);  // TODO code smell
                     }
+                }
+            }
+            else if (childNode instanceof RList innerRList) {
+                // We have a form to evaluate.
+                // Processing of the inner form will recursively write assembly like we are here; the result will be in
+                // x0 so we write it to the next pos on our stack of evaluated operands for this form.
+                walkTree(innerRList, currentFunctionScope);
+                asmGenerator.storeResultToStack(slot++);
+            }
+        }
+
+        // Now the evaluated operands are on the stack, load them into registers ready for our operator call
+        // Operands will be stored in registers in incrementing order as per usual calling convention
+        for (int operandNum = 0; operandNum<numOperands; operandNum++) {
+            // Zero-indexed operands are aligned with registers, but stack pos is one pos higher (above the function ptr slot)
+            asmGenerator.loadOperandFromStackIntoRegister(operandNum+1, operandNum);
+        }
+
+        // Load function ptr into next available register
+        // We use operandNum as it's already incremented to next register num (it's not an operand but we need it in
+        // some register for the jump).
+        int functionPtrRegister = numOperands; // Function ptr will be stored in the next register after those used by the operands
+        asmGenerator.loadOperandFromStackIntoRegister(0, functionPtrRegister);
+
+        asmGenerator.callFunction(functionPtrRegister);
+        asmGenerator.freeSpaceOnStack(stackBytes);
+    }
+
+    private void walkTreeForLambdaApply(RList rlist, Function currentFunctionScope) {
+        // We're evaluating a form.
+        // Depending on the operand count, we know how much stack to reserve to hold them.
+        int numOperands = rlist.size()-1;
+
+        // We need 16 bytes for each operand plus one for the function pointer; but ensure we always reserve a multiple
+        // of 16 bytes
+        final int stackBytes = (int)(16 * Math.ceil(numOperands+1/2f));
+        asmGenerator.reserveSpaceOnStack(stackBytes);
+
+        // This doubles as the stack slot index, and also the node index of the list we're walking
+        int slot = 0;
+
+        for (Node childNode : rlist.nodes()) {
+            if (childNode instanceof Atom atom) {
+                TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
+                if (typedAtom instanceof  IntAtom intAtom) {
+                    long fixNum = intAtom.getFixNum();
+                    asmGenerator.pushFixNumToStack(slot++, fixNum);
+                }
+                else if (typedAtom instanceof SymbolAtom symbolAtom) {
+                    String symbol = symbolAtom.getValue();
+                    if (currentFunctionScope.containsBinding(symbol)) {
+                        int stackOffset = currentFunctionScope.getStackOffsets().get(symbol);
+                        asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
+                    } else {
+                        // Generate the global variable for this symbol
+                        asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbol);
+                        // TODO don't add same symbol to asm .cstring segment more than once; sort and uniq them while flushing to asm output for e.g.
+
+                        asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
+                    }
+                    asmGenerator.storeResultToStack(slot++);  // TODO code smell
                 }
             }
             else if (childNode instanceof RList innerRList) {
