@@ -69,6 +69,9 @@ public class LambdaSpecialForm implements SpecialForm {
         asmGenerator.endFunctionDef();
         asmGenerator.putFunction(name);
 
+        // result of evaluating a lambda should be its value
+        asmGenerator.loadFunctionPtrResult(name);
+
         // add this function to our compile-time Map
         treeWalker.getFunctions().put(name, function);
     }

@@ -283,6 +283,19 @@ public class AsmGenerator {
 """.formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
     }
 
+    public void loadFunctionPtrResult(String name) {
+        String symbolPointerName = "_" + name + "_sym";
+        String functionLabel = "_" + name;
+        context.write("""
+  adrp x0, %s@PAGE
+  add x0, x0, %s@PAGEOFF
+  adrp x1, %s@PAGE
+  add x1, x1, %s@PAGEOFF
+  orr x1, x1, #0x2           ; tag the function ptr
+  mov x0, x1                 ; move to x0 as per return value calling convention
+""".formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
+    }
+
     public void writeRegisterToSymbolValue(int registerNum, String symbolValue) {
         // put value to symbol table into variable namespace
         // we use x8 for our own internal work to avoid clobbering x0 to x7 in which we assume our values may be
@@ -294,4 +307,5 @@ public class AsmGenerator {
   str x%d, [x8, #8]
 """.formatted(symbolPointerName, symbolPointerName, registerNum));
     }
+
 }

@@ -209,8 +209,9 @@ public class TreeWalker {
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
                 walkTree(innerRList, currentFunctionScope);
                 if (slot == 0) {
-                    functionToCall = functions.get("closure_0");  // TODO hacking this in for now
-                    asmGenerator.generateSymbolLookup(functionToCall.getSymbolStringName(), Namespace.FUNCTION);
+                    // We saw a list and we're in position 0 so we must have just evaluated a lambda.
+                    // The tagged function pointer will be the return value of the last generated instruction so we can
+                    // push that to the stack as we normally would for a function lookup.
                     asmGenerator.untagFunctionPtr();
                 }
                 asmGenerator.storeResultToStack(slot++);
