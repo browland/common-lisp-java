@@ -49,7 +49,8 @@ public class TreeWalker {
 //        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
 //        String program = "((lambda (x) (+ x 1)) 1)";
 //        String program = "((lambda (x y) (+ x y)) 1 2)";
-        String program = "(let ((x 1)) (+ x 1))";
+//        String program = "(let ((x 1)) (+ x 1))";
+        String program = "(let ((x 1)) (let ((y 2)) (+ x y)))";
 
         // attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
         // (defun foo (x) (lambda (y) x))

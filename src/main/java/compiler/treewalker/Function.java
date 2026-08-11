@@ -10,6 +10,7 @@ import java.util.*;
 public class Function {
     private final String symbolStringName;
     private final Deque<Map<String,Integer>> stackOffsetsStack;
+    private int minOffset = 0;
 
     public Function(String symbolStringName, Map<String,Integer> stackOffsets) {
         this.symbolStringName = symbolStringName;
@@ -47,5 +48,14 @@ public class Function {
 
     public void pushStackOffsets(Map<String,Integer> stackOffsets) {
         stackOffsetsStack.push(stackOffsets);
+        for (int offset : stackOffsets.values()) {
+            if (offset < minOffset) {
+                minOffset = offset;
+            }
+        }
+    }
+
+    public int getMinOffset() {
+        return minOffset;
     }
 }

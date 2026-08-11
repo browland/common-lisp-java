@@ -13,6 +13,8 @@ import java.util.Map;
 public class LetSpecialForm implements SpecialForm {
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunctionScope) {
+        asmGenerator.writeComment("let: " + rlist);
+
         // Get bindings generate code to eval them and put result values onto stack.
         RList bindingsList = RList.expectRList(rlist.nodes().get(1));
 
@@ -24,6 +26,7 @@ public class LetSpecialForm implements SpecialForm {
         // For each binding we eval its value and put it on the stack and record its offset
         int pos = 0;
         Map<String, Integer> stackOffsets = new HashMap<>();
+        int startOffset = currentFunctionScope.getMinOffset();
         for (Node binding : bindingsList.nodes()) {
             RList bindingList = RList.expectRList(binding);
             Atom nameAtom = Atom.expectAtom(bindingList.nodes().getFirst());
@@ -35,7 +38,7 @@ public class LetSpecialForm implements SpecialForm {
             // Push to stack at appropriate offset
             // Stack offset is relative to the frame pointer and starting from low value; values will be e.g. {-16, -8, ...}.
             asmGenerator.storeOperandFromRegisterToStack(pos);
-            int stackOffset = -1*stackBytes + (pos*8);
+            int stackOffset = -1*stackBytes + (pos*8) + startOffset;  // startOffset is negative
             stackOffsets.put(nameAtom.value(), stackOffset);
             pos++;
         }

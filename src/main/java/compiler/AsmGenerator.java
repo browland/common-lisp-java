@@ -308,4 +308,7 @@ public class AsmGenerator {
 """.formatted(symbolPointerName, symbolPointerName, registerNum));
     }
 
+    public void writeComment(String comment) {
+        context.write(";" + comment);
+    }
 }
