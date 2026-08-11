@@ -24,6 +24,7 @@ public class TreeWalker {
         specialForms.put("defun", new DefunSpecialForm());
         specialForms.put("defvar", new DefvarSpecialForm());
         specialForms.put("lambda", new LambdaSpecialForm());
+        specialForms.put("let", new LetSpecialForm());
 
         functions.put("add", new Function("add", Map.of()));
         functions.put("+", new Function("add", Map.of()));
@@ -47,7 +48,8 @@ public class TreeWalker {
 //        String program = "(defvar x 2) (if nil nil x)";
 //        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
 //        String program = "((lambda (x) (+ x 1)) 1)";
-        String program = "((lambda (x y) (+ x y)) 1 2)";
+//        String program = "((lambda (x y) (+ x y)) 1 2)";
+        String program = "(let ((x 1)) (+ x 1))";
 
         // attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
         // (defun foo (x) (lambda (y) x))
@@ -87,8 +89,9 @@ public class TreeWalker {
     void walkTopLevelNodes(List<Node> nodes) throws IOException {
         asmGenerator.initMainFunction();
 
+        Function topLevelScope = new Function("_default_", Map.of());
         for (Node node : nodes) {
-            walkTree(node, null);
+            walkTree(node, topLevelScope);
         }
 
         asmGenerator.printResultAndCleanUpMainFunction();
@@ -112,7 +115,7 @@ public class TreeWalker {
         if (typedAtom instanceof SymbolAtom symbolAtom) {
             String symbol = symbolAtom.getValue();
             if (currentFunctionScope.containsBinding(symbol)) {
-                int stackOffset = currentFunctionScope.getStackOffsets().get(symbol);
+                int stackOffset = currentFunctionScope.getClosestOffset(symbol).orElseThrow(() -> new IllegalArgumentException("symbol %s not in scope".formatted(symbol)));
                 asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
             }
             else {
@@ -143,6 +146,9 @@ public class TreeWalker {
                     Function function = functions.get(sa.getValue());
                     if (function != null) {
                         walkTreeForFunctionCall(rlist, function, currentFunctionScope);
+                    }
+                    else {
+                        throw new UnsupportedOperationException("Unsupported operator " + sa.getValue());
                     }
                 }
             }
@@ -197,7 +203,7 @@ public class TreeWalker {
                     else {
                         String symbol = symbolAtom.getValue();
                         if (currentFunctionScope.containsBinding(symbol)) {
-                            int stackOffset = currentFunctionScope.getStackOffsets().get(symbol);
+                            int stackOffset = currentFunctionScope.getClosestOffset(symbol).orElseThrow(() -> new IllegalArgumentException("symbol %s not in scope".formatted(symbol)));
                             asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
                         }
                         else {
@@ -260,7 +266,7 @@ public class TreeWalker {
                 else if (typedAtom instanceof SymbolAtom symbolAtom) {
                     String symbol = symbolAtom.getValue();
                     if (currentFunctionScope.containsBinding(symbol)) {
-                        int stackOffset = currentFunctionScope.getStackOffsets().get(symbol);
+                        int stackOffset = currentFunctionScope.getClosestOffset(symbol).orElseThrow(() -> new IllegalArgumentException("symbol %s not in scope".formatted(symbol)));
                         asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
                     } else {
                         // Generate the global variable for this symbol

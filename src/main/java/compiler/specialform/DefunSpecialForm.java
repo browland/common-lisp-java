@@ -23,7 +23,7 @@ public class DefunSpecialForm implements SpecialForm {
         SymbolAtom nameSymbolAtom = TypedAtom.toSymbolAtom(nameNode);
         String name = nameSymbolAtom.getValue();
 
-        // Generate the global variable for this symbol
+        // Generate the global variable for the symbol for this function name
         asmGenerator.generateDataSectionQuadWordForSymbolPtr(name);
         asmGenerator.generateCStringForSymbol(name);
 
@@ -38,6 +38,9 @@ public class DefunSpecialForm implements SpecialForm {
         int stackBytes = (int)(16 * Math.ceil(numBindings/2f));
         asmGenerator.reserveSpaceOnStack(stackBytes);
 
+        // At runtime we expect the caller to have passed the arguments to registers x0, x1, ...
+        // For each binding, we push the operand in that register position to the stack and then associate that stack
+        // offset with the symbol in the map on the Function.
         int pos = 0;
         Map<String, Integer> stackOffsets = new HashMap<>();
         for (Node bindingNode : bindingsList) {
