@@ -165,5 +165,6 @@ Issues:
 1. When we use a non-existent symbol e.g. + instead of add when we have only stored `add` in the symbol table, then we
    get an error from clang (as the symbol name string isn't there) but we should have an error out of the compiler as
    we should know we have no mapping for it.
-2. Bindings for defun
-3. Handle user-defined functions in operator position
+2. lambda within let - we create a new Function for the lambda and hence lose our offsets for bindings in the let.  
+   Should we have only one big "Function" active at any one time which represents the asm frame?  Or should I create
+   a new offsets Map on the current Function?  Is this actually capture?

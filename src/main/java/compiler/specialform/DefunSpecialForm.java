@@ -24,8 +24,9 @@ public class DefunSpecialForm implements SpecialForm {
         String name = nameSymbolAtom.getValue();
 
         // Generate the global variable for the symbol for this function name
-        asmGenerator.generateDataSectionQuadWordForSymbolPtr(name);
-        asmGenerator.generateCStringForSymbol(name);
+//        asmGenerator.generateDataSectionQuadWordForSymbolPtr(name);
+//        asmGenerator.generateCStringForSymbol(name);
+        asmGenerator.addToSymbolTable(name);
 
         asmGenerator.initFunction(name);
 

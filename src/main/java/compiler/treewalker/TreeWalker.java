@@ -43,14 +43,17 @@ public class TreeWalker {
 //        String program = "(+ 1 (+ 1 2))";
 //        String program = "(defun foo () 2) (foo)";
 //        String program = "(defun foo () (add 1 1)) (if t (foo) (add 1 2))";
-//        String program = "(defun foo (x y) x) (foo 1 2)";
-//        String program = "(defvar x (+ 1 1)) (if t x (+ 1 2))";
+//        String program = "(defun first (x y) x) (first 1 2)";
+//        String program = "(defvar two (+ 1 1)) (if t two (+ 1 2))";
 //        String program = "(defvar x 2) (if nil nil x)";
-//        String program = "(defun foo (x y) (+ x y)) (foo 1 2)";
+//        String program = "(defun adder (x y) (+ x y)) (adder 1 2)";
 //        String program = "((lambda (x) (+ x 1)) 1)";
 //        String program = "((lambda (x y) (+ x y)) 1 2)";
 //        String program = "(let ((x 1)) (+ x 1))";
         String program = "(let ((x 1)) (let ((y 2)) (+ x y)))";
+
+        // TODO Escape analysis: x in the lambda body is free; we expect it to be in the symbol table but it's in the enclosing scope
+//        String program = "(let ((x 1)) ((lambda (y) (+ x y)) 2))";
 
         // attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
         // (defun foo (x) (lambda (y) x))
@@ -208,10 +211,14 @@ public class TreeWalker {
                             asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
                         }
                         else {
-                            // Generate the global variable for this symbol
-                            asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbol);
-                            // TODO don't add same symbol to asm .cstring segment more than once; sort and uniq them while flushing to asm output for e.g.
-
+                            // We have no binding for this symbol; assume it's in the symbol table from an earlier defvar for eg.
+                            // TODO this creates bug when symbol is in enclosing scope (generate asm symbol lookup but doesn't exist, linker failure).
+                            //      LambdaSpecialForm: currentFunctionScope needs to capture the x into the currentFunctionScope in the knowledge that its body accesses it.
+                            //                         It needs to copy the x from its currentFunctionScope to the new one its creating: generate code to copy stack to stack by value at eval. time
+                            //                         and store new stack offset in new Function scope.
+                            //                         Copying by value essentially 'freezes' the captured variable at the time of the lambda apply, which is correct.
+                            //                         How to copy by value?  We can't reference the value statically in asm (obviously) and can't dynamically access the creator's stack (it could be gone by application time).
+                            //                         Need to malloc into somewhere in main memory?
                             asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
                         }
                         asmGenerator.storeResultToStack(slot++);  // TODO code smell
@@ -227,6 +234,14 @@ public class TreeWalker {
             }
         }
 
+        // TODO now we have the tagged function ptr on the stack, determine if it points to a closure (in heap) or a plain static function (directly label in asm).
+        //      So check the tag and if it's a closure generate the code to move captured variables which were stored on heap to next stack positions.
+        //      Replace the tagged function ptr on stack with the tagged ptr to the static code.
+        //      1. if tagged fxn ptr last 3 bits are 0x3, then:
+        //      2. untag the fxn ptr and deref it - this gives us the closure struct containing: tagged real fxn ptr, N slots for captured variables (we know how many slots as our functionToCall contains the capturedSymbols).
+        //      3. We load each captured variable onto the stack after the existing bindings
+        //      4. Then put tagged real fxn ptr on the stack in appropriate place
+
         // Now the evaluated operands are on the stack, load them into registers ready for our operator call
         // Operands will be stored in registers in incrementing order as per usual calling convention
         for (int operandNum = 0; operandNum<numOperands; operandNum++) {
@@ -239,6 +254,9 @@ public class TreeWalker {
         // some register for the jump).
         int functionPtrRegister = numOperands; // Function ptr will be stored in the next register after those used by the operands
         asmGenerator.loadOperandFromStackIntoRegister(0, functionPtrRegister);
+
+        // Now we can safely untag the function ptr in x0
+//        asmGenerator.untagFunctionPtr();
 
         asmGenerator.callFunction(functionPtrRegister);
         asmGenerator.freeSpaceOnStack(stackBytes);
@@ -270,10 +288,6 @@ public class TreeWalker {
                         int stackOffset = currentFunctionScope.getClosestOffset(symbol).orElseThrow(() -> new IllegalArgumentException("symbol %s not in scope".formatted(symbol)));
                         asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
                     } else {
-                        // Generate the global variable for this symbol
-                        asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbol);
-                        // TODO don't add same symbol to asm .cstring segment more than once; sort and uniq them while flushing to asm output for e.g.
-
                         asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
                     }
                     asmGenerator.storeResultToStack(slot++);  // TODO code smell
@@ -286,9 +300,12 @@ public class TreeWalker {
                 walkTree(innerRList, currentFunctionScope);
                 if (slot == 0) {
                     // We saw a list and we're in position 0 so we must have just evaluated a lambda.
-                    // The tagged function pointer will be the return value of the last generated instruction so we can
-                    // push that to the stack as we normally would for a function lookup.
-                    asmGenerator.untagFunctionPtr();
+                    // We should have a tagged pointer for a closure, which when untagged will point to our Closure struct on the heap.
+
+                    // TODO for now just ignore captures and deref and untag real fxn ptr
+                    // We have a tagged closure ptr, and we want the untagged raw fxn ptr.
+                    asmGenerator.loadRealFxnPtr();
+                    // The tagged pointer will be the return value of the last generated instruction so we can  push that to the stack as we normally would for a function lookup.
                 }
                 asmGenerator.storeResultToStack(slot++);
             }

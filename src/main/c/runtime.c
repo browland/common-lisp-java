@@ -122,3 +122,30 @@ uintptr_t untag_fxn_ptr(uintptr_t taggedFxnPtr) {
      return taggedFxnPtr & 0xFFFFFFFFFFFFFFF8;
 }
 
+struct Closure {
+    uintptr_t taggedFxnPtr;
+    uintptr_t *captures;
+};
+
+uintptr_t alloc_captures(int capturesLen) {
+    return (uintptr_t)malloc(capturesLen * 8);
+}
+
+uintptr_t mk_closure(uintptr_t taggedFxnPtr, uintptr_t *captures) {
+    void *heapPtr = malloc(sizeof(struct Closure));
+    struct Closure test = {taggedFxnPtr, captures};
+    memcpy(heapPtr, &test, sizeof(struct Closure));
+
+    // tag the heap ptr
+    uintptr_t taggedHeapPtr = (uintptr_t)heapPtr;
+    taggedHeapPtr = taggedHeapPtr | TYPE_TAG_CLOSURE;
+    return taggedHeapPtr;
+}
+
+uintptr_t deref_tagged_closure_fxn_ptr(uintptr_t taggedClosurePtr) {
+    void* untaggedClosurePtr = (void*)untag_fxn_ptr(taggedClosurePtr);
+    struct Closure *closure = (struct Closure*)untaggedClosurePtr;
+    uintptr_t taggedFxnPtr = closure->taggedFxnPtr;
+    return untag_fxn_ptr(taggedFxnPtr);
+}
+

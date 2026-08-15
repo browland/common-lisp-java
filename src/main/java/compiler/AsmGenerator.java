@@ -167,7 +167,7 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName, offset));
     }
 
-    public void generateDataSectionQuadWordForSymbolPtr(String symbolName) {
+    public String addToSymbolTable(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_sym";
         String strPointerName = "_" + symbolName + "_str";
@@ -181,12 +181,6 @@ public class AsmGenerator {
     .quad 0
                 """.formatted(symPointerName, strPointerName));
         switchFromDataSegmentContext();
-    }
-
-    // Returns name of pointer to symbol name cstring
-    public String generateCStringForSymbol(String symbolName) {
-        // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String strPointerName = "_" + symbolName + "_str";
 
         switchToCStringContext();
         context.write(strPointerName + ":\n");
@@ -283,17 +277,31 @@ public class AsmGenerator {
 """.formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
     }
 
+    public void putClosure(String name, int capturesLen) {
+        // Just like putFunction() except we tag with 0x3L
+//        String symbolPointerName = "_" + name + "_sym";
+        String functionLabel = "_" + name;
+        context.write("""
+  mov x0, #%d                ; set up capturesLen arg
+  bl _alloc_captures         ; this leaves our captures array ptr in x0
+  mov x1, x0                 ; x1 now has our captures array ptr
+  
+  adrp x0, %s@PAGE           ; set up real fxn ptr in x0
+  add x0, x0, %s@PAGEOFF     ; ...
+  orr x0, x0, #0x3           ; tag real fxn ptr
+  
+  bl _mk_closure
+  
+""".formatted(capturesLen, functionLabel, functionLabel));
+    }
+
     public void loadFunctionPtrResult(String name) {
-        String symbolPointerName = "_" + name + "_sym";
         String functionLabel = "_" + name;
         context.write("""
   adrp x0, %s@PAGE
   add x0, x0, %s@PAGEOFF
-  adrp x1, %s@PAGE
-  add x1, x1, %s@PAGEOFF
-  orr x1, x1, #0x2           ; tag the function ptr
-  mov x0, x1                 ; move to x0 as per return value calling convention
-""".formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
+  orr x0, x0, #0x2           ; tag the function ptr; result is in x0 as per calling convention
+""".formatted(functionLabel, functionLabel));
     }
 
     public void writeRegisterToSymbolValue(int registerNum, String symbolValue) {
@@ -310,5 +318,13 @@ public class AsmGenerator {
 
     public void writeComment(String comment) {
         context.write(";" + comment);
+    }
+
+    public void loadRealFxnPtr() {
+        // deref_closure_fxn_ptr
+        context.write("""
+                bl _deref_tagged_closure_fxn_ptr
+                """);
+
     }
 }

@@ -19,8 +19,9 @@ public class DefvarSpecialForm implements SpecialForm {
         String symbolValue = symbolAtom.getValue();
 
         // Generate the global variable for this symbol
-        asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbolValue);
-        asmGenerator.generateCStringForSymbol(symbolValue);
+//        asmGenerator.generateDataSectionQuadWordForSymbolPtr(symbolValue);
+//        asmGenerator.generateCStringForSymbol(symbolValue);
+        asmGenerator.addToSymbolTable(symbolValue);
 
         asmGenerator.reserveSpaceOnStack(16);
 

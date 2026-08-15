@@ -26,9 +26,10 @@ public class LambdaSpecialForm implements SpecialForm {
 
         String name = "closure_" + num++;
 
-        // Generate the global variable for this symbol
-        asmGenerator.generateDataSectionQuadWordForSymbolPtr(name);
-        asmGenerator.generateCStringForSymbol(name);
+        // Generate the symbols for the name of the closure
+//        asmGenerator.generateDataSectionQuadWordForSymbolPtr(name);
+//        asmGenerator.generateCStringForSymbol(name);
+        asmGenerator.addToSymbolTable(name);
 
         asmGenerator.initFunction(name);
 
@@ -53,6 +54,19 @@ public class LambdaSpecialForm implements SpecialForm {
             pos++;
         }
 
+        // TODO do escape analysis
+        //      currentFunctionScope has offsets of vars we may access in the lambda body.  If so, we need to copy
+        //      these to heap and put ptr onto our stack and keep track of it in our stackOffsets
+        //      For now let's cheat and hardcode it to our 'x' symbol.  This will break until we do proper tree-walking
+        //      escape analysis.
+
+        // Generate asm:
+        // Malloc 8 bytes; pointer will be in x0
+        // Load value of x from its offset on currentFunctionScope into x1
+        // Store value in x1 to malloc pointer (in x0)
+        // Tag the malloc pointer (tagged value still in x0)
+        //
+
         // Store stack offsets on Function so we can pass them around with relevant context
         Function function = new Function(name, stackOffsets);
 
@@ -68,10 +82,11 @@ public class LambdaSpecialForm implements SpecialForm {
         // return the AsmGenerator from new function scope
         // TODO confusing how this differs from endFunction() - doing different things
         asmGenerator.endFunctionDef();
-        asmGenerator.putFunction(name);
+        asmGenerator.putClosure(name, 0);  // TODO hardcoded to 0 captures; get it from the Function / escape analysis
 
         // result of evaluating a lambda should be its value
-        asmGenerator.loadFunctionPtrResult(name);
+        // no longer wanted; already done in putClosure()
+//        asmGenerator.loadFunctionPtrResult(name);
 
         // add this function to our compile-time Map
         treeWalker.getFunctions().put(name, function);
