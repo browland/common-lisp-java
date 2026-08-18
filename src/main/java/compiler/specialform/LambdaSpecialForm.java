@@ -40,13 +40,20 @@ public class LambdaSpecialForm implements SpecialForm {
         Node bindingsNode = lambdaForm.nodes().get(1);
         List<Node> bindingsList = RList.expectRList(bindingsNode).nodes();
 
-        Map<String,Integer> captureOffsets = generateCaptureOffsets(currentFunctionScope, bindingsList, lambdaForm);
+        List<String> capturedVariables = generateCaptures(currentFunctionScope, bindingsList, lambdaForm);
+        asmGenerator.mkCaptures(capturedVariables.size());
 
-        asmGenerator.mkCaptures(captureOffsets.size());
+        // Index of captures in the captures array referenced by the closure object on the heap.
+        Map<String, Integer> captureIndices = new HashMap<>(capturedVariables.size());
 
-        // Copies captured variable at frame pointer offset in current lexical scope to the next position in the heap-allocated captures array.
-        // TODO We add captures in order of offset in captureOffsets, but reference their source offset from THIS stack frame.
-        asmGenerator.addCapture(-16);  // TODO fake code to copy x as a capture; we know it's at [fp, -16] here in the flow from debugging
+        for(int captureIndex=0; captureIndex<capturedVariables.size(); captureIndex++) {
+            // Copies captured variable at frame pointer offset in current lexical scope to the next position in the heap-allocated captures array.
+            String capturedVariable = capturedVariables.get(captureIndex);
+            int sourceOffsetInThisLexicalScope = currentFunctionScope.getClosestOffset(capturedVariable)
+                    .orElseThrow(() -> new IllegalStateException("Have captured var but can't find it in enclosing scope!"));
+            asmGenerator.addCapture(sourceOffsetInThisLexicalScope);
+            captureIndices.put(capturedVariables.get(captureIndex), captureIndex);
+        }
 
         // heap allocate this closure object - holds function ptr and captures array
         // This ends up being the value of this lambda evaluation.  If this seems counter-intuitive, the remaining code
@@ -54,14 +61,13 @@ public class LambdaSpecialForm implements SpecialForm {
         // the main flow.
         asmGenerator.putClosure(lambdaFunctionName);
 
-        generateLambdaFunctionImpl(asmGenerator, lambdaFunctionName, lambdaForm, treeWalker, captureOffsets, bindingsList);
+        generateLambdaFunctionImpl(asmGenerator, lambdaFunctionName, lambdaForm, treeWalker, captureIndices, bindingsList);
     }
 
-    Map<String,Integer> generateCaptureOffsets(Function currentFunctionScope, List<Node> bindingsList, RList lambdaBody) {
-        // TODO actually handle/use offsets.  Collect unbound symbols in lambda body.  For each, look at currentFunctionScope.stackOffsetStack
-        //      and its framePointerOffset is recorded there.
-        Map<String,Integer> captureOffsets = Map.of("x", 0);
-        return captureOffsets;
+    List<String> generateCaptures(Function currentFunctionScope, List<Node> bindingsList, RList lambdaBody) {
+        // TODO for now we'll just look one level deep for free variables.  Really, we want an alternative TreeWalker impl which can do escape analysis at arbitrary depth!
+        List<String> capturedVars = List.of("x");
+        return capturedVars;
     }
 
     // ****************************************
