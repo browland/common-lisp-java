@@ -61,4 +61,17 @@ public class Function {
     public int getMinOffset() {
         return minOffset;
     }
+
+    public int getStackBytes() {
+        // each stack slot is 8 bytes
+        int stackSlots = 0;
+
+        Iterator<Map<String,Integer>> iter = stackOffsetsStack.descendingIterator();
+        while (iter.hasNext()) {
+            Map<String,Integer> stackOffsets = iter.next();
+            stackSlots += stackOffsets.size();
+        }
+
+       return (int)(16 * Math.ceil(stackSlots/2f));
+    }
 }

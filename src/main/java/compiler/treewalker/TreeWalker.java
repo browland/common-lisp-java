@@ -302,8 +302,6 @@ public class TreeWalker {
                     // We saw a list and we're in position 0 so we must have just evaluated a lambda.
                     // We should have a tagged pointer for a closure, which when untagged will point to our Closure struct on the heap.
 
-                    // First push the closure ptr to stack
-//                    asmGenerator.loadCapturesPtr();
                     asmGenerator.storeResultToStack(slot++);
 
                     // We have a tagged closure ptr, and we want the untagged raw fxn ptr.

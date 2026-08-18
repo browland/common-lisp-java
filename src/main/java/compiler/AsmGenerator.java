@@ -107,11 +107,22 @@ public class AsmGenerator {
 
     /**
      * operandNum starts from 0
+     * Deprecated as it's too opaque how this works.
      */
+    @Deprecated
     public void storeOperandFromRegisterToStack(int pos) {
         context.write("""
       str x%d, [sp, #%d]   ;; load evaluated operand into register ready for operator call
     """.formatted(pos, pos*8));
+    }
+
+    /**
+     * operandNum starts from 0
+     */
+    public void storeOperandFromRegisterToStack(int regNum, int framePointerOffset) {
+        context.write("""
+      str x%d, [x29, #%d]   ;; load evaluated operand into register ready for operator call
+    """.formatted(regNum, framePointerOffset));
     }
 
     /**
@@ -326,15 +337,13 @@ public class AsmGenerator {
         context.write(";" + comment);
     }
 
-    public void loadCapturedVariable(int index) {
-        // TODO hack to get tagged closure ptr into x0 (was in x1 from earlier call into closure fxn)
-        //      and then the captures ptr is needed in x1 as it comes after the single binding we currently have
+    public void loadCapturedVariable(int captureIndex, int closurePtrFPOffset) {
+        // Load closure ptr from stack into x0; capture index goes into x1
         context.write("""
-                mov x0, x1
+                ldr x0, [x29, #%d]
                 mov x1, #%d
                 bl _load_captured_variable
-                mov x1, x0
-                """.formatted(index));
+                """.formatted(closurePtrFPOffset, captureIndex));
     }
 
     public void loadRealFxnPtr() {
