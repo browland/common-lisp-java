@@ -277,30 +277,36 @@ public class AsmGenerator {
 """.formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
     }
 
-    public void putClosure(String name, int capturesLen) {
-        // Just like putFunction() except we tag with 0x3L
-//        String symbolPointerName = "_" + name + "_sym";
-        String functionLabel = "_" + name;
+    public void mkCaptures(int capturesLen) {
         context.write("""
   mov x0, #%d                ; set up capturesLen arg
   bl _alloc_captures         ; this leaves our captures array ptr in x0
-  mov x1, x0                 ; x1 now has our captures array ptr
-  
+  """.formatted(capturesLen));
+    }
+
+    public void addCapture(int framePointerOffset) {
+        context.write("""
+                ;; x0 already set as we should call mkCaptures directly before this
+                ldr x1, [x29, #%d]
+                mov x2, #0
+                bl _add_capture
+                """.formatted(framePointerOffset));
+    }
+
+    public void putClosure(String name) {
+        // We'll generate tagged fxn ptr, we only expect captures array in x0
+        // Just like putFunction() except we tag with 0x3L
+        String functionLabel = "_" + name;
+        context.write("""
+  ;;; xl should be ptr to captures array (already in x0 from last addCapture() or mkCaptures())
+  mov x1, x0
+  ;;; x0 should be tagged fxn ptr
   adrp x0, %s@PAGE           ; set up real fxn ptr in x0
   add x0, x0, %s@PAGEOFF     ; ...
   orr x0, x0, #0x3           ; tag real fxn ptr
   
   bl _mk_closure
   
-""".formatted(capturesLen, functionLabel, functionLabel));
-    }
-
-    public void loadFunctionPtrResult(String name) {
-        String functionLabel = "_" + name;
-        context.write("""
-  adrp x0, %s@PAGE
-  add x0, x0, %s@PAGEOFF
-  orr x0, x0, #0x2           ; tag the function ptr; result is in x0 as per calling convention
 """.formatted(functionLabel, functionLabel));
     }
 
@@ -318,6 +324,17 @@ public class AsmGenerator {
 
     public void writeComment(String comment) {
         context.write(";" + comment);
+    }
+
+    public void loadCapturedVariable(int index) {
+        // TODO hack to get tagged closure ptr into x0 (was in x1 from earlier call into closure fxn)
+        //      and then the captures ptr is needed in x1 as it comes after the single binding we currently have
+        context.write("""
+                mov x0, x1
+                mov x1, #%d
+                bl _load_captured_variable
+                mov x1, x0
+                """.formatted(index));
     }
 
     public void loadRealFxnPtr() {

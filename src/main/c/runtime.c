@@ -74,6 +74,39 @@ void printResult(uintptr_t result) {
     }
 }
 
+char *printValue(uintptr_t taggedValue) {
+    long tagMask = 0x7;
+    long tag = taggedValue & tagMask;
+    long value = 0L;
+
+    char *resultStr = (char*)malloc(25 * sizeof(char));
+
+    if (tag == 1L) {
+        // fixnum
+        value = taggedValue >> 3;
+        sprintf(resultStr, "%ld", value);
+        return resultStr;
+    }
+    else if (tag == 3L) {
+        // closure
+        value = taggedValue & 0xFFFFFFFFFFFFFFF8;
+        void *closurePtr = (void*)value;
+        sprintf(resultStr, "%p", closurePtr);
+        return resultStr;
+    }
+    else if (tag == 4L) {
+        // symbol
+        value = taggedValue & 0xFFFFFFFFFFFFFFF8;
+        char *symbolPtr = (char*)value;
+        sprintf(resultStr, "%s", symbolPtr);
+        return resultStr;
+    }
+    else {
+        printf("printResult: type error for: 0x%lx\n", taggedValue);
+        exit(-1);
+    }
+}
+
 void typecheck_fixnum(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
 
@@ -127,8 +160,15 @@ struct Closure {
     uintptr_t *captures;
 };
 
-uintptr_t alloc_captures(int capturesLen) {
-    return (uintptr_t)malloc(capturesLen * 8);
+void *alloc_captures(int capturesLen) {
+    return malloc(capturesLen * 8);
+}
+
+uintptr_t *add_capture(uintptr_t *capturesPtr, uintptr_t value, int index) {
+    // returns capturesPtr* back to caller as we often need it in x0 for adding multiple captures in sequence
+    capturesPtr[index] = value;
+    printf("add_capture: added value %s into captures at index %d resulting in val %s\n", printValue(value), index, printValue(capturesPtr[index]));
+    return capturesPtr;
 }
 
 uintptr_t mk_closure(uintptr_t taggedFxnPtr, uintptr_t *captures) {
@@ -139,6 +179,8 @@ uintptr_t mk_closure(uintptr_t taggedFxnPtr, uintptr_t *captures) {
     // tag the heap ptr
     uintptr_t taggedHeapPtr = (uintptr_t)heapPtr;
     taggedHeapPtr = taggedHeapPtr | TYPE_TAG_CLOSURE;
+
+    printf("mk_closure: created closure with heapPtr %p, tagged heap ptr 0x%lx, with capture at index 0 having val %s\n", heapPtr, taggedHeapPtr, printValue(captures[0]));
     return taggedHeapPtr;
 }
 
@@ -146,6 +188,14 @@ uintptr_t deref_tagged_closure_fxn_ptr(uintptr_t taggedClosurePtr) {
     void* untaggedClosurePtr = (void*)untag_fxn_ptr(taggedClosurePtr);
     struct Closure *closure = (struct Closure*)untaggedClosurePtr;
     uintptr_t taggedFxnPtr = closure->taggedFxnPtr;
-    return untag_fxn_ptr(taggedFxnPtr);
+    uintptr_t rawFxnPtr = untag_fxn_ptr(taggedFxnPtr);
+    printf("deref_tagged_closure_fxn_ptr: got raw fxn ptr: 0x%lx\n", rawFxnPtr);
+    return rawFxnPtr;
 }
 
+uintptr_t load_captured_variable(uintptr_t taggedClosurePtr, int index) {
+    void* untaggedClosurePtr = (void*)untag_fxn_ptr(taggedClosurePtr);
+    struct Closure *closure = (struct Closure*)untaggedClosurePtr;
+    uintptr_t *capturesPtr = closure->captures;
+    return capturesPtr[index];
+}

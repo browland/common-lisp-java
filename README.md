@@ -168,3 +168,14 @@ Issues:
 2. lambda within let - we create a new Function for the lambda and hence lose our offsets for bindings in the let.  
    Should we have only one big "Function" active at any one time which represents the asm frame?  Or should I create
    a new offsets Map on the current Function?  Is this actually capture?
+
+Closures remaining work
+1. Where is the name of the lambda function actually needed?  Only needs to be unique in the asm file and also we need to
+   get its address for the function ptr.  But where and over which scope?  Only up to evaluation of it and not apply?
+2. Are functions being tagged the same as closures?
+   We need to handle closures differently at apply time as we follow the closure ptr, get the function ptr, untag it, get the 
+   captures ptr and pass that it as an arg to the function.
+3. Where are the capture offsets needed?  Only at lambda eval time as that's where we generate the function and then no 
+   longer needed.
+   Currently we're hardcoding the single offset, need to handle properly.
+4. I'm not sure we should write closure name to the symbol table.

@@ -50,10 +50,10 @@ public class TreeWalker {
 //        String program = "((lambda (x) (+ x 1)) 1)";
 //        String program = "((lambda (x y) (+ x y)) 1 2)";
 //        String program = "(let ((x 1)) (+ x 1))";
-        String program = "(let ((x 1)) (let ((y 2)) (+ x y)))";
+//        String program = "(let ((x 1)) (let ((y 2)) (+ x y)))";
 
         // TODO Escape analysis: x in the lambda body is free; we expect it to be in the symbol table but it's in the enclosing scope
-//        String program = "(let ((x 1)) ((lambda (y) (+ x y)) 2))";
+        String program = "(let ((x 1)) ((lambda (y) (+ x y)) 2))";
 
         // attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
         // (defun foo (x) (lambda (y) x))
@@ -302,7 +302,10 @@ public class TreeWalker {
                     // We saw a list and we're in position 0 so we must have just evaluated a lambda.
                     // We should have a tagged pointer for a closure, which when untagged will point to our Closure struct on the heap.
 
-                    // TODO for now just ignore captures and deref and untag real fxn ptr
+                    // First push the closure ptr to stack
+//                    asmGenerator.loadCapturesPtr();
+                    asmGenerator.storeResultToStack(slot++);
+
                     // We have a tagged closure ptr, and we want the untagged raw fxn ptr.
                     asmGenerator.loadRealFxnPtr();
                     // The tagged pointer will be the return value of the last generated instruction so we can  push that to the stack as we normally would for a function lookup.
@@ -314,15 +317,16 @@ public class TreeWalker {
         // Now the evaluated operands are on the stack, load them into registers ready for our operator call
         // Operands will be stored in registers in incrementing order as per usual calling convention
         for (int operandNum = 0; operandNum<numOperands; operandNum++) {
-            // Zero-indexed operands are aligned with registers, but stack pos is one pos higher (above the function ptr slot)
-            asmGenerator.loadOperandFromStackIntoRegister(operandNum+1, operandNum);
+            // Zero-indexed operands are aligned with registers, but stack pos is two pos higher (above the function ptr and captures ptr slots)
+            asmGenerator.loadOperandFromStackIntoRegister(operandNum+2, operandNum);
         }
 
-        // Load function ptr into next available register
-        // We use operandNum as it's already incremented to next register num (it's not an operand but we need it in
-        // some register for the jump).
-        int functionPtrRegister = numOperands; // Function ptr will be stored in the next register after those used by the operands
-        asmGenerator.loadOperandFromStackIntoRegister(0, functionPtrRegister);
+        // Load closure ptr into next register
+        asmGenerator.loadOperandFromStackIntoRegister(0, numOperands);
+
+        // Load function ptr into next register
+        int functionPtrRegister = numOperands+1; // Function ptr will be stored in the next register after those used by the operands
+        asmGenerator.loadOperandFromStackIntoRegister(1, functionPtrRegister);
 
         asmGenerator.callFunction(functionPtrRegister);
         asmGenerator.freeSpaceOnStack(stackBytes);
