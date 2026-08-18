@@ -53,8 +53,8 @@ public class LambdaSpecialForm implements SpecialForm {
 
     List<String> generateCaptures(Function currentFunctionScope, List<Node> bindingsList, RList lambdaBody, AsmGenerator asmGenerator) {
         // TODO for now we'll just look one level deep for free variables.  Really, we want an alternative TreeWalker impl which can do escape analysis at arbitrary depth!
-        List<String> capturedVariables = List.of();
-        asmGenerator.mkCaptures(capturedVariables.size());
+        List<String> capturedVariables = List.of("x", "y");
+        asmGenerator.mkCaptures(Math.max(capturedVariables.size(), 8));  // ensure we don't alloc 0 byte array
         // todo captures ptr is now in x0
 
         for(int captureIndex=0; captureIndex<capturedVariables.size(); captureIndex++) {

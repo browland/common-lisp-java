@@ -180,7 +180,7 @@ uintptr_t mk_closure(uintptr_t taggedFxnPtr, uintptr_t *captures) {
     uintptr_t taggedHeapPtr = (uintptr_t)heapPtr;
     taggedHeapPtr = taggedHeapPtr | TYPE_TAG_CLOSURE;
 
-    printf("mk_closure: created closure with heapPtr %p, tagged heap ptr 0x%lx, with capture at index 0 having val %s\n", heapPtr, taggedHeapPtr, printValue(captures[0]));
+    printf("mk_closure: created closure with heapPtr %p, tagged heap ptr 0x%lx\n", heapPtr, taggedHeapPtr);
     return taggedHeapPtr;
 }
 
