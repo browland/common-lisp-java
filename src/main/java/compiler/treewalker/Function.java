@@ -46,6 +46,9 @@ public class Function {
         return false;
     }
 
+    // Augment the current lexical scope with a new set of bindings, e.g. when we enter a `let` form within a function.
+    // In this case the let bindings occupy a lexical scope 'within' the lexical scope of the function.
+    // We maintain minOffset so that any inner lexical scope starts from the bottom of the enclosing one.
     public void pushStackOffsets(Map<String,Integer> stackOffsets) {
         stackOffsetsStack.push(stackOffsets);
         for (int offset : stackOffsets.values()) {

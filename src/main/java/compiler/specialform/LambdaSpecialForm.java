@@ -25,7 +25,7 @@ public class LambdaSpecialForm implements SpecialForm {
     private static int num = 0;
 
     @Override
-    public void walkTree(RList rlist, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunctionScope) {
+    public void walkTree(RList lambdaForm, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunctionScope) {
         // Step 1. Create the closure object.
         // All we need so far is:
         // 1. Function pointer (based on name of lambda function within the asm)
@@ -36,9 +36,16 @@ public class LambdaSpecialForm implements SpecialForm {
         // The closure pointer will be tagged, and the function pointer within will be tagged.
         String lambdaFunctionName = "closure_" + num++;
 
-        // TODO we need to assess bindings and do escape analysis here otherwise we don't know how many captures
+        // Determine bindings
+        Node bindingsNode = lambdaForm.nodes().get(1);
+        List<Node> bindingsList = RList.expectRList(bindingsNode).nodes();
 
-        asmGenerator.mkCaptures(1);
+        Map<String,Integer> captureOffsets = generateCaptureOffsets(currentFunctionScope, bindingsList, lambdaForm);
+
+        asmGenerator.mkCaptures(captureOffsets.size());
+
+        // Copies captured variable at frame pointer offset in current lexical scope to the next position in the heap-allocated captures array.
+        // TODO We add captures in order of offset in captureOffsets, but reference their source offset from THIS stack frame.
         asmGenerator.addCapture(-16);  // TODO fake code to copy x as a capture; we know it's at [fp, -16] here in the flow from debugging
 
         // heap allocate this closure object - holds function ptr and captures array
@@ -47,15 +54,21 @@ public class LambdaSpecialForm implements SpecialForm {
         // the main flow.
         asmGenerator.putClosure(lambdaFunctionName);
 
-        // TODO actually handle/use offsets
+        generateLambdaFunctionImpl(asmGenerator, lambdaFunctionName, lambdaForm, treeWalker, captureOffsets, bindingsList);
+    }
+
+    Map<String,Integer> generateCaptureOffsets(Function currentFunctionScope, List<Node> bindingsList, RList lambdaBody) {
+        // TODO actually handle/use offsets.  Collect unbound symbols in lambda body.  For each, look at currentFunctionScope.stackOffsetStack
+        //      and its framePointerOffset is recorded there.
         Map<String,Integer> captureOffsets = Map.of("x", 0);
-        generateLambdaFunctionImpl(asmGenerator, lambdaFunctionName, rlist, treeWalker, captureOffsets);
+        return captureOffsets;
     }
 
     // ****************************************
     // *** Code gen for lambda application time
     // ****************************************
-    private void generateLambdaFunctionImpl(AsmGenerator asmGenerator, String lambdaFunctionName, RList lambdaForm, TreeWalker treeWalker, Map<String, Integer> captureOffsets) {
+    private void generateLambdaFunctionImpl(AsmGenerator asmGenerator, String lambdaFunctionName, RList lambdaForm,
+                                            TreeWalker treeWalker, Map<String, Integer> captureOffsets, List<Node> bindingsList) {
         // Write symbol table entry for the closure and its function slot in the symbol table.
         asmGenerator.addToSymbolTable(lambdaFunctionName);
 
@@ -63,9 +76,6 @@ public class LambdaSpecialForm implements SpecialForm {
         asmGenerator.startFunctionDef();
         asmGenerator.initFunction(lambdaFunctionName);
 
-        // Determine bindings
-        Node bindingsNode = lambdaForm.nodes().get(1);
-        List<Node> bindingsList = RList.expectRList(bindingsNode).nodes();
         int numBindings = bindingsList.size();
         int numCaptures = captureOffsets.size();
 
@@ -74,36 +84,32 @@ public class LambdaSpecialForm implements SpecialForm {
         asmGenerator.reserveSpaceOnStack(stackBytes);
 
         int pos = 0;
-        Map<String, Integer> stackOffsets = new HashMap<>();
+        Map<String, Integer> closureFunctionStackOffsets = new HashMap<>();
+        int stackOffset;
         for (Node bindingNode : bindingsList) {
             Atom symbolAtom = Atom.expectAtom(bindingNode);
             System.out.printf("lambda: storing binding for %s to stack%n", symbolAtom.value());
             asmGenerator.storeOperandFromRegisterToStack(pos);
             // Stack offset is relative to the frame pointer and starting from low value; values will be e.g. {-16, -8, ...}.
-            int stackOffset = -1*stackBytes + (pos*8);
-            stackOffsets.put(symbolAtom.value(), stackOffset);
+            stackOffset = -1*stackBytes + (pos*8);
+            closureFunctionStackOffsets.put(symbolAtom.value(), stackOffset);
             pos++;
         }
 
         // TODO temp one-off capture handling
-        //      expect one more argument than bindings, which is captures ptr
+        //      expect one more argument than bindings, which is captures ptr.  We will always set one of these.
         System.out.printf("lambda: storing capture for %s to stack%n", "x");
         asmGenerator.loadCapturedVariable(0);  // TODO hardcoded with 0th captured var
         asmGenerator.storeOperandFromRegisterToStack(pos);
-        // Stack offset is relative to the frame pointer and starting from low value; values will be e.g. {-16, -8, ...}.
-        // TODO garbage as we can't rely on these stackOffsets later on anyway, it's the captures offsets we need to store here isn't it?
-        //      But we need something in offsets otherwise it blows up later by looking for symbol table entry for x
-        int stackOffset = -1*stackBytes + (pos*8);
-        stackOffsets.put("x", stackOffset);
 
-        // TODO do escape analysis
-        //      currentFunctionScope has offsets of vars we may access in the lambda body.  If so, we need to copy
-        //      these to heap and put ptr onto our stack and keep track of it in our stackOffsets
-        //      For now let's cheat and hardcode it to our 'x' symbol.  This will break until we do proper tree-walking
-        //      escape analysis.
+        // continue with next stack offset for captured variable; this has a bit of a smell perhaps.  We work out the
+        // stack pos within storeOperandFromRegisterToStack() relative to the stack pointer, but repeat the calculation
+        // here relative to the frame pointer (as it's stable over time).
+        stackOffset = -1*stackBytes + (pos*8);
+        closureFunctionStackOffsets.put("x", stackOffset);
 
-        // Store stack offsets on Function so we can pass them around with relevant context
-        Function function = new Function(lambdaFunctionName, stackOffsets);
+        // Store stack offsets on Function; needed in walkTree() to generate instructions for entirety of lambda body.
+        Function function = new Function(lambdaFunctionName, closureFunctionStackOffsets);
 
         // Function impl
         Node bodyNode = lambdaForm.nodes().get(2);
@@ -118,11 +124,7 @@ public class LambdaSpecialForm implements SpecialForm {
         // TODO confusing how this differs from endFunction() - doing different things
         asmGenerator.endFunctionDef();
 
-        // result of evaluating a lambda should be its value
-        // no longer wanted; already done in putClosure()
-//        asmGenerator.loadFunctionPtrResult(name);
-
-        // add this function to our compile-time Map
+        // add this function to our compile-time Map; needed for compile time logic when we need to look it up at apply time.
         treeWalker.getFunctions().put(lambdaFunctionName, function);
     }
 }
