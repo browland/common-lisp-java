@@ -295,13 +295,12 @@ public class AsmGenerator {
   """.formatted(capturesLen));
     }
 
-    public void addCapture(int framePointerOffset) {
+    public void addCapture(int sourceFramePointerOffset, int captureIndex) {
         context.write("""
-                ;; x0 already set as we should call mkCaptures directly before this
                 ldr x1, [x29, #%d]
-                mov x2, #0
+                mov x2, #%d
                 bl _add_capture
-                """.formatted(framePointerOffset));
+                """.formatted(sourceFramePointerOffset, captureIndex));
     }
 
     public void putClosure(String name) {

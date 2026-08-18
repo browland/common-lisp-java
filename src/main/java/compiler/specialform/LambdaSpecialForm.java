@@ -40,16 +40,7 @@ public class LambdaSpecialForm implements SpecialForm {
         Node bindingsNode = lambdaForm.nodes().get(1);
         List<Node> bindingsList = RList.expectRList(bindingsNode).nodes();
 
-        List<String> capturedVariables = generateCaptures(currentFunctionScope, bindingsList, lambdaForm);
-        asmGenerator.mkCaptures(capturedVariables.size());
-
-        for(int captureIndex=0; captureIndex<capturedVariables.size(); captureIndex++) {
-            // Copies captured variable at frame pointer offset in current lexical scope to the next position in the heap-allocated captures array.
-            String capturedVariable = capturedVariables.get(captureIndex);
-            int sourceOffsetInThisLexicalScope = currentFunctionScope.getClosestOffset(capturedVariable)
-                    .orElseThrow(() -> new IllegalStateException("Have captured var but can't find it in enclosing scope!"));
-            asmGenerator.addCapture(sourceOffsetInThisLexicalScope);
-        }
+        List<String> capturedVariables = generateCaptures(currentFunctionScope, bindingsList, lambdaForm, asmGenerator);
 
         // heap allocate this closure object - holds function ptr and captures array
         // This ends up being the value of this lambda evaluation.  If this seems counter-intuitive, the remaining code
@@ -60,10 +51,23 @@ public class LambdaSpecialForm implements SpecialForm {
         generateLambdaFunctionImpl(asmGenerator, lambdaFunctionName, lambdaForm, treeWalker, capturedVariables, bindingsList);
     }
 
-    List<String> generateCaptures(Function currentFunctionScope, List<Node> bindingsList, RList lambdaBody) {
+    List<String> generateCaptures(Function currentFunctionScope, List<Node> bindingsList, RList lambdaBody, AsmGenerator asmGenerator) {
         // TODO for now we'll just look one level deep for free variables.  Really, we want an alternative TreeWalker impl which can do escape analysis at arbitrary depth!
-        List<String> capturedVars = List.of("x");
-        return capturedVars;
+        List<String> capturedVariables = List.of();
+        asmGenerator.mkCaptures(capturedVariables.size());
+        // todo captures ptr is now in x0
+
+        for(int captureIndex=0; captureIndex<capturedVariables.size(); captureIndex++) {
+            // Copies captured variable at frame pointer offset in current lexical scope to the next position in the heap-allocated captures array.
+            String capturedVariable = capturedVariables.get(captureIndex);
+            int sourceOffsetInThisLexicalScope = currentFunctionScope.getClosestOffset(capturedVariable)
+                    .orElseThrow(() -> new IllegalStateException("Have captured var but can't find it in enclosing scope!"));
+            System.out.println("adding capture for var %s in lexical scope at offset %d".formatted(capturedVariable, sourceOffsetInThisLexicalScope) );
+            asmGenerator.addCapture(sourceOffsetInThisLexicalScope, captureIndex);
+            // todo captures ptr is now in x0 again as it's returned from add_capture
+        }
+
+        return capturedVariables;
     }
 
     // ****************************************
@@ -117,6 +121,7 @@ public class LambdaSpecialForm implements SpecialForm {
         // Usual save of FP/LR
         asmGenerator.initFunction(lambdaFunctionName);
 
+        // TODO dupe code
         int numBindings = bindingsList.size();
         int numCaptures = capturedVariables.size();
 
@@ -155,9 +160,9 @@ public class LambdaSpecialForm implements SpecialForm {
             // here relative to the frame pointer (as it's stable over time).
             framePointerOffset = -1*stackBytes + (stackPos*8);
 
-            System.out.printf("lambda: loading captures ptr from stack at FP offset %d%n", closurePtrFPOffset);
+            System.out.printf("lambda: loading closure ptr from stack at FP offset %d%n", closurePtrFPOffset);
             asmGenerator.loadCapturedVariable(captureIndex, closurePtrFPOffset);
-            System.out.printf("lambda: storing capture for %s result from x0 to stack at FP offset %d%n", capturedVariable, framePointerOffset);
+            System.out.printf("lambda: storing capture for value of %s from x0 (after loading it there) to stack at FP offset %d%n", capturedVariable, framePointerOffset);
             asmGenerator.storeOperandFromRegisterToStack(0, framePointerOffset);
 
             closureFunctionFPOffsets.put(capturedVariable, framePointerOffset);

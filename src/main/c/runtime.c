@@ -102,7 +102,7 @@ char *printValue(uintptr_t taggedValue) {
         return resultStr;
     }
     else {
-        printf("printResult: type error for: 0x%lx\n", taggedValue);
+        printf("printValue: type error for: 0x%lx\n", taggedValue);
         exit(-1);
     }
 }

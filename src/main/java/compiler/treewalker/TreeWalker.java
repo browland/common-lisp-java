@@ -48,12 +48,15 @@ public class TreeWalker {
 //        String program = "(defvar x 2) (if nil nil x)";
 //        String program = "(defun adder (x y) (+ x y)) (adder 1 2)";
 //        String program = "((lambda (x) (+ x 1)) 1)";
-//        String program = "((lambda (x y) (+ x y)) 1 2)";
+        String program = "((lambda (x y) (+ x y)) 1 2)";
 //        String program = "(let ((x 1)) (+ x 1))";
 //        String program = "(let ((x 1)) (let ((y 2)) (+ x y)))";
 
         // TODO Escape analysis: x in the lambda body is free; we expect it to be in the symbol table but it's in the enclosing scope
-        String program = "(let ((x 1)) ((lambda (y) (+ x y)) 2))";
+//        String program = "(let ((x 1)) ((lambda (y) (+ x y)) 2))";
+
+        // Multiple captures
+//        String program = "(let ((x 1) (y 2)) ((lambda () (+ x y))))";
 
         // attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
         // (defun foo (x) (lambda (y) x))

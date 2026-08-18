@@ -37,13 +37,16 @@ public class LetSpecialForm implements SpecialForm {
 
             // Push to stack at appropriate offset
             // Stack offset is relative to the frame pointer and starting from low value; values will be e.g. {-16, -8, ...}.
-            asmGenerator.storeOperandFromRegisterToStack(pos);
+            System.out.println("let: copying operand from register %d to stack at sp+%d\n".formatted(pos, pos*8));
+            // TODO messy; our walkTree impl for Atoms always puts the value into x0 so we use this method to always pull from x0
+            asmGenerator.storeResultToStack(pos);
             int stackOffset = -1*stackBytes + (pos*8) + startOffset;  // startOffset is negative
             stackOffsets.put(nameAtom.value(), stackOffset);
             pos++;
         }
 
         currentFunctionScope.pushStackOffsets(stackOffsets);
+        System.out.println("let: pushed stack offsets %s".formatted(stackOffsets));
 
         // Evaluate let body
         Node bodyNode = rlist.nodes().get(2);
