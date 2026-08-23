@@ -58,11 +58,8 @@ public class LambdaSpecialForm implements SpecialForm {
     // ****************************************
     private void generateLambdaFunctionImpl(CompilerBackend backend, String lambdaFunctionName, RList lambdaForm,
                                             TreeWalker treeWalker, List<String> capturedVariables, List<Node> bindingsList) {
-        // Write symbol table entry for the closure and its function slot in the symbol table.
-        backend.initialiseSymbol(lambdaFunctionName);
 
-        // put the AsmGenerator into new function scope
-        backend.startFunctionDefinition();
+        backend.startFunction(lambdaFunctionName);
 
         Function function = backend.setUpClosureFunctionStack(capturedVariables, bindingsList, lambdaFunctionName);
 
@@ -70,6 +67,6 @@ public class LambdaSpecialForm implements SpecialForm {
         Node bodyNode = lambdaForm.nodes().get(2);
         treeWalker.walkTree(bodyNode);
 
-        backend.leaveFunction(function);
+        backend.endFunction(function);
     }
 }

@@ -17,9 +17,7 @@ public class DefunSpecialForm implements SpecialForm {
         String name = nameSymbolAtom.getValue();
 
         // put the AsmGenerator into new function scope
-        backend.startFunctionDefinition();
-        backend.initialiseSymbol(name);
-        backend.functionPrologue(name);
+        backend.startFunction(name);
 
         // Bindings
         Node bindingsNode = rlist.nodes().get(2);
@@ -46,6 +44,6 @@ public class DefunSpecialForm implements SpecialForm {
         Node bodyNode = rlist.nodes().get(3);
         treeWalker.walkTree(bodyNode);
 
-        backend.leaveFunction(name, numBindings);
+        backend.endFunction(name, numBindings);
     }
 }

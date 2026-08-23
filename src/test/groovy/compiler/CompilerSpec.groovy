@@ -7,7 +7,7 @@ import syntaxtree.Node
 
 class CompilerSpec extends Specification {
 
-    def "bare int atom"() {
+    def "compilation tests"() {
         when:
         compile(program)
 

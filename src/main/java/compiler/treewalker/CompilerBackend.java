@@ -54,8 +54,10 @@ public class CompilerBackend {
         asmGenerator.writeFixNumToRegister(0, intAtom.getFixNum());
     }
 
-    public void startFunctionDefinition() {
+    public void startFunction(String name) {
         asmGenerator.startFunctionDef();
+        initialiseSymbol(name);
+        functionPrologue(name);
     }
 
     public void initialiseSymbol(String symbol) {
@@ -100,7 +102,7 @@ public class CompilerBackend {
         functionsMap.put(functionName, newFunctionScope);
     }
 
-    public void leaveFunction(String functionName, int numVariables) {
+    public void endFunction(String functionName, int numVariables) {
         // TODO we should be able to use the current Function scope to get the used stack space?
 
         // We need to free an additional 16 bytes for the stored x29 and x30 regs
@@ -109,22 +111,18 @@ public class CompilerBackend {
         asmGenerator.endFunction();
 
         // return the AsmGenerator from new function scope
-        // TODO confusing how this differs from endFunction() - doing different things
         asmGenerator.endFunctionDef();
         asmGenerator.putFunction(functionName);
     }
 
-    public void leaveFunction(Function function) {
+    public void endFunction(Function function) {
         // TODO a bit special for lambdas?
         // Automatically free stack based on passed function scope
         int stackBytes = function.getStackBytes();
+
         System.out.printf("lambda: freeing stack bytes: %d\n",stackBytes);
         asmGenerator.freeSpaceOnStack(stackBytes);
-
         asmGenerator.endFunction();
-
-        // return the AsmGenerator from new function scope
-        // TODO confusing how this differs from endFunction() - doing different things
         asmGenerator.endFunctionDef();
     }
 
@@ -234,7 +232,7 @@ public class CompilerBackend {
      */
     public Function setUpClosureFunctionStack(List<String> capturedVariables, List<Node> bindingsList, String lambdaFunctionName) {
         // Usual save of FP/LR
-        asmGenerator.initFunction(lambdaFunctionName);
+//        asmGenerator.initFunction(lambdaFunctionName);
 
         // TODO dupe code
         int numBindings = bindingsList.size();
