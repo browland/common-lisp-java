@@ -35,34 +35,7 @@ public class TreeWalker {
 
         TreeWalker walker = new TreeWalker();
 
-        // String atom
-//        String program = "1";
-//        String program = "(if t 1 2)";
-//        String program = "(add 1 2)";
-//        String program = "(+ 1 2)";
-//        String program = "(+ 1 (+ 1 2))";
-//        String program = "(defun foo () 2) (foo)";
-//        String program = "(defun foo () (add 1 1)) (if t (foo) (add 1 2))";
-//        String program = "(defun first (x y) x) (first 1 2)";
-//        String program = "(defvar two (+ 1 1)) (if t two (+ 1 2))";
-//        String program = "(defvar x 2) (if nil nil x)";
-//        String program = "(defun adder (x y) (+ x y)) (adder 1 2)";
-//        String program = "((lambda (x) (+ x 1)) 1)";
-//        String program = "((lambda (x y) (+ x y)) 1 2)";
-//        String program = "(let ((x 1)) (+ x 1))";
-//        String program = "(let ((x 1)) (let ((y 2)) (+ x y)))";
-
-        // TODO Escape analysis: x in the lambda body is free; we expect it to be in the symbol table but it's in the enclosing scope
-//        String program = "(let ((x 1)) ((lambda (y) (+ x y)) 2))";
-
-        // Multiple captures
-        String program = "(let ((x 1) (y 2)) ((lambda () (+ x y))))";
-
-        // attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
-        // (defun foo (x) (lambda (y) x))
-        // we'd then need to call it like this though:
-        // (+ (funcall (foo 2) 1) 1)
-
+        String program = "(+ 1 2)";
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
@@ -93,7 +66,7 @@ public class TreeWalker {
     // Once we end up with the evaluated list of nodes, then we evaluate the "flattened" list at this level as a form.
     // We call into our NodeListener for individual atoms as well as the overall form at each level while we still
     // evolve the design.
-    void walkTopLevelNodes(List<Node> nodes) {
+    public void walkTopLevelNodes(List<Node> nodes) {
         backend.startProgram();
 
         for (Node node : nodes) {

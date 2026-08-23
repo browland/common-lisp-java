@@ -11,22 +11,22 @@ import java.util.List;
 public class DefunSpecialForm implements SpecialForm {
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
-        // put the AsmGenerator into new function scope
-        backend.startFunctionDefinition();
-
+        // Determine name of function
         Node nameNode = rlist.nodes().get(1);
         SymbolAtom nameSymbolAtom = TypedAtom.toSymbolAtom(nameNode);
         String name = nameSymbolAtom.getValue();
 
+        // put the AsmGenerator into new function scope
+        backend.startFunctionDefinition();
         backend.initialiseSymbol(name);
-        backend.functionPrologue(name);  // TODO we allocate 16 bytes on stack here
+        backend.functionPrologue(name);
 
         // Bindings
         Node bindingsNode = rlist.nodes().get(2);
         List<Node> bindingsList = RList.expectRList(bindingsNode).nodes();
         int numBindings = bindingsList.size();
 
-        backend.reserveStackForVariables(numBindings);  // TODO we allocate 0 bytes on stack here
+        backend.reserveStackForVariables(numBindings);
 
         // At runtime we expect the caller to have passed the arguments to registers x0, x1, ...
         // For each binding, we push the operand in that register position to the stack and then associate that stack
@@ -39,12 +39,13 @@ public class DefunSpecialForm implements SpecialForm {
             bindingNameList.add(symbolAtom.value());
         }
 
+        // This is where we register the Function
         backend.setUpFunctionBindings(name, bindingNameList);
 
         // Function impl
         Node bodyNode = rlist.nodes().get(3);
         treeWalker.walkTree(bodyNode);
 
-        backend.leaveFunction(name, numBindings);  // TODO we free 16 bytes of stack here (for x29 and x30)
+        backend.leaveFunction(name, numBindings);
     }
 }

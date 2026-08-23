@@ -107,7 +107,7 @@ public class AsmGenerator {
 
     /**
      * operandNum starts from 0
-     * Deprecated as it's too opaque how this works.
+     * Deprecated as it's too opaque how this works.  Also we use the sp which moves around, rather than the fp.
      */
     @Deprecated
     public void storeOperandFromRegisterToStack(int pos) {

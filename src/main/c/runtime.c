@@ -4,6 +4,8 @@
 #include <string.h>
 #include "runtime.h"
 
+#define DEBUG 0
+
 struct SymbolEntry {
     char *symbol;
     uintptr_t variableSlot;
@@ -51,7 +53,10 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
 }
 
 void printResult(uintptr_t result) {
-    printf("printResult: 0x%lx\n", result);
+    if (DEBUG == 1) {
+        printf("printResult: 0x%lx\n", result);
+    }
+
     // result is a tagged pointer
     long tagMask = 0x7;
     long tag = result & tagMask;
@@ -167,7 +172,9 @@ void *alloc_captures(int capturesLen) {
 uintptr_t *add_capture(uintptr_t *capturesPtr, uintptr_t value, int index) {
     // returns capturesPtr* back to caller as we often need it in x0 for adding multiple captures in sequence
     capturesPtr[index] = value;
-    printf("add_capture: added value %s into captures at index %d resulting in val %s\n", printValue(value), index, printValue(capturesPtr[index]));
+    if (DEBUG == 1) {
+        printf("add_capture: added value %s into captures at index %d resulting in val %s\n", printValue(value), index, printValue(capturesPtr[index]));
+    }
     return capturesPtr;
 }
 
@@ -180,7 +187,9 @@ uintptr_t mk_closure(uintptr_t taggedFxnPtr, uintptr_t *captures) {
     uintptr_t taggedHeapPtr = (uintptr_t)heapPtr;
     taggedHeapPtr = taggedHeapPtr | TYPE_TAG_CLOSURE;
 
-    printf("mk_closure: created closure with heapPtr %p, tagged heap ptr 0x%lx\n", heapPtr, taggedHeapPtr);
+    if (DEBUG == 1) {
+        printf("mk_closure: created closure with heapPtr %p, tagged heap ptr 0x%lx\n", heapPtr, taggedHeapPtr);
+    }
     return taggedHeapPtr;
 }
 
@@ -189,7 +198,9 @@ uintptr_t deref_tagged_closure_fxn_ptr(uintptr_t taggedClosurePtr) {
     struct Closure *closure = (struct Closure*)untaggedClosurePtr;
     uintptr_t taggedFxnPtr = closure->taggedFxnPtr;
     uintptr_t rawFxnPtr = untag_fxn_ptr(taggedFxnPtr);
-    printf("deref_tagged_closure_fxn_ptr: got raw fxn ptr: 0x%lx\n", rawFxnPtr);
+    if (DEBUG == 1) {
+        printf("deref_tagged_closure_fxn_ptr: got raw fxn ptr: 0x%lx\n", rawFxnPtr);
+    }
     return rawFxnPtr;
 }
 
