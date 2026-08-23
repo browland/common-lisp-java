@@ -15,7 +15,7 @@ import java.util.Map;
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
-    private final AsmGenerator asmGenerator = new AsmGenerator();
+    private CompilerBackend backend = new CompilerBackend();
     private final Map<String, SpecialForm> specialForms = new HashMap<>();
     private final Map<String, Function> functions = new HashMap<>();
 
@@ -93,45 +93,34 @@ public class TreeWalker {
     // Once we end up with the evaluated list of nodes, then we evaluate the "flattened" list at this level as a form.
     // We call into our NodeListener for individual atoms as well as the overall form at each level while we still
     // evolve the design.
-    void walkTopLevelNodes(List<Node> nodes) throws IOException {
-        asmGenerator.initMainFunction();
+    void walkTopLevelNodes(List<Node> nodes) {
+        backend.startProgram();
 
-        Function topLevelScope = new Function("_default_", Map.of());
         for (Node node : nodes) {
-            walkTree(node, topLevelScope);
+            walkTree(node);
         }
 
-        asmGenerator.printResultAndCleanUpMainFunction();
-
-        BufferedWriter bw = new BufferedWriter(new FileWriter("./src/main/asm/my-asm.s"));
-
-        asmGenerator.dumpAsm(bw);
+        backend.endProgram();
     }
 
-    public void walkTree(Node node, Function currentFunctionScope) {
+    public void walkTree(Node node) {
         if (node instanceof Atom atom) {
-            handleAtom(atom, currentFunctionScope);
+            handleAtom(atom);
         }
         else if (node instanceof RList rlist) {
-            walkTree(rlist, currentFunctionScope);
+            walkTree(rlist);
         }
     }
 
-    private TypedAtom<?> handleAtom(Atom atom, Function currentFunctionScope) {
+    private TypedAtom<?> handleAtom(Atom atom) {
         TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
         if (typedAtom instanceof SymbolAtom symbolAtom) {
             String symbol = symbolAtom.getValue();
-            if (currentFunctionScope.containsBinding(symbol)) {
-                int stackOffset = currentFunctionScope.getClosestOffset(symbol).orElseThrow(() -> new IllegalArgumentException("symbol %s not in scope".formatted(symbol)));
-                asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
-            }
-            else {
-                // check our mappings to stack offsets first (bindings for the current function)
-                asmGenerator.generateSymbolLookup(symbolAtom.getValue(), Namespace.VARIABLE);
-            }
+            backend.handleSymbolOperand(symbol, Namespace.VARIABLE);
         }
         else if (typedAtom instanceof IntAtom intAtom) {
-            asmGenerator.writeFixNumToRegister(0, intAtom.getFixNum());
+            // Operand index 0 since this is a bare atom
+            backend.handleIntOperand(intAtom, 0);
         }
         else {
             throw new UnsupportedOperationException("unsupported to eval other types of atoms");
@@ -140,24 +129,11 @@ public class TreeWalker {
         return typedAtom;
     }
 
-    private void walkTree(RList rlist, Function currentFunctionScope) {
+    private void walkTree(RList rlist) {
         if (rlist.nodes().getFirst() instanceof Atom operatorAtom) {
             TypedAtom<?> ta = TypedAtom.fromAtom(operatorAtom);
             if (ta instanceof SymbolAtom sa) {
-                // First check operator symbol for match on special forms which are statically defined.
-                SpecialForm specialForm = specialForms.get(sa.getValue());
-                if (specialForm != null) {
-                    specialForm.walkTree(rlist, this, asmGenerator, currentFunctionScope);
-                }
-                else {
-                    Function function = functions.get(sa.getValue());
-                    if (function != null) {
-                        walkTreeForFunctionCall(rlist, function, currentFunctionScope);
-                    }
-                    else {
-                        throw new UnsupportedOperationException("Unsupported operator " + sa.getValue());
-                    }
-                }
+                handleFormWithSymbolOperator(rlist, sa);
             }
             else {
                 throw new UnsupportedOperationException("can't coerce type of operator atom");
@@ -165,29 +141,54 @@ public class TreeWalker {
 
         }
         else if (rlist.nodes().getFirst() instanceof RList expectedLambda) {
-            if (expectedLambda.nodes().getFirst() instanceof Atom lambdaAtom) {
-                if ("lambda".equals(lambdaAtom.value())) {
-                    walkTreeForLambdaApply(rlist, currentFunctionScope);
-                }
-                else {
-                    throw new IllegalArgumentException("Invalid operator, not a lambda expression: " + expectedLambda);
-                }
+            handleFormWithLambdaOperator(rlist, expectedLambda);
+        }
+    }
+
+    private void handleFormWithSymbolOperator(RList rlist, SymbolAtom sa) {
+        System.out.println("Handling form with symbol operator");
+
+        // First check operator symbol for match on special forms which are statically defined.
+        SpecialForm specialForm = specialForms.get(sa.getValue());
+        if (specialForm != null) {
+            System.out.println("Found special form for symbol " + sa.getValue());
+            specialForm.walkTree(rlist, this, backend);
+        }
+        else {
+            Function function = backend.findFunction(sa.getValue());
+            if (function != null) {
+                System.out.println("Found function for symbol " + sa.getValue());
+                walkTreeForFunctionCall(rlist, function);
+            }
+            else {
+                throw new UnsupportedOperationException("Could not find symbol for operator " + sa.getValue());
+            }
+        }
+    }
+
+    private void handleFormWithLambdaOperator(RList rlist, RList expectedLambda) {
+        System.out.println("Handling form with lambda operator");
+
+        if (expectedLambda.nodes().getFirst() instanceof Atom lambdaAtom) {
+            if ("lambda".equals(lambdaAtom.value())) {
+                walkTreeForLambdaApply(rlist);
             }
             else {
                 throw new IllegalArgumentException("Invalid operator, not a lambda expression: " + expectedLambda);
             }
         }
+        else {
+            throw new IllegalArgumentException("Invalid operator, not a lambda expression: " + expectedLambda);
+        }
     }
 
-    private void walkTreeForFunctionCall(RList rlist, Function functionToCall, Function currentFunctionScope) {
+    private void walkTreeForFunctionCall(RList rlist, Function functionToCall) {
         // We're evaluating a form.
         // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;
 
-        // We need 16 bytes for each operand plus one for the function pointer; but ensure we always reserve a multiple
-        // of 16 bytes
-        final int stackBytes = (int)(16 * Math.ceil(numOperands+1/2f));
-        asmGenerator.reserveSpaceOnStack(stackBytes);
+        // Reserve stack for operands plus function pointer for our the operator being applied
+        backend.reserveStackForVariables(numOperands + 1);
 
         // This doubles as the stack slot index, and also the node index of the list we're walking
         int slot = 0;
@@ -196,35 +197,22 @@ public class TreeWalker {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
-                    long fixNum = intAtom.getFixNum();
-                    asmGenerator.pushFixNumToStack(slot++, fixNum);
+                    backend.handleIntOperand(intAtom, slot);
+                    backend.storeResultToVariable(slot);
+                    slot++;
                 }
                 else if (typedAtom instanceof SymbolAtom symbolAtom) {
                     if (slot == 0) {
                         // operator position; look up symbol from function namespace.  This will return a function ptr.
                         // we'll then write the function pointer after the operands (stackSlot was already post-incremented on last operand)
-                        asmGenerator.generateSymbolLookup(functionToCall.getSymbolStringName(), Namespace.FUNCTION);
-                        asmGenerator.untagFunctionPtr();
-                        asmGenerator.storeResultToStack(slot++);
+                        backend.handleSymbolOperand(functionToCall.getSymbolStringName(), Namespace.FUNCTION);
+                        backend.untagFunctionPointer();
+                        backend.storeResultToVariable(slot++);
                     }
                     else {
                         String symbol = symbolAtom.getValue();
-                        if (currentFunctionScope.containsBinding(symbol)) {
-                            int stackOffset = currentFunctionScope.getClosestOffset(symbol).orElseThrow(() -> new IllegalArgumentException("symbol %s not in scope".formatted(symbol)));
-                            asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
-                        }
-                        else {
-                            // We have no binding for this symbol; assume it's in the symbol table from an earlier defvar for eg.
-                            // TODO this creates bug when symbol is in enclosing scope (generate asm symbol lookup but doesn't exist, linker failure).
-                            //      LambdaSpecialForm: currentFunctionScope needs to capture the x into the currentFunctionScope in the knowledge that its body accesses it.
-                            //                         It needs to copy the x from its currentFunctionScope to the new one its creating: generate code to copy stack to stack by value at eval. time
-                            //                         and store new stack offset in new Function scope.
-                            //                         Copying by value essentially 'freezes' the captured variable at the time of the lambda apply, which is correct.
-                            //                         How to copy by value?  We can't reference the value statically in asm (obviously) and can't dynamically access the creator's stack (it could be gone by application time).
-                            //                         Need to malloc into somewhere in main memory?
-                            asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
-                        }
-                        asmGenerator.storeResultToStack(slot++);  // TODO code smell
+                        backend.handleSymbolOperand(symbol, Namespace.VARIABLE);
+                        backend.storeResultToVariable(slot++);
                     }
                 }
             }
@@ -232,8 +220,8 @@ public class TreeWalker {
                 // We have a form to evaluate.
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
-                walkTree(innerRList, currentFunctionScope);
-                asmGenerator.storeResultToStack(slot++);
+                walkTree(innerRList);
+                backend.storeResultToVariable(slot++);
             }
         }
 
@@ -249,31 +237,28 @@ public class TreeWalker {
         // Operands will be stored in registers in incrementing order as per usual calling convention
         for (int operandNum = 0; operandNum<numOperands; operandNum++) {
             // Zero-indexed operands are aligned with registers, but stack pos is one pos higher (above the function ptr slot)
-            asmGenerator.loadOperandFromStackIntoRegister(operandNum+1, operandNum);
+            backend.loadVariableFromStackIntoRegister(operandNum+1, operandNum);
         }
 
         // Load function ptr into next available register
         // We use operandNum as it's already incremented to next register num (it's not an operand but we need it in
         // some register for the jump).
         int functionPtrRegister = numOperands; // Function ptr will be stored in the next register after those used by the operands
-        asmGenerator.loadOperandFromStackIntoRegister(0, functionPtrRegister);
+        backend.loadVariableFromStackIntoRegister(0, functionPtrRegister);
 
-        // Now we can safely untag the function ptr in x0
-//        asmGenerator.untagFunctionPtr();
+        backend.callFunction(functionPtrRegister);
 
-        asmGenerator.callFunction(functionPtrRegister);
-        asmGenerator.freeSpaceOnStack(stackBytes);
+        // Free space on stack for operands plus function pointer for our the operator being applied
+        backend.freeStackForVariables(numOperands + 1);
     }
 
-    private void walkTreeForLambdaApply(RList rlist, Function currentFunctionScope) {
+    private void walkTreeForLambdaApply(RList rlist) {
         // We're evaluating a form.
         // Depending on the operand count, we know how much stack to reserve to hold them.
         int numOperands = rlist.size()-1;
 
-        // We need 16 bytes for each operand plus one for the function pointer; but ensure we always reserve a multiple
-        // of 16 bytes
-        final int stackBytes = (int)(16 * Math.ceil(numOperands+1/2f));
-        asmGenerator.reserveSpaceOnStack(stackBytes);
+        // Reserve stack space for each operand plus one for the function pointer
+        backend.reserveStackForVariables(numOperands + 1);
 
         // This doubles as the stack slot index, and also the node index of the list we're walking
         int slot = 0;
@@ -282,36 +267,33 @@ public class TreeWalker {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
-                    long fixNum = intAtom.getFixNum();
-                    asmGenerator.pushFixNumToStack(slot++, fixNum);
+                    backend.handleIntOperand(intAtom, slot);
+                    backend.storeResultToVariable(slot);
+                    slot++;
                 }
                 else if (typedAtom instanceof SymbolAtom symbolAtom) {
                     String symbol = symbolAtom.getValue();
-                    if (currentFunctionScope.containsBinding(symbol)) {
-                        int stackOffset = currentFunctionScope.getClosestOffset(symbol).orElseThrow(() -> new IllegalArgumentException("symbol %s not in scope".formatted(symbol)));
-                        asmGenerator.loadOperandFromStackOffsetIntoRegister(stackOffset, 0);
-                    } else {
-                        asmGenerator.generateSymbolLookup(symbol, Namespace.VARIABLE);
-                    }
-                    asmGenerator.storeResultToStack(slot++);  // TODO code smell
+                    backend.handleSymbolOperand(symbol, Namespace.VARIABLE);
+                    backend.storeResultToVariable(slot++);
                 }
             }
             else if (childNode instanceof RList innerRList) {
                 // We have a form to evaluate.
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
-                walkTree(innerRList, currentFunctionScope);
+                walkTree(innerRList);
                 if (slot == 0) {
                     // We saw a list and we're in position 0 so we must have just evaluated a lambda.
                     // We should have a tagged pointer for a closure, which when untagged will point to our Closure struct on the heap.
 
-                    asmGenerator.storeResultToStack(slot++);
+                    backend.storeResultToVariable(slot++);
 
                     // We have a tagged closure ptr, and we want the untagged raw fxn ptr.
-                    asmGenerator.loadRealFxnPtr();
+                    backend.loadRealFunctionPointer();
+
                     // The tagged pointer will be the return value of the last generated instruction so we can  push that to the stack as we normally would for a function lookup.
                 }
-                asmGenerator.storeResultToStack(slot++);
+                backend.storeResultToVariable(slot++);
             }
         }
 
@@ -319,21 +301,19 @@ public class TreeWalker {
         // Operands will be stored in registers in incrementing order as per usual calling convention
         for (int operandNum = 0; operandNum<numOperands; operandNum++) {
             // Zero-indexed operands are aligned with registers, but stack pos is two pos higher (above the function ptr and captures ptr slots)
-            asmGenerator.loadOperandFromStackIntoRegister(operandNum+2, operandNum);
+            backend.loadVariableFromStackIntoRegister(operandNum+2, operandNum);
         }
 
         // Load closure ptr into next register
-        asmGenerator.loadOperandFromStackIntoRegister(0, numOperands);
+        backend.loadVariableFromStackIntoRegister(0, numOperands);
 
         // Load function ptr into next register
         int functionPtrRegister = numOperands+1; // Function ptr will be stored in the next register after those used by the operands
-        asmGenerator.loadOperandFromStackIntoRegister(1, functionPtrRegister);
+        backend.loadVariableFromStackIntoRegister(1, functionPtrRegister);
 
-        asmGenerator.callFunction(functionPtrRegister);
-        asmGenerator.freeSpaceOnStack(stackBytes);
-    }
+        backend.callFunction(functionPtrRegister);
 
-    public Map<String,Function> getFunctions() {
-        return functions;
+        // Free stack space for each operand plus one for the function pointer
+        backend.freeStackForVariables(numOperands + 1);
     }
 }

@@ -46,6 +46,19 @@ public class Function {
         return false;
     }
 
+    public void pushStackOffsetFrame() {
+        stackOffsetsStack.push(new HashMap<>());
+    }
+
+    public void pushStackOffset(String name, int offset) {
+        Map<String,Integer> stackOffsets = stackOffsetsStack.peek();
+        stackOffsets.put(name, offset);
+
+        if (offset < minOffset) {
+            minOffset = offset;
+        }
+    }
+
     // Augment the current lexical scope with a new set of bindings, e.g. when we enter a `let` form within a function.
     // In this case the let bindings occupy a lexical scope 'within' the lexical scope of the function.
     // We maintain minOffset so that any inner lexical scope starts from the bottom of the enclosing one.
@@ -72,6 +85,7 @@ public class Function {
             stackSlots += stackOffsets.size();
         }
 
-       return (int)(16 * Math.ceil(stackSlots/2f));
+        // We account for 1 more stack slot to store the FP/LR
+       return (int)(16 * Math.ceil(stackSlots+1/2f));
     }
 }

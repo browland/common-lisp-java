@@ -1,15 +1,12 @@
 package compiler.specialform;
 
-import compiler.AsmGenerator;
+import compiler.treewalker.CompilerBackend;
 import compiler.treewalker.Function;
 import compiler.treewalker.TreeWalker;
-import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Since this area can be confusing, it's important to think that this class is responsible for evaluating a lambda
@@ -25,7 +22,7 @@ public class LambdaSpecialForm implements SpecialForm {
     private static int num = 0;
 
     @Override
-    public void walkTree(RList lambdaForm, TreeWalker treeWalker, AsmGenerator asmGenerator, Function currentFunctionScope) {
+    public void walkTree(RList lambdaForm, TreeWalker treeWalker, CompilerBackend backend) {
         // Step 1. Create the closure object.
         // All we need so far is:
         // 1. Function pointer (based on name of lambda function within the asm)
@@ -40,32 +37,18 @@ public class LambdaSpecialForm implements SpecialForm {
         Node bindingsNode = lambdaForm.nodes().get(1);
         List<Node> bindingsList = RList.expectRList(bindingsNode).nodes();
 
-        List<String> capturedVariables = generateCaptures(currentFunctionScope, bindingsList, lambdaForm, asmGenerator);
+        List<String> capturedVariables = generateClosure(lambdaFunctionName, bindingsList, lambdaForm, backend);
 
-        // heap allocate this closure object - holds function ptr and captures array
-        // This ends up being the value of this lambda evaluation.  If this seems counter-intuitive, the remaining code
-        // from here switches to other `AsmContext`s in order to write the symbol table entry and asm function, out of
-        // the main flow.
-        asmGenerator.putClosure(lambdaFunctionName);
-
-        generateLambdaFunctionImpl(asmGenerator, lambdaFunctionName, lambdaForm, treeWalker, capturedVariables, bindingsList);
+        generateLambdaFunctionImpl(backend, lambdaFunctionName, lambdaForm, treeWalker, capturedVariables, bindingsList);
     }
 
-    List<String> generateCaptures(Function currentFunctionScope, List<Node> bindingsList, RList lambdaBody, AsmGenerator asmGenerator) {
+    List<String> generateClosure(String lambdaAsmName, List<Node> bindingsList, RList lambdaBody, CompilerBackend backend) {
         // TODO for now we'll just look one level deep for free variables.  Really, we want an alternative TreeWalker impl which can do escape analysis at arbitrary depth!
+        // TODO don't forget to update this in the meantime
         List<String> capturedVariables = List.of("x", "y");
-        asmGenerator.mkCaptures(Math.max(capturedVariables.size(), 8));  // ensure we don't alloc 0 byte array
-        // todo captures ptr is now in x0
-
-        for(int captureIndex=0; captureIndex<capturedVariables.size(); captureIndex++) {
-            // Copies captured variable at frame pointer offset in current lexical scope to the next position in the heap-allocated captures array.
-            String capturedVariable = capturedVariables.get(captureIndex);
-            int sourceOffsetInThisLexicalScope = currentFunctionScope.getClosestOffset(capturedVariable)
-                    .orElseThrow(() -> new IllegalStateException("Have captured var but can't find it in enclosing scope!"));
-            System.out.println("adding capture for var %s in lexical scope at offset %d".formatted(capturedVariable, sourceOffsetInThisLexicalScope) );
-            asmGenerator.addCapture(sourceOffsetInThisLexicalScope, captureIndex);
-            // todo captures ptr is now in x0 again as it's returned from add_capture
-        }
+//        List<String> capturedVariables = List.of("x");
+//        List<String> capturedVariables = List.of();
+        backend.createClosure(lambdaAsmName, capturedVariables);
 
         return capturedVariables;
     }
@@ -73,104 +56,20 @@ public class LambdaSpecialForm implements SpecialForm {
     // ****************************************
     // *** Code gen for lambda application time
     // ****************************************
-    private void generateLambdaFunctionImpl(AsmGenerator asmGenerator, String lambdaFunctionName, RList lambdaForm,
+    private void generateLambdaFunctionImpl(CompilerBackend backend, String lambdaFunctionName, RList lambdaForm,
                                             TreeWalker treeWalker, List<String> capturedVariables, List<Node> bindingsList) {
         // Write symbol table entry for the closure and its function slot in the symbol table.
-        asmGenerator.addToSymbolTable(lambdaFunctionName);
+        backend.initialiseSymbol(lambdaFunctionName);
 
         // put the AsmGenerator into new function scope
-        asmGenerator.startFunctionDef();
+        backend.startFunctionDefinition();
 
-        Function function = setUpClosureFunctionStack(asmGenerator, capturedVariables, bindingsList, lambdaFunctionName);
+        Function function = backend.setUpClosureFunctionStack(capturedVariables, bindingsList, lambdaFunctionName);
 
         // Function impl
         Node bodyNode = lambdaForm.nodes().get(2);
-        treeWalker.walkTree(bodyNode, function);
+        treeWalker.walkTree(bodyNode);
 
-        // We need to free an additional 16 bytes for the stored x29 and x30 regs
-        int stackBytes = function.getStackBytes() + 16;
-        System.out.println("lambda: freeing stack bytes: %d".formatted(stackBytes));
-        asmGenerator.freeSpaceOnStack(stackBytes + 16);
-
-        asmGenerator.endFunction();
-
-        // return the AsmGenerator from new function scope
-        // TODO confusing how this differs from endFunction() - doing different things
-        asmGenerator.endFunctionDef();
-
-        // add this function to our compile-time Map; needed for compile time logic when we need to look it up at apply time.
-        treeWalker.getFunctions().put(lambdaFunctionName, function);
-    }
-
-    /**
-     * Closure stack layout:
-     *
-     * +----------------------------+
-     *      +-- Saved caller's LR      --+ (as for any function stack frame)
-     *      +-- Saved caller's FP      --+ (as for any function stack frame)
-     * FP-> +-- (Optional empty slot)  --+ (to achieve 16 byte alignment if needed)
-     *      +-- Capture 2              --+ (capture 2 ...)
-     *      +-- Capture 1              --+ (capture 1 which we'll copy from the heap)
-     *      +-- Binding 2              --+ (binding 2 ...)
-     *      +-- Binding 1              --+ (binding 1 passed at apply time)
-     * SP-> +-- Closure ptr            --+ (at bottom of stack to keep separate from bindings/captures; also we always have one of these)
-     * +----------------------------+
-     */
-    private Function setUpClosureFunctionStack(AsmGenerator asmGenerator, List<String> capturedVariables,
-                                                 List<Node> bindingsList, String lambdaFunctionName) {
-        // Usual save of FP/LR
-        asmGenerator.initFunction(lambdaFunctionName);
-
-        // TODO dupe code
-        int numBindings = bindingsList.size();
-        int numCaptures = capturedVariables.size();
-
-        // We need 8 bytes for each binding, capture and the captures ptr, but ensure we always reserve a multiple of 16 bytes
-        // This moves sp down to bottom of scheme shown above.
-        final int stackBytes = (int)(16 * Math.ceil((numBindings + numCaptures + 1)/2f));
-        System.out.printf("lambda: allocating %d bytes of stack%n", stackBytes);
-        asmGenerator.reserveSpaceOnStack(stackBytes);
-
-        // Deal with closure ptr first.  The closure ptr is always passed directly after the bindings and we can get
-        // the captures ptr from that via a deref.
-        int closurePtrRegNum = numBindings;
-        int closurePtrFPOffset = -1 * stackBytes;  // closure ptr goes to bottom of our stack frame
-        System.out.printf("lambda: storing closure ptr from reg %d to stack at FP offset %d%n", closurePtrRegNum, closurePtrFPOffset);
-        asmGenerator.storeOperandFromRegisterToStack(closurePtrRegNum, closurePtrFPOffset);
-
-        int stackPos = 1;  // Our next stack slot is 1 higher than the closure ptr we just stored
-        Map<String, Integer> closureFunctionFPOffsets = new HashMap<>();
-        int framePointerOffset;
-        for (int operandNum = 0; operandNum< bindingsList.size(); operandNum++) {
-            Node bindingNode = bindingsList.get(operandNum);
-            Atom symbolAtom = Atom.expectAtom(bindingNode);
-            framePointerOffset = -1*stackBytes + (stackPos*8);
-            System.out.printf("lambda: storing binding for %s from reg %d to stack at FP offset %d%n", symbolAtom.value(), operandNum, framePointerOffset);
-            asmGenerator.storeOperandFromRegisterToStack(operandNum, framePointerOffset);
-            // Stack offset is relative to the frame pointer and starting from low value; values will be e.g. {-16, -8, ...}.
-            closureFunctionFPOffsets.put(symbolAtom.value(), framePointerOffset);
-            stackPos++;
-        }
-
-        for (int captureIndex=0; captureIndex<capturedVariables.size(); captureIndex++) {
-            String capturedVariable = capturedVariables.get(captureIndex);
-
-            // continue with next stack offset for captured variable; this has a bit of a smell perhaps.  We work out the
-            // stack pos within storeOperandFromRegisterToStack() relative to the stack pointer, but repeat the calculation
-            // here relative to the frame pointer (as it's stable over time).
-            framePointerOffset = -1*stackBytes + (stackPos*8);
-
-            System.out.printf("lambda: loading closure ptr from stack at FP offset %d%n", closurePtrFPOffset);
-            asmGenerator.loadCapturedVariable(captureIndex, closurePtrFPOffset);
-            System.out.printf("lambda: storing capture for value of %s from x0 (after loading it there) to stack at FP offset %d%n", capturedVariable, framePointerOffset);
-            asmGenerator.storeOperandFromRegisterToStack(0, framePointerOffset);
-
-            closureFunctionFPOffsets.put(capturedVariable, framePointerOffset);
-
-            stackPos++;
-        }
-
-        // Store stack offsets on Function; needed in walkTree() to generate instructions for entirety of lambda body.
-        return new Function(lambdaFunctionName, closureFunctionFPOffsets);
+        backend.leaveFunction(function);
     }
 }
