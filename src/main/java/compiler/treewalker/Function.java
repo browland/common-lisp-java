@@ -85,7 +85,13 @@ public class Function {
             stackSlots += stackOffsets.size();
         }
 
-        // We account for 1 more stack slot to store the FP/LR
-       return (int)(16 * Math.ceil(stackSlots+1/2f));
+       return (int)(16 * Math.ceil((stackSlots)/2f));
     }
+
+//    public static void main(String[] args) {
+//        int stackSlots = 2;
+//        System.out.println(stackSlots+1/2f);
+//        System.out.println(Math.ceil(stackSlots+1/2f));
+//        System.out.println((int)(16 * Math.ceil(stackSlots+1/2f)));
+//    }
 }

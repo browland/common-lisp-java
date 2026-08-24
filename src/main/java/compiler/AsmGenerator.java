@@ -59,6 +59,7 @@ public class AsmGenerator {
 
     public void endFunction() {
         context.write("""
+  add sp, sp, #16            ;; free stack space for saved FP, LR
   ldp x29, x30, [x29]
   ret
 """);

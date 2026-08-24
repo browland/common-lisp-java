@@ -102,21 +102,11 @@ public class CompilerBackend {
         functionsMap.put(functionName, newFunctionScope);
     }
 
-    public void endFunction(String functionName, int numVariables) {
-        // TODO we should be able to use the current Function scope to get the used stack space?
-
-        // We need to free an additional 16 bytes for the stored x29 and x30 regs
-        freeStackForVariables(numVariables + 2);
-
-        asmGenerator.endFunction();
-
-        // return the AsmGenerator from new function scope
-        asmGenerator.endFunctionDef();
-        asmGenerator.putFunction(functionName);
+    public void addFunctionToSymbolTable(String name) {
+        asmGenerator.putFunction(name);
     }
 
     public void endFunction(Function function) {
-        // TODO a bit special for lambdas?
         // Automatically free stack based on passed function scope
         int stackBytes = function.getStackBytes();
 
@@ -231,16 +221,12 @@ public class CompilerBackend {
      * +----------------------------+
      */
     public Function setUpClosureFunctionStack(List<String> capturedVariables, List<Node> bindingsList, String lambdaFunctionName) {
-        // Usual save of FP/LR
-//        asmGenerator.initFunction(lambdaFunctionName);
-
         // TODO dupe code
         int numBindings = bindingsList.size();
         int numCaptures = capturedVariables.size();
 
         // We need 8 bytes for each binding, capture and the captures ptr, but ensure we always reserve a multiple of 16 bytes
         // This moves sp down to bottom of scheme shown above.
-        // We account for 1 more stack slot to store the FP/LR
         final int stackBytes = (int)(16 * Math.ceil((numBindings + numCaptures + 1)/2f));
         System.out.printf("lambda: allocating %d bytes of stack%n", stackBytes);
         asmGenerator.reserveSpaceOnStack(stackBytes);
@@ -252,8 +238,14 @@ public class CompilerBackend {
         System.out.printf("lambda: storing closure ptr from reg %d to stack at FP offset %d%n", closurePtrRegNum, closurePtrFPOffset);
         asmGenerator.storeOperandFromRegisterToStack(closurePtrRegNum, closurePtrFPOffset);
 
-        int stackPos = 1;  // Our next stack slot is 1 higher than the closure ptr we just stored
+        // TODO we're storing the closure ptr in the stack offsets map, against the name of the closure asm function
+        //      We're doing this so we clean up the stack properly (which is based on Function.getStackBytes() which
+        //      in turn looks at the offsets map.)  Will this cause problems if we e.g. have a binding with same name as
+        //      closure?
         Map<String, Integer> closureFunctionFPOffsets = new HashMap<>();
+        closureFunctionFPOffsets.put(lambdaFunctionName, closurePtrFPOffset);
+
+        int stackPos = 1;  // Our next stack slot is 1 higher than the closure ptr we just stored
         int framePointerOffset;
         for (int operandNum = 0; operandNum< bindingsList.size(); operandNum++) {
             Node bindingNode = bindingsList.get(operandNum);

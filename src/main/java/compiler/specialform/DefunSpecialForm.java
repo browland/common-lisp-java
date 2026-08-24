@@ -44,6 +44,8 @@ public class DefunSpecialForm implements SpecialForm {
         Node bodyNode = rlist.nodes().get(3);
         treeWalker.walkTree(bodyNode);
 
-        backend.endFunction(name, numBindings);
+        Function function = backend.findFunction(name);
+        backend.endFunction(function);
+        backend.addFunctionToSymbolTable(name);
     }
 }
