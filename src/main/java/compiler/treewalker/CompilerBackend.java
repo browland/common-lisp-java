@@ -193,7 +193,7 @@ public class CompilerBackend {
             // Copies captured variable at frame pointer offset in current lexical scope to the next position in the heap-allocated captures array.
             String capturedVariable = capturedVariables.get(captureIndex);
             int sourceOffsetInThisLexicalScope = currentFunctionScope.getClosestOffset(capturedVariable)
-                    .orElseThrow(() -> new IllegalStateException("Have captured var but can't find it in enclosing scope!"));
+                    .orElseThrow(() -> new IllegalStateException("Have captured var %s but can't find it in enclosing scope!".formatted(capturedVariable)));
             System.out.println("adding capture for var %s in lexical scope at offset %d".formatted(capturedVariable, sourceOffsetInThisLexicalScope) );
             asmGenerator.addCapture(sourceOffsetInThisLexicalScope, captureIndex);
             // todo captures ptr is now in x0 again as it's returned from add_capture
@@ -306,6 +306,10 @@ public class CompilerBackend {
 
     public Function findFunction(String symbol) {
         return functionsMap.get(symbol);
+    }
+
+    public Set<String> getDeclaredFunctionNames() {
+        return functionsMap.keySet();
     }
 
     private int determineStackBytes(int numVariables) {

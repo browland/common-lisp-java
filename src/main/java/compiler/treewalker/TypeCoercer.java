@@ -3,7 +3,7 @@ package compiler.treewalker;
 import syntaxtree.Atom;
 
 public class TypeCoercer {
-    static TypedAtom<?> coerceType(Atom atom) {
+    public static TypedAtom<?> coerceType(Atom atom) {
         String stringValue = atom.value();
         char firstChar = stringValue.charAt(0);
         if (firstChar == '"') {

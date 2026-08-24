@@ -17,7 +17,6 @@ import java.util.Map;
 public class TreeWalker {
     private CompilerBackend backend = new CompilerBackend();
     private final Map<String, SpecialForm> specialForms = new HashMap<>();
-    private final Map<String, Function> functions = new HashMap<>();
 
     public TreeWalker() {
         specialForms.put("if", new IfSpecialForm());
@@ -25,9 +24,6 @@ public class TreeWalker {
         specialForms.put("defvar", new DefvarSpecialForm());
         specialForms.put("lambda", new LambdaSpecialForm());
         specialForms.put("let", new LetSpecialForm());
-
-        functions.put("add", new Function("add", Map.of()));
-        functions.put("+", new Function("add", Map.of()));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

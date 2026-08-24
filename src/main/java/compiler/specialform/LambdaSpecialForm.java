@@ -1,12 +1,15 @@
 package compiler.specialform;
 
 import compiler.treewalker.CompilerBackend;
+import compiler.treewalker.EscapeAnalyser;
 import compiler.treewalker.Function;
 import compiler.treewalker.TreeWalker;
+import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Since this area can be confusing, it's important to think that this class is responsible for evaluating a lambda
@@ -19,6 +22,7 @@ import java.util.List;
  * bear in mind we just create a closure value (pointer in x0, backed by the asm function and captures array on the heap).
  */
 public class LambdaSpecialForm implements SpecialForm {
+    private EscapeAnalyser escapeAnalyser = new EscapeAnalyser();
     private static int num = 0;
 
     @Override
@@ -42,12 +46,22 @@ public class LambdaSpecialForm implements SpecialForm {
         generateLambdaFunctionImpl(backend, lambdaFunctionName, lambdaForm, treeWalker, capturedVariables, bindingsList);
     }
 
-    List<String> generateClosure(String lambdaAsmName, List<Node> bindingsList, RList lambdaBody, CompilerBackend backend) {
+    List<String> generateClosure(String lambdaAsmName, List<Node> bindingsList, RList lambdaForm, CompilerBackend backend) {
         // TODO for now we'll just look one level deep for free variables.  Really, we want an alternative TreeWalker impl which can do escape analysis at arbitrary depth!
         // TODO don't forget to update this in the meantime
 //        List<String> capturedVariables = List.of("x", "y");
 //        List<String> capturedVariables = List.of("x");
-        List<String> capturedVariables = List.of();
+
+        List<String> bindingNames = bindingsList.stream().map(bindingNode ->
+                {
+                    Atom bindingAtom = Atom.expectAtom(bindingNode);
+                    return bindingAtom.value();
+                }).toList();
+
+        RList lambdaBody = RList.expectRList(lambdaForm.nodes().get(2));
+        Set<String> declaredFunctionNames = backend.getDeclaredFunctionNames();
+        List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, lambdaBody);
+
         backend.createClosure(lambdaAsmName, capturedVariables);
 
         return capturedVariables;
