@@ -36,6 +36,7 @@ class CompilerSpec extends Specification {
         "(cons 1 2)"                                         || "(1 . 2)"
         "(cons 1 (cons 1 2))"                                || "(1 . (1 . 2))"
         "(cons (+ 1 2) (+ 2 1))"                             || "(3 . 3)"
+        "(list 1 2)"                                         || "(1 . 2)"
     }
 
     def compile(String program) {

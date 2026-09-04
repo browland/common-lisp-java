@@ -28,9 +28,10 @@ public class CompilerBackend {
     public CompilerBackend() {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
         // operator name.
-        functionsMap.put("add", new Function("add", Map.of()));
-        functionsMap.put("+", new Function("add", Map.of()));
-        functionsMap.put("cons", new Function("cons", Map.of()));
+        functionsMap.put("add", new Function("add", false));
+        functionsMap.put("+", new Function("add", false));
+        functionsMap.put("cons", new Function("cons", false));
+        functionsMap.put("list", new Function("list", true));
     }
 
     public void startProgram() {
@@ -64,7 +65,12 @@ public class CompilerBackend {
 
     public void handleIntOperand(IntAtom intAtom, int index) {
         System.out.printf("Storing int literal operand %d to register 0\n", intAtom.getValue(), index);
-        asmGenerator.writeFixNumToRegister(0, intAtom.getFixNum());
+        asmGenerator.writeLongToRegister(0, intAtom.getFixNum());
+    }
+
+    public void writeLongToRegister(long value, int regNum) {
+        System.out.printf("Storing int literal operand %d to register %d\n", value, regNum);
+        asmGenerator.writeLongToRegister(regNum, value);
     }
 
     public void startFunction(String name) {
@@ -177,6 +183,11 @@ public class CompilerBackend {
     public void loadVariableFromStackIntoRegister(int stackPos, int regNum) {
         System.out.printf("Loading operand from stack pos %d to reg num %d\n", stackPos, regNum);
         asmGenerator.loadOperandFromStackIntoRegister(stackPos, regNum);
+    }
+
+    public void moveStackPointerToRegister(int offsetFromStackPointer, int regNum) {
+        System.out.printf("Moving address of stack pointer plus offset %d to register %d\n", offsetFromStackPointer, regNum);
+        asmGenerator.moveStackPointerToRegister(offsetFromStackPointer, regNum);
     }
 
     public void resultWasT() {

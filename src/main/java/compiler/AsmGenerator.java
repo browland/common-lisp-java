@@ -82,22 +82,12 @@ public class AsmGenerator {
     }
 
     /**
-     * pos starts from 0 and is used to determine the stack offset
-     */
-    public void pushFixNumToStack(int pos, long fixNum) {
-        context.write("""
-    mov x0, #%d          ;; move operand (fixnum) to x0
-    str x0, [sp, #%d]  ;; store fixnum on stack to free x0 for further operand processing
-  """.formatted(fixNum, pos*8));
-    }
-
-    /**
      * pos starts from 0 and is used to determine the register
      */
-    public void writeFixNumToRegister(int pos, long fixNum) {
+    public void writeLongToRegister(int regNum, long fixNum) {
         context.write("""
     mov x%d, #%d          ;; move operand (fixnum) to provided register
-  """.formatted(pos, fixNum));
+  """.formatted(regNum, fixNum));
     }
 
     public void storeResultToStack(int operandNum) {
@@ -352,5 +342,11 @@ public class AsmGenerator {
                 bl _deref_tagged_closure_fxn_ptr
                 """);
 
+    }
+
+    public void moveStackPointerToRegister(int offsetFromStackPointer, int regNum) {
+        context.write("""
+                add x%d, sp, #%d
+                """.formatted(regNum, offsetFromStackPointer));
     }
 }

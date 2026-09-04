@@ -11,11 +11,19 @@ public class Function {
     private final String symbolStringName;
     private final Deque<Map<String,Integer>> stackOffsetsStack;
     private int minOffset = 0;
+    private boolean variadicArgs;
 
     public Function(String symbolStringName, Map<String,Integer> stackOffsets) {
         this.symbolStringName = symbolStringName;
         this.stackOffsetsStack = new LinkedList<>();
         this.stackOffsetsStack.push(stackOffsets);
+    }
+
+    public Function(String symbolStringName, boolean variadicArgs) {
+        this.symbolStringName = symbolStringName;
+        this.stackOffsetsStack = new LinkedList<>();
+        this.stackOffsetsStack.push(Map.of());
+        this.variadicArgs = variadicArgs;
     }
 
     public String getSymbolStringName() {
@@ -88,10 +96,7 @@ public class Function {
        return (int)(16 * Math.ceil((stackSlots)/2f));
     }
 
-//    public static void main(String[] args) {
-//        int stackSlots = 2;
-//        System.out.println(stackSlots+1/2f);
-//        System.out.println(Math.ceil(stackSlots+1/2f));
-//        System.out.println((int)(16 * Math.ceil(stackSlots+1/2f)));
-//    }
+    public boolean isVariadicArgs() {
+        return variadicArgs;
+    }
 }

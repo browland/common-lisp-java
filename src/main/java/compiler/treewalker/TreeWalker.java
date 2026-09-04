@@ -201,11 +201,26 @@ public class TreeWalker {
             backend.loadVariableFromStackIntoRegister(operandNum+1, operandNum);
         }
 
-        // Load function ptr into next available register
-        // We use operandNum as it's already incremented to next register num (it's not an operand but we need it in
-        // some register for the jump).
-        int functionPtrRegister = numOperands; // Function ptr will be stored in the next register after those used by the operands
-        backend.loadVariableFromStackIntoRegister(0, functionPtrRegister);
+        int functionPtrRegister;
+        if (! functionToCall.isVariadicArgs()) {
+            // Load function ptr into next available register
+            // We use operandNum as it's already incremented to next register num (it's not an operand but we need it in
+            // some register for the jump).
+            functionPtrRegister = numOperands; // Function ptr will be stored in the next register after those used by the operands
+            backend.loadVariableFromStackIntoRegister(0, functionPtrRegister);
+        }
+        else {
+            // Load function ptr from bottom of stack to x2
+            functionPtrRegister = 2;
+            backend.loadVariableFromStackIntoRegister(0, functionPtrRegister);
+
+            // Load ptr to start of variables on stack (second slot, right after the function ptr) into x0 so it can be passed
+            // as an array to our 'list' C API fxn.
+            backend.moveStackPointerToRegister(8, 0);
+
+            // Set the length of args into x1 for the second arg to the 'list' C function
+            backend.writeLongToRegister(numOperands, 1);
+        }
 
         backend.callFunction(functionPtrRegister);
 
