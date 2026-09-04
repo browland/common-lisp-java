@@ -18,6 +18,7 @@ public class CompilerBackend {
     public CompilerBackend() {
         functionsMap.put("add", new Function("add", Map.of()));
         functionsMap.put("+", new Function("add", Map.of()));
+        functionsMap.put("cons", new Function("cons", Map.of()));
     }
 
     public void startProgram() {

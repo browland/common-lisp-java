@@ -33,12 +33,8 @@ class CompilerSpec extends Specification {
         "(let ((x 1)) (let ((y 2)) (+ x y)))"                || "3"
         "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"
         "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"
+        "(cons 1 2)"                                         || "(1 . 2)"
     }
-
-    // TODO attempt to reproduce issue where lambda accesses var in surrounding scope (not in symbol table)
-    // (defun foo (x) (lambda (y) x))
-    // we'd then need to call it like this though:
-    // (+ (funcall (foo 2) 1) 1)
 
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();

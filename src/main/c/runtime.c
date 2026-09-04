@@ -12,14 +12,24 @@ struct SymbolEntry {
     uintptr_t functionSlot;
 };
 
+struct ConsCell {
+    uintptr_t car;
+    uintptr_t cdr;  // tagged ptr to next element which may be another ConsCell, nil (end of list), or any other value
+};
+
 // TODO need to implement a mangling scheme for symbols which we can't represent as C/asm variable names.  We'll hit this
 //      pretty early with `+`.
 
+// Forward references for built-in functions - these are just statically defined as C functions and directly referenced
+// in the symbol table provided at runtime.
 uintptr_t add(uintptr_t val1, uintptr_t val2);
+uintptr_t cons(uintptr_t car, uintptr_t cdr);
 
+// Symbol table
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
 struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, (uintptr_t)&add};
+struct SymbolEntry cons_sym = {"cons", (uintptr_t)NULL, (uintptr_t)&cons};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -52,33 +62,6 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
     }
 }
 
-void printResult(uintptr_t result) {
-    if (DEBUG == 1) {
-        printf("printResult: 0x%lx\n", result);
-    }
-
-    // result is a tagged pointer
-    long tagMask = 0x7;
-    long tag = result & tagMask;
-    long value = 0L;
-
-    if (tag == 1L) {
-        // fixnum
-        value = result >> 3;
-        printf("%ld\n", value);
-    }
-    else if (tag == 4L) {
-        // symbol
-        value = result & 0xFFFFFFFFFFFFFFF8;
-        char *symbolPtr = (char*)value;
-        printf("%s\n", symbolPtr);
-    }
-    else {
-        printf("printResult: type error for: 0x%lx\n", result);
-        exit(-1);
-    }
-}
-
 char *printValue(uintptr_t taggedValue) {
     long tagMask = 0x7;
     long tag = taggedValue & tagMask;
@@ -86,21 +69,18 @@ char *printValue(uintptr_t taggedValue) {
 
     char *resultStr = (char*)malloc(25 * sizeof(char));
 
-    if (tag == 1L) {
-        // fixnum
+    if (tag == TYPE_TAG_FIXNUM) {
         value = taggedValue >> 3;
         sprintf(resultStr, "%ld", value);
         return resultStr;
     }
-    else if (tag == 3L) {
-        // closure
+    else if (tag == TYPE_TAG_CLOSURE ) {
         value = taggedValue & 0xFFFFFFFFFFFFFFF8;
         void *closurePtr = (void*)value;
         sprintf(resultStr, "%p", closurePtr);
         return resultStr;
     }
-    else if (tag == 4L) {
-        // symbol
+    else if (tag == TYPE_TAG_SYMBOL) {
         value = taggedValue & 0xFFFFFFFFFFFFFFF8;
         char *symbolPtr = (char*)value;
         sprintf(resultStr, "%s", symbolPtr);
@@ -111,6 +91,42 @@ char *printValue(uintptr_t taggedValue) {
         exit(-1);
     }
 }
+
+void printResult(uintptr_t result) {
+    if (DEBUG == 1) {
+        printf("printResult: 0x%lx\n", result);
+    }
+
+    // result is a tagged pointer
+    long tagMask = 0x7;
+    long tag = result & tagMask;
+    long value = 0L;
+
+    if (tag == TYPE_TAG_FIXNUM) {
+        value = result >> 3;
+        printf("%ld\n", value);
+    }
+    else if (tag == TYPE_TAG_SYMBOL) {
+        value = result & 0xFFFFFFFFFFFFFFF8;
+        char *symbolPtr = (char*)value;
+        printf("%s\n", symbolPtr);
+    }
+    else if (tag == TYPE_TAG_CONS) {
+        value = result & 0xFFFFFFFFFFFFFFF8;
+        void *valuePtr = (void*)value;
+        struct ConsCell *c = (struct ConsCell*)valuePtr;
+        uintptr_t car = c->car;
+        uintptr_t cdr = c->cdr;
+        char *carStr = printValue(car);
+        char *cdrStr = printValue(cdr);
+        printf("(%s . %s)\n", carStr, cdrStr);
+    }
+    else {
+        printf("printResult: type error for: 0x%lx\n", result);
+        exit(-1);
+    }
+}
+
 
 void typecheck_fixnum(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
@@ -209,4 +225,17 @@ uintptr_t load_captured_variable(uintptr_t taggedClosurePtr, int index) {
     struct Closure *closure = (struct Closure*)untaggedClosurePtr;
     uintptr_t *capturesPtr = closure->captures;
     return capturesPtr[index];
+}
+
+
+uintptr_t cons(uintptr_t car, uintptr_t cdr) {
+    struct ConsCell cons = {car, cdr};
+    void *heapPtr = malloc(sizeof(struct ConsCell));
+    memcpy(heapPtr, &cons, sizeof(struct ConsCell));
+
+    // tag the ptr to return our value
+    uintptr_t taggedHeapPtr = (uintptr_t)heapPtr;
+    taggedHeapPtr = taggedHeapPtr | TYPE_TAG_CONS;
+
+    return taggedHeapPtr;
 }
