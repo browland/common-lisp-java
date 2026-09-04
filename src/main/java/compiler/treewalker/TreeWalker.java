@@ -194,14 +194,6 @@ public class TreeWalker {
             }
         }
 
-        // TODO now we have the tagged function ptr on the stack, determine if it points to a closure (in heap) or a plain static function (directly label in asm).
-        //      So check the tag and if it's a closure generate the code to move captured variables which were stored on heap to next stack positions.
-        //      Replace the tagged function ptr on stack with the tagged ptr to the static code.
-        //      1. if tagged fxn ptr last 3 bits are 0x3, then:
-        //      2. untag the fxn ptr and deref it - this gives us the closure struct containing: tagged real fxn ptr, N slots for captured variables (we know how many slots as our functionToCall contains the capturedSymbols).
-        //      3. We load each captured variable onto the stack after the existing bindings
-        //      4. Then put tagged real fxn ptr on the stack in appropriate place
-
         // Now the evaluated operands are on the stack, load them into registers ready for our operator call
         // Operands will be stored in registers in incrementing order as per usual calling convention
         for (int operandNum = 0; operandNum<numOperands; operandNum++) {

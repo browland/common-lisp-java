@@ -47,16 +47,11 @@ public class LambdaSpecialForm implements SpecialForm {
     }
 
     List<String> generateClosure(String lambdaAsmName, List<Node> bindingsList, RList lambdaForm, CompilerBackend backend) {
-        // TODO for now we'll just look one level deep for free variables.  Really, we want an alternative TreeWalker impl which can do escape analysis at arbitrary depth!
-        // TODO don't forget to update this in the meantime
-//        List<String> capturedVariables = List.of("x", "y");
-//        List<String> capturedVariables = List.of("x");
-
         List<String> bindingNames = bindingsList.stream().map(bindingNode ->
-                {
-                    Atom bindingAtom = Atom.expectAtom(bindingNode);
-                    return bindingAtom.value();
-                }).toList();
+        {
+            Atom bindingAtom = Atom.expectAtom(bindingNode);
+            return bindingAtom.value();
+        }).toList();
 
         RList lambdaBody = RList.expectRList(lambdaForm.nodes().get(2));
         Set<String> declaredFunctionNames = backend.getDeclaredFunctionNames();

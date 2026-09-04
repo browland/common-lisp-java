@@ -17,9 +17,6 @@ struct ConsCell {
     uintptr_t cdr;  // tagged ptr to next element which may be another ConsCell, nil (end of list), or any other value
 };
 
-// TODO need to implement a mangling scheme for symbols which we can't represent as C/asm variable names.  We'll hit this
-//      pretty early with `+`.
-
 // Forward references for built-in functions - these are just statically defined as C functions and directly referenced
 // in the symbol table provided at runtime.
 uintptr_t add(uintptr_t val1, uintptr_t val2);
@@ -84,6 +81,17 @@ char *printValue(uintptr_t taggedValue) {
         value = taggedValue & 0xFFFFFFFFFFFFFFF8;
         char *symbolPtr = (char*)value;
         sprintf(resultStr, "%s", symbolPtr);
+        return resultStr;
+    }
+    else if (tag == TYPE_TAG_CONS) {
+        value = taggedValue & 0xFFFFFFFFFFFFFFF8;
+        void *valuePtr = (void*)value;
+        struct ConsCell *c = (struct ConsCell*)valuePtr;
+        uintptr_t car = c->car;
+        uintptr_t cdr = c->cdr;
+        char *carStr = printValue(car);
+        char *cdrStr = printValue(cdr);
+        sprintf(resultStr, "(%s . %s)", carStr, cdrStr);
         return resultStr;
     }
     else {

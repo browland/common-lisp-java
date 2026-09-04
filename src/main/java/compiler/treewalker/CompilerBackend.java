@@ -12,10 +12,22 @@ import java.util.*;
 
 public class CompilerBackend {
     private final AsmGenerator asmGenerator = new AsmGenerator();
+
+    /*
+     Used for keeping track of stack offsets as we create new scopes.
+     */
     private final Deque<Function> functionStack = new LinkedList<>();
+
+    /*
+     The functionsMap is useful for at least one thing:
+     1. Mapping the Lisp symbol for an operator to the asm function name.  E.g. we can't create an asm routine called "+"
+        so when we see the + operator we need to look its asm name "add".
+     */
     private final Map<String,Function> functionsMap = new HashMap<>();
 
     public CompilerBackend() {
+        // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
+        // operator name.
         functionsMap.put("add", new Function("add", Map.of()));
         functionsMap.put("+", new Function("add", Map.of()));
         functionsMap.put("cons", new Function("cons", Map.of()));

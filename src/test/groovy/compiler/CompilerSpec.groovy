@@ -34,6 +34,8 @@ class CompilerSpec extends Specification {
         "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"
         "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"
         "(cons 1 2)"                                         || "(1 . 2)"
+        "(cons 1 (cons 1 2))"                                || "(1 . (1 . 2))"
+        "(cons (+ 1 2) (+ 2 1))"                             || "(3 . 3)"
     }
 
     def compile(String program) {
