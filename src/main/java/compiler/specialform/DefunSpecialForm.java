@@ -46,6 +46,5 @@ public class DefunSpecialForm implements SpecialForm {
 
         Function function = backend.findFunction(name);
         backend.endFunction(function);
-        backend.addFunctionToSymbolTable(name);
     }
 }

@@ -23,12 +23,8 @@ class CompilerSpec extends Specification {
         "(add 1 2)"                                          || "3"
         "(+ 1 2)"                                            || "3"
         "(+ 1 (+ 1 2))"                                      || "4"
-        "(defun foo () 2) (foo)"                             || "2"
-        "(defun foo () (add 1 1)) (if t (foo) (add 1 2))"    || "2"
-        "(defun first (x y) x) (first 1 2)"                  || "1"
         "(defvar two (+ 1 1)) (if t two (+ 1 2))"            || "2"
         "(defvar x 2) (if nil nil x)"                        || "2"
-        "(defun adder (x y) (+ x y)) (adder 1 2)"            || "3"
         "((lambda (x) (+ x 1)) 1)"                           || "2"
         "((lambda (x y) (+ x y)) 1 2)"                       || "3"
         "(let ((x 1)) (+ x 1))"                              || "2"
@@ -41,6 +37,22 @@ class CompilerSpec extends Specification {
         "(list 1 2)"                                         || "(1 . (2 . nil))"
         "(list 1 2 3)"                                       || "(1 . (2 . (3 . nil)))"
         "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
+    }
+
+
+    def "defun tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program || expectedResult
+        "(defun foo () 2) (foo)"                             || "2"
+        "(defun foo () (add 1 1)) (if t (foo) (add 1 2))"    || "2"
+        "(defun first (x y) x) (first 1 2)"                  || "1"
+        "(defun adder (x y) (+ x y)) (adder 1 2)"            || "3"
     }
 
     def compile(String program) {

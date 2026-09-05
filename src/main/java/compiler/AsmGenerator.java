@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Needs to be lazy due to the need to generate the assembly in the correct order regardless of what order the calls
@@ -169,19 +170,23 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName, offset));
     }
 
-    public String addToSymbolTable(String symbolName) {
+    public String addToSymbolTable(String symbolName, Optional<String> asmFunctionSymbol) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_sym";
         String strPointerName = "_" + symbolName + "_str";
 
         switchToDataSegmentContext();
+
+        // Write tagged function pointer (if present) directly into function slot
+        String functionSlot = asmFunctionSymbol.map(name -> "_" + name + " + 2")
+                .orElse("0");
         context.write("""
 .p2align 3
 %s:
     .quad %s
     .quad 0
-    .quad 0
-                """.formatted(symPointerName, strPointerName));
+    .quad %s
+                """.formatted(symPointerName, strPointerName, functionSlot));
         switchFromDataSegmentContext();
 
         switchToCStringContext();
@@ -262,21 +267,6 @@ public class AsmGenerator {
     public void switchFromCStringContext() {
         contextStack.pop();
         context = contextStack.peek();
-    }
-
-    public void putFunction(String name) {
-        // Can't (?) call putFunction in C as we have the dynamically-generated name of the symbol but not obvious to me
-        // how to reach it by calling into C.
-        String symbolPointerName = "_" + name + "_sym";
-        String functionLabel = "_" + name;
-        context.write("""
-  adrp x0, %s@PAGE
-  add x0, x0, %s@PAGEOFF
-  adrp x1, %s@PAGE
-  add x1, x1, %s@PAGEOFF
-  orr x1, x1, #0x2           ; tag the function ptr
-  str x1, [x0, #16]          ; store function ptr to function slot for the symbol
-""".formatted(symbolPointerName, symbolPointerName, functionLabel, functionLabel));
     }
 
     public void mkCaptures(int capturesLen) {

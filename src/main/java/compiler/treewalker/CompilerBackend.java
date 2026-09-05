@@ -75,12 +75,12 @@ public class CompilerBackend {
 
     public void startFunction(String name) {
         asmGenerator.startFunctionDef();
-        initialiseSymbol(name);
+        initialiseSymbol(name, Optional.of(name));
         functionPrologue(name);
     }
 
-    public void initialiseSymbol(String symbol) {
-        asmGenerator.addToSymbolTable(symbol);
+    public void initialiseSymbol(String symbol, Optional<String> asmFunctionSymbol) {
+        asmGenerator.addToSymbolTable(symbol, asmFunctionSymbol);
     }
 
     public void functionPrologue(String name) {
@@ -119,10 +119,6 @@ public class CompilerBackend {
 
         // add this function to our compile-time Map
         functionsMap.put(functionName, newFunctionScope);
-    }
-
-    public void addFunctionToSymbolTable(String name) {
-        asmGenerator.putFunction(name);
     }
 
     public void endFunction(Function function) {

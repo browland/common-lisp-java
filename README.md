@@ -179,3 +179,8 @@ Closures remaining work
    longer needed.
    Currently we're hardcoding the single offset, need to handle properly.
 4. I'm not sure we should write closure name to the symbol table.
+
+Functions:
+1. When writing function to symbol table, write out function struct too; at this point we break out separate method
+1. Factor out the function object and go through that, rather than directly using the fxn ptr in the fxn slot.
+2. We can then print out a function's name in (function foo).
