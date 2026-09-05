@@ -135,7 +135,7 @@ public class AsmGenerator {
 
     public void untagFunctionPtr() {
         context.write("""
-      bl _untag_fxn_ptr
+      bl _untag_ptr
     """);
     }
 
@@ -301,10 +301,10 @@ public class AsmGenerator {
         context.write("""
   ;;; xl should be ptr to captures array (already in x0 from last addCapture() or mkCaptures())
   mov x1, x0
-  ;;; x0 should be tagged fxn ptr
+  ;;; x0 should be ptr to actual fxn code
   adrp x0, %s@PAGE           ; set up real fxn ptr in x0
   add x0, x0, %s@PAGEOFF     ; ...
-  orr x0, x0, #0x3           ; tag real fxn ptr
+  ;orr x0, x0, #0x3           ; tag real fxn ptr
   
   bl _mk_closure
   
@@ -336,12 +336,10 @@ public class AsmGenerator {
                 """.formatted(closurePtrFPOffset, captureIndex));
     }
 
-    public void loadRealFxnPtr() {
-        // deref_closure_fxn_ptr
+    public void closureToFunctionPtr() {
         context.write("""
-                bl _deref_tagged_closure_fxn_ptr
+                bl _tagged_closure_ptr_to_fxn_ptr
                 """);
-
     }
 
     public void moveStackPointerToRegister(int offsetFromStackPointer, int regNum) {

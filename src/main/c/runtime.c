@@ -17,6 +17,16 @@ struct ConsCell {
     uintptr_t cdr;  // tagged ptr to next element which may be another ConsCell, nil (end of list), or any other value
 };
 
+struct Closure {
+    void *fxnPtr;
+    uintptr_t *captures;
+};
+
+struct Function {
+    uintptr_t taggedFxnPtr;
+    char *name;
+};
+
 // Forward references for built-in functions - these are just statically defined as C functions and directly referenced
 // in the symbol table provided at runtime.
 uintptr_t add(uintptr_t val1, uintptr_t val2);
@@ -189,14 +199,9 @@ long is_t(uintptr_t val) {
     return -1;
 }
 
-uintptr_t untag_fxn_ptr(uintptr_t taggedFxnPtr) {
-     return taggedFxnPtr & 0xFFFFFFFFFFFFFFF8;
+uintptr_t untag_ptr(uintptr_t taggedPtr) {
+     return taggedPtr & 0xFFFFFFFFFFFFFFF8;
 }
-
-struct Closure {
-    uintptr_t taggedFxnPtr;
-    uintptr_t *captures;
-};
 
 void *alloc_captures(int capturesLen) {
     return malloc(capturesLen * 8);
@@ -211,9 +216,9 @@ uintptr_t *add_capture(uintptr_t *capturesPtr, uintptr_t value, int index) {
     return capturesPtr;
 }
 
-uintptr_t mk_closure(uintptr_t taggedFxnPtr, uintptr_t *captures) {
+uintptr_t mk_closure(void *fxnPtr, uintptr_t *captures) {
     void *heapPtr = malloc(sizeof(struct Closure));
-    struct Closure test = {taggedFxnPtr, captures};
+    struct Closure test = {fxnPtr, captures};
     memcpy(heapPtr, &test, sizeof(struct Closure));
 
     // tag the heap ptr
@@ -226,19 +231,18 @@ uintptr_t mk_closure(uintptr_t taggedFxnPtr, uintptr_t *captures) {
     return taggedHeapPtr;
 }
 
-uintptr_t deref_tagged_closure_fxn_ptr(uintptr_t taggedClosurePtr) {
-    void* untaggedClosurePtr = (void*)untag_fxn_ptr(taggedClosurePtr);
+void *tagged_closure_ptr_to_fxn_ptr(uintptr_t taggedClosurePtr) {
+    void* untaggedClosurePtr = (void*)untag_ptr(taggedClosurePtr);
     struct Closure *closure = (struct Closure*)untaggedClosurePtr;
-    uintptr_t taggedFxnPtr = closure->taggedFxnPtr;
-    uintptr_t rawFxnPtr = untag_fxn_ptr(taggedFxnPtr);
+    void *fxnPtr = closure->fxnPtr;
     if (DEBUG == 1) {
-        printf("deref_tagged_closure_fxn_ptr: got raw fxn ptr: 0x%lx\n", rawFxnPtr);
+        printf("tagged_closure_ptr_to_fxn_ptr: got raw fxn ptr: 0x%px\n", fxnPtr);
     }
-    return rawFxnPtr;
+    return fxnPtr;
 }
 
 uintptr_t load_captured_variable(uintptr_t taggedClosurePtr, int index) {
-    void* untaggedClosurePtr = (void*)untag_fxn_ptr(taggedClosurePtr);
+    void* untaggedClosurePtr = (void*)untag_ptr(taggedClosurePtr);
     struct Closure *closure = (struct Closure*)untaggedClosurePtr;
     uintptr_t *capturesPtr = closure->captures;
     return capturesPtr[index];

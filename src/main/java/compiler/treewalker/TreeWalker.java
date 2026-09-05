@@ -15,7 +15,7 @@ import java.util.Map;
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
-    private CompilerBackend backend = new CompilerBackend();
+    private final CompilerBackend backend = new CompilerBackend();
     private final Map<String, SpecialForm> specialForms = new HashMap<>();
 
     public TreeWalker() {
@@ -265,7 +265,7 @@ public class TreeWalker {
                     backend.storeResultToVariable(slot++);
 
                     // We have a tagged closure ptr, and we want the untagged raw fxn ptr.
-                    backend.loadRealFunctionPointer();
+                    backend.closureToFunctionPtr();
 
                     // The tagged pointer will be the return value of the last generated instruction so we can  push that to the stack as we normally would for a function lookup.
                 }

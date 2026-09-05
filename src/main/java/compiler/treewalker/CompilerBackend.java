@@ -324,8 +324,8 @@ public class CompilerBackend {
         asmGenerator.callFunction(functionPtrRegister);
     }
 
-    public void loadRealFunctionPointer() {
-        asmGenerator.loadRealFxnPtr();
+    public void closureToFunctionPtr() {
+        asmGenerator.closureToFunctionPtr();
     }
 
     public Function findFunction(String symbol) {
