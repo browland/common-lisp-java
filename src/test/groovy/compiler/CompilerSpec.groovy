@@ -19,7 +19,6 @@ class CompilerSpec extends Specification {
         "2"                                                  || "2"
         "nil"                                                || "nil"
         "t"                                                  || "t"
-        "(if t 1 2)"                                         || "1"
         "(add 1 2)"                                          || "3"
         "(+ 1 2)"                                            || "3"
         "(+ 1 (+ 1 2))"                                      || "4"
@@ -27,6 +26,29 @@ class CompilerSpec extends Specification {
         "(defvar x 2) (if nil nil x)"                        || "2"
         "(let ((x 1)) (+ x 1))"                              || "2"
         "(let ((x 1)) (let ((y 2)) (+ x y)))"                || "3"
+    }
+
+    def "conditionals tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() ==  expectedResult
+
+        where:
+        program                                              || expectedResult
+        "(if t 1 2)"                                         || "1"
+    }
+
+    def "cons and list tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() ==  expectedResult
+
+        where:
+        program                                              || expectedResult
         "(cons 1 2)"                                         || "(1 . 2)"
         "(cons 1 (cons 1 2))"                                || "(1 . (1 . 2))"
         "(cons (+ 1 2) (+ 2 1))"                             || "(3 . 3)"
@@ -63,6 +85,7 @@ class CompilerSpec extends Specification {
         "(defun foo () (add 1 1)) (if t (foo) (add 1 2))"    || "2"
         "(defun first (x y) x) (first 1 2)"                  || "1"
         "(defun adder (x y) (+ x y)) (adder 1 2)"            || "3"
+        "(function add)"                                     || "#<FUNCTION add>"
     }
 
     def compile(String program) {

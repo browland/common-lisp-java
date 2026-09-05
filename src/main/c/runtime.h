@@ -1,5 +1,6 @@
 #define TYPE_FIXNUM 1
 #define TYPE_SYMBOL 2
+#define TYPE_FUNCTION 3
 #define TYPE_UNKNOWN 999
 
 #define TYPE_MASK 0x7

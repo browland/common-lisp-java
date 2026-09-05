@@ -19,7 +19,7 @@ public class IfSpecialForm implements SpecialForm {
         treeWalker.walkTree(conditionNode);
 
         backend.reserveStackForVariables(2);  // 2 variables to get 16 byte alignment
-        backend.storeResultToVariable(0);
+        backend.storeResultToStack(0);
 
         // we now have the result of evaluating the condition in x0.  It should be either t or nil.  Generate asm to
         // type-check and then generate code for each branch, each with a label and jump to the right one.

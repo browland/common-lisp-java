@@ -24,6 +24,7 @@ public class TreeWalker {
         specialForms.put("defvar", new DefvarSpecialForm());
         specialForms.put("lambda", new LambdaSpecialForm());
         specialForms.put("let", new LetSpecialForm());
+        specialForms.put("function", new FunctionSpecialForm());
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -167,7 +168,7 @@ public class TreeWalker {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
                     backend.handleIntOperand(intAtom, slot);
-                    backend.storeResultToVariable(slot);
+                    backend.storeResultToStack(slot);
                     slot++;
                 }
                 else if (typedAtom instanceof SymbolAtom symbolAtom) {
@@ -176,12 +177,12 @@ public class TreeWalker {
                         // we'll then write the function pointer after the operands (stackSlot was already post-incremented on last operand)
                         backend.handleSymbolOperand(functionToCall.getSymbolStringName(), Namespace.FUNCTION);
                         backend.untagAndAccessFunctionPointer();
-                        backend.storeResultToVariable(slot++);
+                        backend.storeResultToStack(slot++);
                     }
                     else {
                         String symbol = symbolAtom.getValue();
                         backend.handleSymbolOperand(symbol, Namespace.VARIABLE);
-                        backend.storeResultToVariable(slot++);
+                        backend.storeResultToStack(slot++);
                     }
                 }
             }
@@ -190,7 +191,7 @@ public class TreeWalker {
                 // Processing of the inner form will recursively write assembly like we are here; the result will be in
                 // x0 so we write it to the next pos on our stack of evaluated operands for this form.
                 walkTree(innerRList);
-                backend.storeResultToVariable(slot++);
+                backend.storeResultToStack(slot++);
             }
         }
 
@@ -244,13 +245,13 @@ public class TreeWalker {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
                     backend.handleIntOperand(intAtom, slot);
-                    backend.storeResultToVariable(slot);
+                    backend.storeResultToStack(slot);
                     slot++;
                 }
                 else if (typedAtom instanceof SymbolAtom symbolAtom) {
                     String symbol = symbolAtom.getValue();
                     backend.handleSymbolOperand(symbol, Namespace.VARIABLE);
-                    backend.storeResultToVariable(slot++);
+                    backend.storeResultToStack(slot++);
                 }
             }
             else if (childNode instanceof RList innerRList) {
@@ -262,14 +263,14 @@ public class TreeWalker {
                     // We saw a list and we're in position 0 so we must have just evaluated a lambda.
                     // We should have a tagged pointer for a closure, which when untagged will point to our Closure struct on the heap.
 
-                    backend.storeResultToVariable(slot++);
+                    backend.storeResultToStack(slot++);
 
                     // We have a tagged closure ptr, and we want the untagged raw fxn ptr.
                     backend.closureToFunctionPtr();
 
                     // The tagged pointer will be the return value of the last generated instruction so we can  push that to the stack as we normally would for a function lookup.
                 }
-                backend.storeResultToVariable(slot++);
+                backend.storeResultToStack(slot++);
             }
         }
 

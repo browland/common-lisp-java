@@ -142,7 +142,7 @@ public class CompilerBackend {
         asmGenerator.writeRegisterToSymbolValue(0, symbolName);
     }
 
-    public void storeResultToVariable(int variableIndex) {
+    public void storeResultToStack(int variableIndex) {
         System.out.printf("Storing result from x0 to stack at index %d\n", variableIndex);
         asmGenerator.storeResultToStack(variableIndex);
     }

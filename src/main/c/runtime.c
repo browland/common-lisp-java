@@ -85,6 +85,8 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
         return TYPE_FIXNUM;
     } else if (tag == TYPE_TAG_SYMBOL) {
         return TYPE_SYMBOL;
+    } else if (tag == TYPE_TAG_FUNCTION) {
+        return TYPE_FUNCTION;
     } else {
         return TYPE_UNKNOWN;
     }
@@ -159,9 +161,9 @@ void printResult(uintptr_t result) {
         printf("(%s . %s)\n", carStr, cdrStr);
     }
     else if (tag == TYPE_TAG_FUNCTION) {
-        // TODO - how do we get its symbol ...? Wrap in a struct?
-        printf("printResult: function value not implemented\n");
-        exit(-1);
+        uintptr_t untaggedPtr = result & 0xFFFFFFFFFFFFFFF8;
+        struct Function *functionPtr = (struct Function*)untaggedPtr;
+        printf("#<FUNCTION %s>\n", functionPtr->name);
     }
     else if (tag == TYPE_TAG_CLOSURE) {
         // TODO
@@ -186,8 +188,19 @@ void typecheck_fixnum(uintptr_t val) {
 void typecheck_symbol(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
 
+    // Remember TYPE_SYMBOL is numbered differently than TYPE_TAG_SYMBOL, etc.!  The former is like an enum whereas the
+    // latter is the actual tag we use.
     if (type != TYPE_SYMBOL) {
         printf("Type error; expect symbol for value 0x%lx\n", val);
+        exit(-1);
+    }
+}
+
+void typecheck_function(uintptr_t val) {
+    RUNTIME_TYPE type = determineType(val);
+
+    if (type != TYPE_FUNCTION) {
+        printf("Type error; expect function for value 0x%lx\n", val);
         exit(-1);
     }
 }
