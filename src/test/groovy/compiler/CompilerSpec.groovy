@@ -62,14 +62,15 @@ class CompilerSpec extends Specification {
         compile(program)
 
         then:
-        run() ==  expectedResult
+        checkContains ? run().contains(expectedResult) : run() == expectedResult
 
         where:
-        program                                              || expectedResult
-        "((lambda (x) (+ x 1)) 1)"                           || "2"
-        "((lambda (x y) (+ x y)) 1 2)"                       || "3"
-        "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"
-        "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"
+        program                                              || expectedResult     || checkContains
+        "(lambda (x) (+ x 1))"                               || "(lambda (x) ())"  || true
+        "((lambda (x) (+ x 1)) 1)"                           || "2"                || false
+        "((lambda (x y) (+ x y)) 1 2)"                       || "3"                || false
+        "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"                || false
+        "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"                || false
     }
 
     def "function tests"() {

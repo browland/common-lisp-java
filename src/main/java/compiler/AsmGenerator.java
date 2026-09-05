@@ -326,7 +326,17 @@ public class AsmGenerator {
                 """.formatted(sourceFramePointerOffset, captureIndex));
     }
 
-    public void putClosure(String name) {
+    public void putClosure(String name, List<String> bindingNames) {
+        String bindingNamesString = String.join(" ", bindingNames);
+        String debugStringTemplate = "(lambda (%s) ())".formatted(bindingNamesString);
+
+        // Write the debug string
+        switchToCStringContext();
+        String debugStringName = name + "_debug";
+        context.write(debugStringName + ":\n");
+        context.write("  .asciz \"%s\"\n".formatted(debugStringTemplate));
+        switchFromCStringContext();
+
         // We'll generate tagged fxn ptr, we only expect captures array in x0
         // Just like putFunction() except we tag with 0x3L
         String functionLabel = "_" + name;
@@ -336,11 +346,12 @@ public class AsmGenerator {
   ;;; x0 should be ptr to actual fxn code
   adrp x0, %s@PAGE           ; set up real fxn ptr in x0
   add x0, x0, %s@PAGEOFF     ; ...
-  ;orr x0, x0, #0x3           ; tag real fxn ptr
+  adrp x2, %s@PAGE           ; set up debug string in x2
+  add x2, x2, %s@PAGEOFF     ; ...
   
   bl _mk_closure
   
-""".formatted(functionLabel, functionLabel));
+""".formatted(functionLabel, functionLabel, debugStringName, debugStringName));
     }
 
     public void writeRegisterToSymbolValue(int registerNum, String symbolValue) {

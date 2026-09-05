@@ -208,7 +208,7 @@ public class CompilerBackend {
         asmGenerator.generateUnconditionalJump(label);
     }
 
-    public void createClosure(String lambdaAsmName, List<String> capturedVariables) {
+    public void createClosure(String lambdaAsmName, List<String> capturedVariables, List<String> bindingNames) {
         int numCaptures = Math.max(capturedVariables.size(), 8);  // ensure we don't alloc 0 byte array;
         asmGenerator.mkCaptures(numCaptures);
 
@@ -229,7 +229,7 @@ public class CompilerBackend {
         // This ends up being the value of this lambda evaluation.  If this seems counter-intuitive, the remaining code
         // from here switches to other `AsmContext`s in order to write the symbol table entry and asm function, out of
         // the main flow.
-        asmGenerator.putClosure(lambdaAsmName);
+        asmGenerator.putClosure(lambdaAsmName, bindingNames);
     }
 
     /**

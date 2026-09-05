@@ -57,7 +57,7 @@ public class LambdaSpecialForm implements SpecialForm {
         Set<String> declaredFunctionNames = backend.getDeclaredFunctionNames();
         List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, lambdaBody);
 
-        backend.createClosure(lambdaAsmName, capturedVariables);
+        backend.createClosure(lambdaAsmName, capturedVariables, bindingNames);
 
         return capturedVariables;
     }

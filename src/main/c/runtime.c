@@ -20,6 +20,7 @@ struct ConsCell {
 struct Closure {
     void *fxnPtr;
     uintptr_t *captures;
+    char *debugString;
 };
 
 struct Function {
@@ -132,6 +133,9 @@ char *printValue(uintptr_t taggedValue) {
     }
 }
 
+// forward declaration needed for printResult()
+char *get_closure_debugString(uintptr_t taggedClosurePtr);
+
 void printResult(uintptr_t result) {
     if (DEBUG == 1) {
         printf("printResult: 0x%lx\n", result);
@@ -166,9 +170,11 @@ void printResult(uintptr_t result) {
         printf("#<FUNCTION %s>\n", functionPtr->name);
     }
     else if (tag == TYPE_TAG_CLOSURE) {
-        // TODO
-        printf("printResult: closure value not implemented\n");
-        exit(-1);
+        char *debugString = get_closure_debugString(result);
+        char *hexMemoryAddress = (char*)malloc(25 * sizeof(char));
+        uintptr_t untaggedClosurePtr = result & 0xFFFFFFFFFFFFFFF8;
+        sprintf(hexMemoryAddress, "%lx",  untaggedClosurePtr);
+        printf("#<FUNCTION %s {%s}\n", debugString, hexMemoryAddress);
     }
     else {
         printf("printResult: type error for: 0x%lx\n", result);
@@ -248,9 +254,9 @@ uintptr_t *add_capture(uintptr_t *capturesPtr, uintptr_t value, int index) {
     return capturesPtr;
 }
 
-uintptr_t mk_closure(void *fxnPtr, uintptr_t *captures) {
+uintptr_t mk_closure(void *fxnPtr, uintptr_t *captures, char *debugString) {
     void *heapPtr = malloc(sizeof(struct Closure));
-    struct Closure test = {fxnPtr, captures};
+    struct Closure test = {fxnPtr, captures, debugString};
     memcpy(heapPtr, &test, sizeof(struct Closure));
 
     // tag the heap ptr
@@ -278,6 +284,12 @@ uintptr_t load_captured_variable(uintptr_t taggedClosurePtr, int index) {
     struct Closure *closure = (struct Closure*)untaggedClosurePtr;
     uintptr_t *capturesPtr = closure->captures;
     return capturesPtr[index];
+}
+
+char *get_closure_debugString(uintptr_t taggedClosurePtr) {
+    void* untaggedClosurePtr = (void*)untag_ptr(taggedClosurePtr);
+    struct Closure *closure = (struct Closure*)untaggedClosurePtr;
+    return closure->debugString;
 }
 
 uintptr_t cons(uintptr_t car, uintptr_t cdr) {
