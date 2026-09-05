@@ -80,10 +80,10 @@ char *printValue(uintptr_t taggedValue) {
         return resultStr;
     }
     else if (tag == TYPE_TAG_SYMBOL) {
-        value = taggedValue & 0xFFFFFFFFFFFFFFF8;
-        char *symbolPtr = (char*)value;
-        sprintf(resultStr, "%s", symbolPtr);
+        struct SymbolEntry *symEntry = (struct SymbolEntry*)(taggedValue & 0xFFFFFFFFFFFFFFF8);
+        sprintf(resultStr, "%s", symEntry->symbol);
         return resultStr;
+
     }
     else if (tag == TYPE_TAG_CONS) {
         value = taggedValue & 0xFFFFFFFFFFFFFFF8;
@@ -251,9 +251,25 @@ uintptr_t cons(uintptr_t car, uintptr_t cdr) {
 }
 
 uintptr_t list(uintptr_t *args, long numArgs) {
-    if (numArgs == 2) {
-        return cons(args[0], args[1]);
+    void *consHeadPtr = malloc(sizeof(struct ConsCell) * numArgs);
+
+    for (int i = 0; i < numArgs; i++) {
+        uintptr_t thisConsPtr = (uintptr_t)consHeadPtr + (i * sizeof(struct ConsCell));
+        uintptr_t nextConsPtr = thisConsPtr + sizeof(struct ConsCell);
+
+        uintptr_t cdr;
+        if (i < numArgs-1) {
+            cdr = nextConsPtr | TYPE_TAG_CONS;
+        }
+        else {
+            cdr = nil_sym.variableSlot;
+        }
+
+        uintptr_t car = args[i];
+        struct ConsCell cons = {car, cdr};
+
+        memcpy((void*)thisConsPtr, &cons, sizeof(struct ConsCell));
     }
 
-    return (uintptr_t)&nil_sym;
+    return ((uintptr_t)consHeadPtr) | TYPE_TAG_CONS;
 }
