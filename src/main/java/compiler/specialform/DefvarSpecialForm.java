@@ -4,8 +4,6 @@ import compiler.treewalker.*;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
-import java.util.Optional;
-
 public class DefvarSpecialForm implements SpecialForm {
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
@@ -17,7 +15,7 @@ public class DefvarSpecialForm implements SpecialForm {
         String symbolValue = symbolAtom.getValue();
 
         // Generate the global variable for this symbol
-        backend.initialiseSymbol(symbolValue, Optional.empty());
+        backend.initialiseSymbol(symbolValue);
 
         // Reserve space on stack - pretend 2 variables to get multiple of 16 bytes
         backend.reserveStackForVariables(2);

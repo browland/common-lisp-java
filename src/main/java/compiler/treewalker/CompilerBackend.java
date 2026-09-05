@@ -73,14 +73,20 @@ public class CompilerBackend {
         asmGenerator.writeLongToRegister(regNum, value);
     }
 
-    public void startFunction(String name) {
+    public void startFunction(String name, boolean isLambda) {
         asmGenerator.startFunctionDef();
-        initialiseSymbol(name, Optional.of(name));
+        if (!isLambda) {
+            initialiseFunctionSymbol(name);
+        }
         functionPrologue(name);
     }
 
-    public void initialiseSymbol(String symbol, Optional<String> asmFunctionSymbol) {
-        asmGenerator.addToSymbolTable(symbol, asmFunctionSymbol);
+    public void initialiseSymbol(String symbol) {
+        asmGenerator.addToSymbolTable(symbol);
+    }
+
+    public void initialiseFunctionSymbol(String symbol) {
+        asmGenerator.addFunctionToSymbolTable(symbol);
     }
 
     public void functionPrologue(String name) {
@@ -311,8 +317,8 @@ public class CompilerBackend {
         asmGenerator.writeComment(comment);
     }
 
-    public void untagFunctionPointer() {
-        asmGenerator.untagFunctionPtr();
+    public void untagAndAccessFunctionPointer() {
+        asmGenerator.untagAndAccessFunctionPtr();
     }
 
     public void callFunction(int functionPtrRegister) {

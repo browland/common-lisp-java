@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Needs to be lazy due to the need to generate the assembly in the correct order regardless of what order the calls
@@ -134,9 +133,14 @@ public class AsmGenerator {
     """.formatted(regNum, stackOffset));
     }
 
-    public void untagFunctionPtr() {
+    /*
+     * At the moment we have a tagged function object (Function struct) in x0, so we untag it and then access the real
+     * function pointer which is the second member in the Function struct.
+     */
+    public void untagAndAccessFunctionPtr() {
         context.write("""
       bl _untag_ptr
+      ldr x0, [x0, #8]
     """);
     }
 
@@ -170,16 +174,53 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName, offset));
     }
 
-    public String addToSymbolTable(String symbolName, Optional<String> asmFunctionSymbol) {
+    public String addToSymbolTable(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_sym";
         String strPointerName = "_" + symbolName + "_str";
 
         switchToDataSegmentContext();
 
-        // Write tagged function pointer (if present) directly into function slot
-        String functionSlot = asmFunctionSymbol.map(name -> "_" + name + " + 2")
-                .orElse("0");
+        context.write("""
+.p2align 3
+%s:
+    .quad %s
+    .quad 0
+    .quad 0
+                """.formatted(symPointerName, strPointerName));
+        switchFromDataSegmentContext();
+
+        switchToCStringContext();
+        context.write(strPointerName + ":\n");
+        context.write("  .asciz \"" + symbolName + "\"\n");
+        switchFromCStringContext();
+        return strPointerName;
+    }
+
+    public String addFunctionToSymbolTable(String symbolName) {
+        // Generate the well-defined name of the runtime symbol holding the tagged pointer
+        String symPointerName = "_" + symbolName + "_sym";
+        String strPointerName = "_" + symbolName + "_str";
+
+        switchToDataSegmentContext();
+
+        String functionAsmName = "_" + symbolName;
+
+        // Write static function object (in contrast with lambdas which are heap-allocated)
+        String functionObjName = "_" + symbolName + "_fxn";
+
+        String functionSlot = functionObjName + " + 2";
+
+        // Aligns with struct Function in C API
+        context.write("""
+                .p2align 3
+                %s:
+                    .quad %s
+                    .quad %s
+                """.formatted(functionObjName, strPointerName, functionAsmName));
+
+        // Write tagged function pointer directly into function slot
+        // Aligns with struct SymbolEntry in C API
         context.write("""
 .p2align 3
 %s:
@@ -193,6 +234,7 @@ public class AsmGenerator {
         context.write(strPointerName + ":\n");
         context.write("  .asciz \"" + symbolName + "\"\n");
         switchFromCStringContext();
+
         return strPointerName;
     }
 

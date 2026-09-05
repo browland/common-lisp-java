@@ -23,8 +23,8 @@ struct Closure {
 };
 
 struct Function {
-    uintptr_t taggedFxnPtr;
     char *name;
+    uintptr_t taggedFxnPtr;
 };
 
 // Forward references for built-in functions - these are just statically defined as C functions and directly referenced
@@ -33,12 +33,31 @@ uintptr_t add(uintptr_t val1, uintptr_t val2);
 uintptr_t cons(uintptr_t car, uintptr_t cdr);
 uintptr_t list(uintptr_t *args, long numArgs);
 
-// Symbol table
+// Function objects
+struct Function add_fxn = {
+    "add",
+    (uintptr_t)&add
+};
+
+struct Function cons_fxn = {
+    "cons",
+    (uintptr_t)&cons
+};
+
+struct Function list_fxn = {
+    "list",
+    (uintptr_t)&list
+};
+
+// Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
-struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, (uintptr_t)&add};
-struct SymbolEntry cons_sym = {"cons", (uintptr_t)NULL, (uintptr_t)&cons};
-struct SymbolEntry list_sym = {"list", (uintptr_t)NULL, (uintptr_t)&list};
+
+// Populate symbol table with functions
+// We need to tag them using + rather than | so we achieve compile-time constants
+struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, (uintptr_t)&add_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry cons_sym = {"cons", (uintptr_t)NULL, (uintptr_t)&cons_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry list_sym = {"list", (uintptr_t)NULL, (uintptr_t)&list_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values

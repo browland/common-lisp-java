@@ -25,12 +25,8 @@ class CompilerSpec extends Specification {
         "(+ 1 (+ 1 2))"                                      || "4"
         "(defvar two (+ 1 1)) (if t two (+ 1 2))"            || "2"
         "(defvar x 2) (if nil nil x)"                        || "2"
-        "((lambda (x) (+ x 1)) 1)"                           || "2"
-        "((lambda (x y) (+ x y)) 1 2)"                       || "3"
         "(let ((x 1)) (+ x 1))"                              || "2"
         "(let ((x 1)) (let ((y 2)) (+ x y)))"                || "3"
-        "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"
-        "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"
         "(cons 1 2)"                                         || "(1 . 2)"
         "(cons 1 (cons 1 2))"                                || "(1 . (1 . 2))"
         "(cons (+ 1 2) (+ 2 1))"                             || "(3 . 3)"
@@ -39,8 +35,22 @@ class CompilerSpec extends Specification {
         "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
     }
 
+    def "lambda tests"() {
+        when:
+        compile(program)
 
-    def "defun tests"() {
+        then:
+        run() ==  expectedResult
+
+        where:
+        program                                              || expectedResult
+        "((lambda (x) (+ x 1)) 1)"                           || "2"
+        "((lambda (x y) (+ x y)) 1 2)"                       || "3"
+        "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"
+        "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"
+    }
+
+    def "function tests"() {
         when:
         compile(program)
 

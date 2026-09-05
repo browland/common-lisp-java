@@ -68,7 +68,7 @@ public class LambdaSpecialForm implements SpecialForm {
     private void generateLambdaFunctionImpl(CompilerBackend backend, String lambdaFunctionName, RList lambdaForm,
                                             TreeWalker treeWalker, List<String> capturedVariables, List<Node> bindingsList) {
 
-        backend.startFunction(lambdaFunctionName);
+        backend.startFunction(lambdaFunctionName, true);
 
         Function function = backend.setUpClosureFunctionStack(capturedVariables, bindingsList, lambdaFunctionName);
 

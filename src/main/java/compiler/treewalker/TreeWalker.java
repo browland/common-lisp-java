@@ -175,7 +175,7 @@ public class TreeWalker {
                         // operator position; look up symbol from function namespace.  This will return a function ptr.
                         // we'll then write the function pointer after the operands (stackSlot was already post-incremented on last operand)
                         backend.handleSymbolOperand(functionToCall.getSymbolStringName(), Namespace.FUNCTION);
-                        backend.untagFunctionPointer();
+                        backend.untagAndAccessFunctionPointer();
                         backend.storeResultToVariable(slot++);
                     }
                     else {
