@@ -55,6 +55,7 @@ class CompilerSpec extends Specification {
         "(list 1 2)"                                         || "(1 . (2 . nil))"
         "(list 1 2 3)"                                       || "(1 . (2 . (3 . nil)))"
         "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
+        "(cdr (list 1 2 3))"                                 || "(2 . (3 . nil))"
     }
 
     def "lambda tests"() {

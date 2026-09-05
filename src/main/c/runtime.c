@@ -33,6 +33,8 @@ struct Function {
 uintptr_t add(uintptr_t val1, uintptr_t val2);
 uintptr_t cons(uintptr_t car, uintptr_t cdr);
 uintptr_t list(uintptr_t *args, long numArgs);
+uintptr_t car(uintptr_t taggedCons);
+uintptr_t cdr(uintptr_t taggedCons);
 
 // Function objects
 struct Function add_fxn = {
@@ -50,6 +52,16 @@ struct Function list_fxn = {
     (uintptr_t)&list
 };
 
+struct Function car_fxn = {
+    "car",
+    (uintptr_t)&car
+};
+
+struct Function cdr_fxn = {
+    "cdr",
+    (uintptr_t)&cdr
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -59,6 +71,8 @@ struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
 struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, (uintptr_t)&add_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry cons_sym = {"cons", (uintptr_t)NULL, (uintptr_t)&cons_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry list_sym = {"list", (uintptr_t)NULL, (uintptr_t)&list_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry car_sym = {"car", (uintptr_t)NULL, (uintptr_t)&car_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry cdr_sym = {"cdr", (uintptr_t)NULL, (uintptr_t)&cdr_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -88,6 +102,8 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
         return TYPE_SYMBOL;
     } else if (tag == TYPE_TAG_FUNCTION) {
         return TYPE_FUNCTION;
+    } else if (tag == TYPE_TAG_CONS) {
+        return TYPE_CONS;
     } else {
         return TYPE_UNKNOWN;
     }
@@ -211,6 +227,15 @@ void typecheck_function(uintptr_t val) {
     }
 }
 
+void typecheck_cons(uintptr_t val) {
+    RUNTIME_TYPE type = determineType(val);
+
+    if (type != TYPE_CONS) {
+        printf("Type error; expect cons for value 0x%lx\n", val);
+        exit(-1);
+    }
+}
+
 long tagged_ptr_to_fixnum(uintptr_t val) {
     typecheck_fixnum(val);
     return val >> 3;
@@ -326,4 +351,20 @@ uintptr_t list(uintptr_t *args, long numArgs) {
     }
 
     return ((uintptr_t)consHeadPtr) | TYPE_TAG_CONS;
+}
+
+uintptr_t car(uintptr_t taggedCons) {
+    typecheck_cons(taggedCons);
+    void* untaggedConsPtr = (void*)untag_ptr(taggedCons);
+    struct ConsCell *cons = (struct ConsCell*)untaggedConsPtr;
+
+    return cons->car;
+}
+
+uintptr_t cdr(uintptr_t taggedCons) {
+    typecheck_cons(taggedCons);
+    void* untaggedConsPtr = (void*)untag_ptr(taggedCons);
+    struct ConsCell *cons = (struct ConsCell*)untaggedConsPtr;
+
+    return cons->cdr;
 }
