@@ -17,6 +17,8 @@ class CompilerSpec extends Specification {
         where:
         program                                              || expectedResult
         "2"                                                  || "2"
+        "nil"                                                || "nil"
+        "t"                                                  || "t"
         "(if t 1 2)"                                         || "1"
         "(add 1 2)"                                          || "3"
         "(+ 1 2)"                                            || "3"
@@ -38,6 +40,7 @@ class CompilerSpec extends Specification {
         "(cons (+ 1 2) (+ 2 1))"                             || "(3 . 3)"
         "(list 1 2)"                                         || "(1 . (2 . nil))"
         "(list 1 2 3)"                                       || "(1 . (2 . (3 . nil)))"
+        "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
     }
 
     def compile(String program) {

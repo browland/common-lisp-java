@@ -83,7 +83,6 @@ char *printValue(uintptr_t taggedValue) {
         struct SymbolEntry *symEntry = (struct SymbolEntry*)(taggedValue & 0xFFFFFFFFFFFFFFF8);
         sprintf(resultStr, "%s", symEntry->symbol);
         return resultStr;
-
     }
     else if (tag == TYPE_TAG_CONS) {
         value = taggedValue & 0xFFFFFFFFFFFFFFF8;
@@ -117,9 +116,8 @@ void printResult(uintptr_t result) {
         printf("%ld\n", value);
     }
     else if (tag == TYPE_TAG_SYMBOL) {
-        value = result & 0xFFFFFFFFFFFFFFF8;
-        char *symbolPtr = (char*)value;
-        printf("%s\n", symbolPtr);
+        struct SymbolEntry *symEntry = (struct SymbolEntry*)(result & 0xFFFFFFFFFFFFFFF8);
+        printf("%s\n", symEntry->symbol);
     }
     else if (tag == TYPE_TAG_CONS) {
         value = result & 0xFFFFFFFFFFFFFFF8;
@@ -131,12 +129,21 @@ void printResult(uintptr_t result) {
         char *cdrStr = printValue(cdr);
         printf("(%s . %s)\n", carStr, cdrStr);
     }
+    else if (tag == TYPE_TAG_FUNCTION) {
+        // TODO - how do we get its symbol ...? Wrap in a struct?
+        printf("printResult: function value not implemented\n");
+        exit(-1);
+    }
+    else if (tag == TYPE_TAG_CLOSURE) {
+        // TODO
+        printf("printResult: closure value not implemented\n");
+        exit(-1);
+    }
     else {
         printf("printResult: type error for: 0x%lx\n", result);
         exit(-1);
     }
 }
-
 
 void typecheck_fixnum(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
@@ -236,7 +243,6 @@ uintptr_t load_captured_variable(uintptr_t taggedClosurePtr, int index) {
     uintptr_t *capturesPtr = closure->captures;
     return capturesPtr[index];
 }
-
 
 uintptr_t cons(uintptr_t car, uintptr_t cdr) {
     struct ConsCell cons = {car, cdr};
