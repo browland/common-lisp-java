@@ -25,7 +25,7 @@ struct Closure {
 
 struct Function {
     char *name;
-    uintptr_t taggedFxnPtr;
+    uintptr_t rawFxnPtr;
 };
 
 // Forward references for built-in functions - these are just statically defined as C functions and directly referenced
@@ -35,6 +35,8 @@ uintptr_t cons(uintptr_t car, uintptr_t cdr);
 uintptr_t list(uintptr_t *args, long numArgs);
 uintptr_t car(uintptr_t taggedCons);
 uintptr_t cdr(uintptr_t taggedCons);
+uintptr_t mapcar(uintptr_t functionObj, uintptr_t taggedCons);
+uintptr_t oneplus(uintptr_t val);
 
 // Function objects
 struct Function add_fxn = {
@@ -62,6 +64,16 @@ struct Function cdr_fxn = {
     (uintptr_t)&cdr
 };
 
+struct Function mapcar_fxn = {
+    "mapcar",
+    (uintptr_t)&mapcar
+};
+
+struct Function oneplus_fxn = {
+    "oneplus",
+    (uintptr_t)&oneplus
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -73,6 +85,8 @@ struct SymbolEntry cons_sym = {"cons", (uintptr_t)NULL, (uintptr_t)&cons_fxn + T
 struct SymbolEntry list_sym = {"list", (uintptr_t)NULL, (uintptr_t)&list_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry car_sym = {"car", (uintptr_t)NULL, (uintptr_t)&car_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry cdr_sym = {"cdr", (uintptr_t)NULL, (uintptr_t)&cdr_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry mapcar_sym = {"mapcar", (uintptr_t)NULL, (uintptr_t)&mapcar_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry oneplus_sym = {"oneplus", (uintptr_t)NULL, (uintptr_t)&oneplus_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -155,6 +169,11 @@ char *get_closure_debugString(uintptr_t taggedClosurePtr);
 void printResult(uintptr_t result) {
     if (DEBUG == 1) {
         printf("printResult: 0x%lx\n", result);
+    }
+
+    if (result == 0x0) {
+        printf("printResult: trying to print null!\n");
+        exit(-1);
     }
 
     // result is a tagged pointer
@@ -367,4 +386,70 @@ uintptr_t cdr(uintptr_t taggedCons) {
     struct ConsCell *cons = (struct ConsCell*)untaggedConsPtr;
 
     return cons->cdr;
+}
+
+// Function pointer type for any function taking one uintptr_t and returning uintptr_t.
+typedef uintptr_t (*FuncType)(uintptr_t);
+
+uintptr_t mapcar(uintptr_t taggedFunctionObj, uintptr_t taggedCons) {
+    typecheck_function(taggedFunctionObj);
+    typecheck_cons(taggedCons);
+
+    void* untaggedConsPtr = (void*)untag_ptr(taggedCons);
+    struct ConsCell *cons = (struct ConsCell*)untaggedConsPtr;
+
+    void *untaggedFunctionObjPtr = (void*)untag_ptr(taggedFunctionObj);
+    struct Function *function = (struct Function*)untaggedFunctionObjPtr;
+    void* rawFxnPtr = (void*)function->rawFxnPtr;
+
+    // Get function pointer
+    FuncType func = (FuncType)rawFxnPtr;
+
+    // We don't know how long the list is.  For now we'll assume no more than 10 ...
+    uintptr_t *resultListPtr = (uintptr_t*)malloc(sizeof(uintptr_t) * 10);
+    uintptr_t car;
+
+    int numArgs = 0;
+    for (int i=0; i<10; i++) {
+        car = cons->car;
+
+        uintptr_t res = func(car);
+
+        resultListPtr[i] = res;
+
+        numArgs++;
+
+        uintptr_t cdr = cons->cdr;
+        RUNTIME_TYPE cdrType = determineType(cdr);
+        if (cdrType == TYPE_CONS) {
+            void *cdrPtr = (void*)(untag_ptr(cdr));
+            cons = (struct ConsCell*)cdrPtr;
+            continue;
+        }
+        else if(cdrType == TYPE_SYMBOL) {
+            void *cdrPtr = (void*)(untag_ptr(cdr));
+            struct SymbolEntry *symbolEntry = (struct SymbolEntry*)cdrPtr;
+            if (symbolEntry->variableSlot == nil_sym.variableSlot) {
+                break;
+            }
+            cons = (struct ConsCell*)cdrPtr;
+            continue;
+        }
+        else {
+            resultListPtr[i+1] = cdr;
+            numArgs++;
+            break;
+        }
+    }
+
+    return list(resultListPtr, numArgs);
+}
+
+uintptr_t oneplus(uintptr_t val) {
+    long raw = tagged_ptr_to_fixnum(val);
+
+    long rawResult = raw + 1;
+
+    uintptr_t res = ((uintptr_t)rawResult << 3) | 0x1;
+    return res;
 }

@@ -9,8 +9,8 @@ public class TypeCoercer {
         if (firstChar == '"') {
             String stringValueNoQuotes = stringValue.replace("\"", "");
             return new StringAtom(atom, stringValueNoQuotes);
-        } else if (Character.isDigit(firstChar)) {
-            // must be either int or float (symbols can't start with a digit)
+        } else if (Character.isDigit(firstChar) && (!stringValue.equals("1+"))) {  // todo hack but only needed when we reintroduce 1+ (symbol mangling problem)
+            // must be either int or float
             for (int j = 1; j < stringValue.length(); j++) {  // inner loop to detect decimal point
                 char innerC = stringValue.charAt(j);
                 if (innerC == '.') {

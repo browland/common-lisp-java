@@ -17,6 +17,7 @@ class CompilerSpec extends Specification {
         where:
         program                                              || expectedResult
         "2"                                                  || "2"
+        "(oneplus 1)"                                        || "2"
         "nil"                                                || "nil"
         "t"                                                  || "t"
         "(add 1 2)"                                          || "3"
@@ -56,6 +57,7 @@ class CompilerSpec extends Specification {
         "(list 1 2 3)"                                       || "(1 . (2 . (3 . nil)))"
         "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
         "(cdr (list 1 2 3))"                                 || "(2 . (3 . nil))"
+        "(mapcar (function oneplus) (list 1 2))"             || "(2 . (3 . nil))"
     }
 
     def "lambda tests"() {

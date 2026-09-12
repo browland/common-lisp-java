@@ -34,6 +34,8 @@ public class CompilerBackend {
         functionsMap.put("list", new Function("list", true));
         functionsMap.put("car", new Function("car", false));
         functionsMap.put("cdr", new Function("cdr", false));
+        functionsMap.put("mapcar", new Function("mapcar", false));
+        functionsMap.put("oneplus", new Function("oneplus", false));
     }
 
     public void startProgram() {
