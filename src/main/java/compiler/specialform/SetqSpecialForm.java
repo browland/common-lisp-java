@@ -1,27 +1,23 @@
 package compiler.specialform;
 
-import compiler.treewalker.*;
+import compiler.treewalker.CompilerBackend;
+import compiler.treewalker.SymbolAtom;
+import compiler.treewalker.TreeWalker;
+import compiler.treewalker.TypedAtom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
-/*
- We initialise the symbol table entry with null in the data namespace slot.
- At runtime, the expression will be evaluated and written to the data namespace slot.
- Arguably we could write the data slot statically if we know it's being set to a compile-time constant (e.g. a fixnum)
- but that could be done later.
- */
-public class DefvarSpecialForm implements SpecialForm {
+public class SetqSpecialForm implements SpecialForm {
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
         Node symbolNode = rlist.get(1);
         SymbolAtom symbolAtom = TypedAtom.toSymbolAtom(symbolNode);
         String symbolValue = symbolAtom.getValue();
 
-        // Record that this symbol is associated with a value in the data namespace
-        backend.recordVariableExists(symbolValue);
-
-        // Generate the global variable for this symbol
-        backend.initialiseSymbol(symbolValue);
+        // Check variable was already defined
+        if (!backend.getDeclaredVariableNames().contains(symbolValue)) {
+            throw new IllegalArgumentException("setq: variable was not defined");
+        }
 
         // Reserve space on stack - pretend 2 variables to get multiple of 16 bytes
         backend.reserveStackForVariables(2);

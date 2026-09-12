@@ -7,6 +7,19 @@ import syntaxtree.Node
 
 class CompilerSpec extends Specification {
 
+    def "failure tests"() {
+        when:
+        compile(program)
+
+        then:
+        thrown(IllegalArgumentException)
+
+        where:
+        program || _
+        "(defvar x 1) (defvar x 2)" || _
+        "(setq x 1)"                || _
+    }
+
     def "compilation tests"() {
         when:
         compile(program)
@@ -27,6 +40,7 @@ class CompilerSpec extends Specification {
         "(defvar x 2) (if nil nil x)"                        || "2"
         "(let ((x 1)) (+ x 1))"                              || "2"
         "(let ((x 1)) (let ((y 2)) (+ x y)))"                || "3"
+        "(defvar x 1) (setq x 2) x"                          || "2"
     }
 
     def "conditionals tests"() {

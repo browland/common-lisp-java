@@ -25,6 +25,7 @@ public class TreeWalker {
         specialForms.put("lambda", new LambdaSpecialForm());
         specialForms.put("let", new LetSpecialForm());
         specialForms.put("function", new FunctionSpecialForm());
+        specialForms.put("setq", new SetqSpecialForm());
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
