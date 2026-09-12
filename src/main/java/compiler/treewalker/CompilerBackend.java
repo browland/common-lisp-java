@@ -165,6 +165,10 @@ public class CompilerBackend {
         asmGenerator.storeResultToStack(variableIndex);
     }
 
+    public void storeResultToStackFPOffset(int fpOffset) {
+        asmGenerator.storeOperandFromRegisterToStackFPOffset(0, fpOffset);
+    }
+
     public void pushStackOffsetFrame() {
         // for let bindings; nested frames of stack offsets within current function stack frame!
         Function currentScope = functionStack.peek();
@@ -280,7 +284,7 @@ public class CompilerBackend {
         int closurePtrRegNum = numBindings;
         int closurePtrFPOffset = -1 * stackBytes;  // closure ptr goes to bottom of our stack frame
         System.out.printf("lambda: storing closure ptr from reg %d to stack at FP offset %d%n", closurePtrRegNum, closurePtrFPOffset);
-        asmGenerator.storeOperandFromRegisterToStack(closurePtrRegNum, closurePtrFPOffset);
+        asmGenerator.storeOperandFromRegisterToStackFPOffset(closurePtrRegNum, closurePtrFPOffset);
 
         // TODO we're storing the closure ptr in the stack offsets map, against the name of the closure asm function
         //      We're doing this so we clean up the stack properly (which is based on Function.getStackBytes() which
@@ -296,7 +300,7 @@ public class CompilerBackend {
             Atom symbolAtom = Atom.expectAtom(bindingNode);
             framePointerOffset = -1*stackBytes + (stackPos*8);
             System.out.printf("lambda: storing binding for %s from reg %d to stack at FP offset %d%n", symbolAtom.value(), operandNum, framePointerOffset);
-            asmGenerator.storeOperandFromRegisterToStack(operandNum, framePointerOffset);
+            asmGenerator.storeOperandFromRegisterToStackFPOffset(operandNum, framePointerOffset);
             // Stack offset is relative to the frame pointer and starting from low value; values will be e.g. {-16, -8, ...}.
             closureFunctionFPOffsets.put(symbolAtom.value(), framePointerOffset);
             stackPos++;
@@ -313,7 +317,7 @@ public class CompilerBackend {
             System.out.printf("lambda: loading closure ptr from stack at FP offset %d%n", closurePtrFPOffset);
             asmGenerator.loadCapturedVariable(captureIndex, closurePtrFPOffset);
             System.out.printf("lambda: storing capture for value of %s from x0 (after loading it there) to stack at FP offset %d%n", capturedVariable, framePointerOffset);
-            asmGenerator.storeOperandFromRegisterToStack(0, framePointerOffset);
+            asmGenerator.storeOperandFromRegisterToStackFPOffset(0, framePointerOffset);
 
             closureFunctionFPOffsets.put(capturedVariable, framePointerOffset);
 
@@ -367,5 +371,17 @@ public class CompilerBackend {
 
     public void recordVariableExists(String symbol) {
         this.declaredVariableNames.add(symbol);
+    }
+
+    public Optional<Integer> findOffsetInLexicalScope(String symbol) {
+        Iterator<Function> functionScopeIter = functionStack.descendingIterator();
+        while (functionScopeIter.hasNext()) {
+            Function function = functionScopeIter.next();
+            Optional<Integer> optionalOffset = function.getClosestOffset(symbol);
+            if (optionalOffset.isPresent()) {
+                return optionalOffset;
+            }
+        }
+        return Optional.empty();
     }
 }

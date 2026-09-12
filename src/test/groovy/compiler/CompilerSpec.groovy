@@ -41,6 +41,7 @@ class CompilerSpec extends Specification {
         "(let ((x 1)) (+ x 1))"                              || "2"
         "(let ((x 1)) (let ((y 2)) (+ x y)))"                || "3"
         "(defvar x 1) (setq x 2) x"                          || "2"
+        "(let ((x 1)) (setq x 2) x)"                         || "2"
     }
 
     def "conditionals tests"() {

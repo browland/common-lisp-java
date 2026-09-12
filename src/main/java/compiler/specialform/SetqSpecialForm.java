@@ -7,6 +7,8 @@ import compiler.treewalker.TypedAtom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
+import java.util.Optional;
+
 public class SetqSpecialForm implements SpecialForm {
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
@@ -14,9 +16,15 @@ public class SetqSpecialForm implements SpecialForm {
         SymbolAtom symbolAtom = TypedAtom.toSymbolAtom(symbolNode);
         String symbolValue = symbolAtom.getValue();
 
-        // Check variable was already defined
-        if (!backend.getDeclaredVariableNames().contains(symbolValue)) {
-            throw new IllegalArgumentException("setq: variable was not defined");
+        // Step 1: Look for symbol in current lexical scope
+        Optional<Integer> optionalOffset = backend.findOffsetInLexicalScope(symbolValue);
+        boolean isLexicallyBound = optionalOffset.isPresent();
+
+        boolean isGlobalVariable = backend.getDeclaredVariableNames().contains(symbolValue);
+
+        // Step 2: Check symbol is bound to a global variable
+        if (!isLexicallyBound && !isGlobalVariable) {
+            throw new IllegalArgumentException("setq: symbol is not bound");
         }
 
         // Reserve space on stack - pretend 2 variables to get multiple of 16 bytes
@@ -27,7 +35,13 @@ public class SetqSpecialForm implements SpecialForm {
         treeWalker.walkTree(valueNode);
 
         // value is now in x0, so update value of symbol
-        backend.storeResultToSymbolValue(symbolValue);
+        if (isGlobalVariable) {
+            backend.storeResultToSymbolValue(symbolValue);
+        }
+        else {
+            // lexically bound
+            backend.storeResultToStackFPOffset(optionalOffset.get());
+        }
 
         // Free space on stack - pretend 2 variables to get multiple of 16 bytes for aarch64
         backend.freeStackForVariables(2);

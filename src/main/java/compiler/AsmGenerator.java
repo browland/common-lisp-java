@@ -110,7 +110,7 @@ public class AsmGenerator {
     /**
      * operandNum starts from 0
      */
-    public void storeOperandFromRegisterToStack(int regNum, int framePointerOffset) {
+    public void storeOperandFromRegisterToStackFPOffset(int regNum, int framePointerOffset) {
         context.write("""
       str x%d, [x29, #%d]   ;; load evaluated operand into register ready for operator call
     """.formatted(regNum, framePointerOffset));
