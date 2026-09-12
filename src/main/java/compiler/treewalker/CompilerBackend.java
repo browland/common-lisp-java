@@ -25,6 +25,16 @@ public class CompilerBackend {
      */
     private final Map<String,Function> functionsMap = new HashMap<>();
 
+    /*
+     Used to avoid double-allocating a symbol, as we create the entry statically.
+     */
+    private final Set<String> definedSymbolsInNamespace = new HashSet<>();
+
+    /*
+     Symbols which have a value in the data namespace.
+     */
+    private final Set<String> declaredVariableNames = new HashSet<>();
+
     public CompilerBackend() {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
         // operator name.
@@ -86,7 +96,11 @@ public class CompilerBackend {
     }
 
     public void initialiseSymbol(String symbol) {
-        asmGenerator.addToSymbolTable(symbol);
+        if (definedSymbolsInNamespace.contains(symbol)) {
+            throw new IllegalArgumentException("Trying to re-create symbol table entry for " + symbol);
+        }
+        asmGenerator.initSymbolTableEntry(symbol);
+        definedSymbolsInNamespace.add(symbol);
     }
 
     public void initialiseFunctionSymbol(String symbol) {
@@ -345,5 +359,13 @@ public class CompilerBackend {
     private int determineStackBytes(int numVariables) {
         // We need 16 bytes for each binding, but ensure we always reserve a multiple of 16 bytes
         return (int)(16 * Math.ceil(numVariables/2f));
+    }
+
+    public Set<String> getDeclaredVariableNames() {
+        return declaredVariableNames;
+    }
+
+    public void recordVariableExists(String symbol) {
+        this.declaredVariableNames.add(symbol);
     }
 }

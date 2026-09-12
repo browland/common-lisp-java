@@ -55,7 +55,8 @@ public class LambdaSpecialForm implements SpecialForm {
 
         RList lambdaBody = RList.expectRList(lambdaForm.nodes().get(2));
         Set<String> declaredFunctionNames = backend.getDeclaredFunctionNames();
-        List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, lambdaBody);
+        Set<String> declaredVariableNames = backend.getDeclaredVariableNames();
+        List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, declaredVariableNames, lambdaBody);
 
         backend.createClosure(lambdaAsmName, capturedVariables, bindingNames);
 

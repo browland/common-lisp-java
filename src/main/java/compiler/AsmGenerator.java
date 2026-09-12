@@ -174,7 +174,10 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName, offset));
     }
 
-    public String addToSymbolTable(String symbolName) {
+    /*
+     Creates a symbol table entry, initialising data and function namespace to null.
+     */
+    public String initSymbolTableEntry(String symbolName) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
         String symPointerName = "_" + symbolName + "_sym";
         String strPointerName = "_" + symbolName + "_str";

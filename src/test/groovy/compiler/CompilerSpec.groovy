@@ -58,6 +58,7 @@ class CompilerSpec extends Specification {
         "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
         "(cdr (list 1 2 3))"                                 || "(2 . (3 . nil))"
         "(mapcar (function oneplus) (list 1 2))"             || "(2 . (3 . nil))"
+        "(mapcar #'oneplus (list 1 2))"                      || "(2 . (3 . nil))"
     }
 
     def "lambda tests"() {
@@ -74,6 +75,7 @@ class CompilerSpec extends Specification {
         "((lambda (x y) (+ x y)) 1 2)"                       || "3"                || false
         "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"                || false
         "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"                || false
+        "(defvar x 1) ((lambda (y) (+ y x)) 2)"              || "3"                || false
     }
 
     def "function tests"() {
