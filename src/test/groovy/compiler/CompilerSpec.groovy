@@ -18,6 +18,8 @@ class CompilerSpec extends Specification {
         program || _
         "(defvar x 1) (defvar x 2)" || _
         "(setq x 1)"                || _
+        "(block (+ 1 1))"           || _
+        "(block 1)"                 || _
     }
 
     def "compilation tests"() {
@@ -54,6 +56,8 @@ class CompilerSpec extends Specification {
         where:
         program                                              || expectedResult
         "(if t 1 2)"                                         || "1"
+        "(if nil 1 2)"                                       || "2"
+        "(+ 1 (if t 1 2))"                                   || "2"
     }
 
     def "cons and list tests"() {
@@ -107,6 +111,20 @@ class CompilerSpec extends Specification {
         "(defun first (x y) x) (first 1 2)"                  || "1"
         "(defun adder (x y) (+ x y)) (adder 1 2)"            || "3"
         "(function add)"                                     || "#<FUNCTION add>"
+    }
+
+    def "block tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program || expectedResult
+        "(block foo (return-from foo))"                      || "nil"
+        "(block foo (return-from foo 1))"                    || "1"
+        "(block nil (return-from nil 1))"                    || "1"
     }
 
     def compile(String program) {

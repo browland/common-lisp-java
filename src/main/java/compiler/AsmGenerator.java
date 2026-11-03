@@ -266,10 +266,14 @@ public class AsmGenerator {
     }
 
     public void generateLabel(String label) {
+        // I don't think we need the jump label available outside the asm.  Not fully confident about this yet so clean up when sure.
+//        context.write("""
+//                .global %s
+//                %s:
+//                """.formatted(label, label));
         context.write("""
-                .global %s
                 %s:
-                """.formatted(label, label));
+                """.formatted(label));
     }
 
     public void dumpAsm(BufferedWriter bw) throws IOException {

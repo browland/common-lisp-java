@@ -172,7 +172,7 @@ void printResult(uintptr_t result) {
     }
 
     if (result == 0x0) {
-        printf("printResult: trying to print null!\n");
+        printf("printResult: trying to print null! Possibly an empty program as the init() function returns 0.\n");
         exit(-1);
     }
 
