@@ -127,6 +127,19 @@ class CompilerSpec extends Specification {
         "(block nil (return-from nil 1))"                    || "1"
     }
 
+    def "tagbody tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program || expectedResult
+        "(let ((x 1)) (tagbody (go end) (setq x 2) end) x)"                         || "1"
+        "(let ((x 1)) (tagbody (go end) (setq x (+ x 1)) end (setq x (+ x 2))) x)"  || "3"
+    }
+
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();
         List<Node> nodes = nodeBuilder.build(program)

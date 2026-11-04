@@ -35,6 +35,8 @@ public class CompilerBackend {
      */
     private final Set<String> declaredVariableNames = new HashSet<>();
 
+    private final Deque<Map<String,String>> tagToAsmLabelStack = new LinkedList<>();
+
     public CompilerBackend() {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
         // operator name.
@@ -380,6 +382,41 @@ public class CompilerBackend {
             Optional<Integer> optionalOffset = function.getClosestOffset(symbol);
             if (optionalOffset.isPresent()) {
                 return optionalOffset;
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Push a set of tags for the current tagbody.  Returns original tag names mapped to their asm label name, avoiding
+     * re-use of labels for different tagbody depths.
+     */
+    public Map<String,String> pushTags(Set<String> tags) {
+        int newDepth = tagToAsmLabelStack.size() + 1;
+        Map<String,String> tagMap = new HashMap<>();
+        for (String tag : tags) {
+            String label = "tag_" + tag + "_" + newDepth;
+            tagMap.put(tag, label);
+        }
+
+        tagToAsmLabelStack.push(tagMap);
+
+        return tagMap;
+    }
+
+    /**
+     * Pop a set of tags for the current tagbody.
+     */
+    public void popTags() {
+        tagToAsmLabelStack.pop();
+    }
+
+    public Optional<String> getAsmLabelForTag(String tagName) {
+        Iterator<Map<String, String>> mapIterator = tagToAsmLabelStack.descendingIterator();
+        while (mapIterator.hasNext()) {
+            Map<String, String> currentTagScope = mapIterator.next();
+            if (currentTagScope.containsKey(tagName)) {
+                return Optional.of(currentTagScope.get(tagName));
             }
         }
         return Optional.empty();

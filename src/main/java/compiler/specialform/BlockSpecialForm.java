@@ -10,6 +10,7 @@ public class BlockSpecialForm implements SpecialForm {
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
         // Get name of block to return from.  This looks like a symbol but is definitely not evaluated, so e.g. the block name could be nil and
         // it's considered as just a name in block/return-from.
+        // TODO track block names in compiler backend like we do with tags - then validate lexical scope in return-from
         Node nameNode = rlist.nodes().get(1);
         Atom nameAtom = nameNode instanceof Atom ? (Atom)nameNode : null;
         if (nameAtom == null) {

@@ -28,6 +28,8 @@ public class TreeWalker {
         specialForms.put("setq", new SetqSpecialForm());
         specialForms.put("block", new BlockSpecialForm());
         specialForms.put("return-from", new ReturnFromSpecialForm());
+        specialForms.put("tagbody", new TagbodySpecialForm());
+        specialForms.put("go", new GoSpecialForm());
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
