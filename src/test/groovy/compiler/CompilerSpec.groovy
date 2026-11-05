@@ -161,6 +161,17 @@ class CompilerSpec extends Specification {
         "(let ((x (cons 1 2)) (y (cons 1 2))) (eq x y))"  || "nil"
     }
 
+    def "block and tagbody tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program || expectedResult
+        "(block foo (tagbody start (return-from foo 7)))"  || "7"
+    }
 
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();
