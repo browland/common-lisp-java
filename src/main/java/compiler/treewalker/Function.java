@@ -3,12 +3,18 @@ package compiler.treewalker;
 import java.util.*;
 
 /**
- * Represents the stack frame for an asm function.
+ * Represents the stack frame for an asm function.  An asm function is generated for each of:
+ * 1. The main flow itself, outside of any user-defined function or closure.
+ * 2. A user-defined function (via defun)
+ * 3. A user-defined closure (via lambda expression)
+ *
  * The stack offsets only work within a single asm function frame, so a new Function should be created once entering a
  * new asm function.
  */
 public class Function {
+    // TODO this conflicts a bit with the notion that this class represents an asm function frame, as this is the lisp symbol for the function being called.
     private final String symbolStringName;
+    // Represents our lexical scope of symbols to their offsets on the stack
     private final Deque<Map<String,Integer>> stackOffsetsStack;
     private int minOffset = 0;
     private boolean variadicArgs;

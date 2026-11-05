@@ -37,6 +37,7 @@ uintptr_t car(uintptr_t taggedCons);
 uintptr_t cdr(uintptr_t taggedCons);
 uintptr_t mapcar(uintptr_t functionObj, uintptr_t taggedCons);
 uintptr_t oneplus(uintptr_t val);
+uintptr_t eq(uintptr_t val1, uintptr_t val2);
 
 // Function objects
 struct Function add_fxn = {
@@ -74,6 +75,11 @@ struct Function oneplus_fxn = {
     (uintptr_t)&oneplus
 };
 
+struct Function eq_fxn = {
+    "eq",
+    (uintptr_t)&eq
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -87,6 +93,7 @@ struct SymbolEntry car_sym = {"car", (uintptr_t)NULL, (uintptr_t)&car_fxn + TYPE
 struct SymbolEntry cdr_sym = {"cdr", (uintptr_t)NULL, (uintptr_t)&cdr_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry mapcar_sym = {"mapcar", (uintptr_t)NULL, (uintptr_t)&mapcar_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry oneplus_sym = {"oneplus", (uintptr_t)NULL, (uintptr_t)&oneplus_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry eq_sym = {"eq", (uintptr_t)NULL, (uintptr_t)&eq_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -452,4 +459,15 @@ uintptr_t oneplus(uintptr_t val) {
 
     uintptr_t res = ((uintptr_t)rawResult << 3) | 0x1;
     return res;
+}
+
+uintptr_t eq(uintptr_t val1, uintptr_t val2) {
+    // We can do a direct comparison of va1 and val2 - the result of eq is true if and only if we're referring to
+    // either the same object in memory (tagged pointers should be equal) or a fixnum, or a symbol table entry etc etc.
+    if (val1 == val2) {
+        return t_sym.variableSlot;
+    }
+    else {
+        return nil_sym.variableSlot;
+    }
 }

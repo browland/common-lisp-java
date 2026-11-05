@@ -9,7 +9,7 @@ import syntaxtree.RList;
 public class LetSpecialForm implements SpecialForm {
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
-        backend.writeComment("let: " + rlist);
+        backend.writeComment("start let: " + rlist);
 
         // Get bindings generate code to eval them and put result values onto stack.
         RList bindingsList = RList.expectRList(rlist.nodes().get(1));
@@ -37,10 +37,12 @@ public class LetSpecialForm implements SpecialForm {
             pos++;
         }
 
-        // Evaluate let body
-        Node bodyNode = rlist.nodes().get(2);
-        treeWalker.walkTree(bodyNode);
+        // Evaluate let body forms one-by-one
+        for(Node bodyNode : rlist.nodes().subList(2, rlist.nodes().size())) {
+            treeWalker.walkTree(bodyNode);
+        }
 
         backend.freeStackForVariables(numBindings);
+        backend.writeComment("end let: " + rlist);
     }
 }

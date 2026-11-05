@@ -136,9 +136,32 @@ class CompilerSpec extends Specification {
 
         where:
         program || expectedResult
-        "(let ((x 1)) (tagbody (go end) (setq x 2) end) x)"                         || "1"
-        "(let ((x 1)) (tagbody (go end) (setq x (+ x 1)) end (setq x (+ x 2))) x)"  || "3"
+        "(let ((x 1)) (tagbody (go end) (setq x 2) end) x)"                            || "1"
+        "(let ((x 1)) (tagbody (go end) (setq x (+ x 1)) end (setq x (+ x 2))) x)"     || "3"
+        "(let ((i 0)) (tagbody start (if (eq i 3) (go end) (setq i (+ i 1))) (go start) end) i)"  || "3"
+        // TODO Failing as we jump out of the if form (go end) and thus don't run if's cleanup (adding 16 bytes to sp).
+        //      How do we ensure we always do cleanup even when jumping to an arbitrary label?
+        // TODO add a failure-mode test for a 'go' issued within a function invocation (tags are not in lexical scope).
+        // TODO add a failure-mode test for a 'go' issued from within a closure which is evaluated after the tagbody has exited.
+        // TODO add tests for go issued in different contexts to ensure we always clean up the stack properly
     }
+
+    def "eq tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program || expectedResult
+        "(eq 1 1) "                                       || "t"
+        "(eq 1 2) "                                       || "nil"
+        "(eq (cons 1 2) (cons 2 1)) "                     || "nil"
+        "(let ((x (cons 1 2))) (eq x x))"                 || "t"
+        "(let ((x (cons 1 2)) (y (cons 1 2))) (eq x y))"  || "nil"
+    }
+
 
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();
