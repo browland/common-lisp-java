@@ -130,10 +130,11 @@ public class CompilerBackend {
         asmGenerator.initFunction(name);
     }
 
-    public void reserveStackForVariables(int numVariables) {
+    public int reserveStackForVariables(int numVariables) {
         int stackBytes = determineStackBytes(numVariables);
         System.out.printf("Reserving %d bytes of stack\n", stackBytes);
         asmGenerator.reserveSpaceOnStack(stackBytes);
+        return stackBytes;
     }
 
     public void freeStackForVariables(int numVariables) {

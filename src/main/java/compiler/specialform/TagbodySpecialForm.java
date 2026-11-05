@@ -1,5 +1,6 @@
 package compiler.specialform;
 
+import compiler.Namespace;
 import compiler.treewalker.CompilerBackend;
 import compiler.treewalker.SymbolAtom;
 import compiler.treewalker.TreeWalker;
@@ -52,5 +53,8 @@ public class TagbodySpecialForm implements SpecialForm {
         }
 
         backend.leaveTagbody();
+
+        // We always return nil from tagbody
+        backend.handleSymbolOperand("nil", Namespace.VARIABLE);
     }
 }

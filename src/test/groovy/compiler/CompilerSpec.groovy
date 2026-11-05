@@ -136,9 +136,10 @@ class CompilerSpec extends Specification {
 
         where:
         program || expectedResult
-        "(let ((x 1)) (tagbody (go end) (setq x 2) end) x)"                            || "1"
-        "(let ((x 1)) (tagbody (go end) (setq x (+ x 1)) end (setq x (+ x 2))) x)"     || "3"
+        "(let ((x 1)) (tagbody (go end) (setq x 2) end) x)"                                       || "1"
+        "(let ((x 1)) (tagbody (go end) (setq x (+ x 1)) end (setq x (+ x 2))) x)"                || "3"
         "(let ((i 0)) (tagbody start (if (eq i 3) (go end) (setq i (+ i 1))) (go start) end) i)"  || "3"
+        "(tagbody start (+ 1 (go end)) end)"                                                      || "nil"
         // TODO add a failure-mode test for a 'go' issued within a function invocation (tags are not in lexical scope).
         // TODO add a failure-mode test for a 'go' issued from within a closure which is evaluated after the tagbody has exited.
         // TODO add tests for go issued in different contexts to ensure we always clean up the stack properly

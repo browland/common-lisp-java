@@ -163,7 +163,10 @@ public class TreeWalker {
         int numOperands = rlist.size()-1;
 
         // Reserve stack for operands plus function pointer for our the operator being applied
-        backend.reserveStackForVariables(numOperands + 1);
+        int stackBytesAllocated = backend.reserveStackForVariables(numOperands + 1);
+
+        // Record allocation in case we drop out via a 'go' form while evaluating arguments
+        backend.recordStackAllocation(stackBytesAllocated);
 
         // This doubles as the stack slot index, and also the node index of the list we're walking
         int slot = 0;
@@ -232,6 +235,7 @@ public class TreeWalker {
 
         // Free space on stack for operands plus function pointer for our the operator being applied
         backend.freeStackForVariables(numOperands + 1);
+        backend.recordStackAllocation(-1 * stackBytesAllocated);
     }
 
     private void walkTreeForLambdaApply(RList rlist) {
