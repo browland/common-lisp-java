@@ -30,6 +30,7 @@ public class TreeWalker {
         specialForms.put("return-from", new ReturnFromSpecialForm());
         specialForms.put("tagbody", new TagbodySpecialForm());
         specialForms.put("go", new GoSpecialForm());
+        specialForms.put("quote", new QuoteSpecialForm());
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -95,7 +96,7 @@ public class TreeWalker {
         }
         else if (typedAtom instanceof IntAtom intAtom) {
             // Operand index 0 since this is a bare atom
-            backend.handleIntOperand(intAtom, 0);
+            backend.handleIntOperand(intAtom);
         }
         else {
             throw new UnsupportedOperationException("unsupported to eval other types of atoms");
@@ -175,7 +176,7 @@ public class TreeWalker {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
-                    backend.handleIntOperand(intAtom, slot);
+                    backend.handleIntOperand(intAtom);
                     backend.storeResultToStack(slot);
                     slot++;
                 }
@@ -253,7 +254,7 @@ public class TreeWalker {
             if (childNode instanceof Atom atom) {
                 TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                 if (typedAtom instanceof  IntAtom intAtom) {
-                    backend.handleIntOperand(intAtom, slot);
+                    backend.handleIntOperand(intAtom);
                     backend.storeResultToStack(slot);
                     slot++;
                 }

@@ -173,6 +173,20 @@ class CompilerSpec extends Specification {
         "(block foo (tagbody start (return-from foo 7)))"  || "7"
     }
 
+    def "quote tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program || expectedResult
+        "'nil"  || "nil"
+        "'1"    || "1"
+        // TODO need a test for a non-existing symbol and should still work.
+    }
+
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();
         List<Node> nodes = nodeBuilder.build(program)

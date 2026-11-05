@@ -96,8 +96,8 @@ public class CompilerBackend {
         }
     }
 
-    public void handleIntOperand(IntAtom intAtom, int index) {
-        System.out.printf("Storing int literal operand %d to register 0\n", intAtom.getValue(), index);
+    public void handleIntOperand(IntAtom intAtom) {
+        System.out.printf("Storing int literal operand %d to register 0\n", intAtom.getValue());
         asmGenerator.writeLongToRegister(0, intAtom.getFixNum());
     }
 
