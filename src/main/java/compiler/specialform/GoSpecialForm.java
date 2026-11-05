@@ -28,7 +28,7 @@ public class GoSpecialForm implements SpecialForm {
             throw new IllegalArgumentException("No tag supplied in go: " + rlist);
         }
 
-        String asmLabel = backend.getAsmLabelForTag(tagName).orElseThrow(() -> new RuntimeException("Cannot find tag in current scope: " + rlist));
+        String asmLabel = backend.getAsmLabelForTag(tagName).orElseThrow(() -> new IllegalArgumentException("Cannot find tag in current scope: " + rlist));
         int stackBytesStillAllocated = backend.getAllocatedBytesFromNearestTag(tagName);
         if (stackBytesStillAllocated > 0) {
             backend.freeStackBytes(stackBytesStillAllocated);
