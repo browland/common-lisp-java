@@ -35,7 +35,7 @@ public class TagbodySpecialForm implements SpecialForm {
             }
         }
 
-        Map<String,String> tagToLabelName = backend.pushTags(tagNames);
+        Map<String,String> tagToLabelName = backend.enterTagbody(tagNames);
 
         // Now evaluate each element of the tagbody.  If we see an atom we emit the label given to us in tagToLabelName.
         // If we see a list we generate the code for it.
@@ -51,6 +51,6 @@ public class TagbodySpecialForm implements SpecialForm {
             }
         }
 
-        backend.popTags();
+        backend.leaveTagbody();
     }
 }

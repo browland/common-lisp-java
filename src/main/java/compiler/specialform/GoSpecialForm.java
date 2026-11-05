@@ -29,6 +29,10 @@ public class GoSpecialForm implements SpecialForm {
         }
 
         String asmLabel = backend.getAsmLabelForTag(tagName).orElseThrow(() -> new RuntimeException("Cannot find tag in current scope: " + rlist));
+        int stackBytesStillAllocated = backend.getAllocatedBytesFromNearestTag(tagName);
+        if (stackBytesStillAllocated > 0) {
+            backend.freeStackBytes(stackBytesStillAllocated);
+        }
         backend.jumpToLabel(asmLabel);
     }
 }

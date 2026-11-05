@@ -19,6 +19,7 @@ public class IfSpecialForm implements SpecialForm {
         treeWalker.walkTree(conditionNode);
 
         backend.reserveStackForVariables(2);  // 2 variables to get 16 byte alignment
+        backend.recordStackAllocation(16);
         backend.storeResultToStack(0);
 
         // we now have the result of evaluating the condition in x0.  It should be either t or nil.  Generate asm to
@@ -53,5 +54,6 @@ public class IfSpecialForm implements SpecialForm {
         backend.generateLabel(exitLabel);
 
         backend.freeStackForVariables(2);
+        backend.recordStackAllocation(-16);
     }
 }

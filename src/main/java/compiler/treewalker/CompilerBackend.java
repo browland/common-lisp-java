@@ -35,7 +35,23 @@ public class CompilerBackend {
      */
     private final Set<String> declaredVariableNames = new HashSet<>();
 
+    /*
+     * Each Map in the Deque represents a tagbody in the current lexical scope; multiple Maps imply nested tagbodys.
+     * If the Deque is non-empty this means we're in at least one tagbody.
+     */
     private final Deque<Map<String,String>> tagToAsmLabelStack = new LinkedList<>();
+
+    /*
+     * We keep track of stack bytes still allocated "beyond" each tag - this is so if we 'go' to that tag we know
+     * how many bytes we need to deallocate (since the 'go' could be issued within a stack of special operators such
+     * as if (but not within a function body as that would leave the lexical scope of the tagbody).  When the 'go' is
+     * issued, we jump straight to the tag, so we need to take care of stack cleanup.
+     * This is a bit artificial as the value for each tag in a tagbody will be the same, but the tags give us a clear
+     * 'anchor point' for lookup and we don't have anything like that for the tagbody itself.
+     * Each Map in the Deque represents a tagbody in the current lexical scope; multiple Maps imply nested tagbodys.
+     * If the Deque is non-empty this means we're in at least one tagbody.
+     */
+    private final Deque<Map<String,Integer>> tagToStackBytesAllocated = new LinkedList<>();
 
     public CompilerBackend() {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
@@ -124,6 +140,14 @@ public class CompilerBackend {
         int stackBytes = determineStackBytes(numVariables);
         System.out.printf("Freeing %d bytes of stack\n", stackBytes);
         asmGenerator.freeSpaceOnStack(stackBytes);
+    }
+
+    public void freeStackBytes(int bytes) {
+        if (bytes <= 0) {
+            throw new RuntimeException("Trying to free stack bytes: " + bytes);
+        }
+        System.out.printf("Freeing %d bytes of stack\n", bytes);
+        asmGenerator.freeSpaceOnStack(bytes);
     }
 
     public void setUpFunctionBindings(String functionName, List<String> bindingNameList) {
@@ -392,7 +416,7 @@ public class CompilerBackend {
      * Push a set of tags for the current tagbody.  Returns original tag names mapped to their asm label name, avoiding
      * re-use of labels for different tagbody depths.
      */
-    public Map<String,String> pushTags(Set<String> tags) {
+    public Map<String,String> enterTagbody(Set<String> tags) {
         int newDepth = tagToAsmLabelStack.size() + 1;
         Map<String,String> tagMap = new HashMap<>();
         for (String tag : tags) {
@@ -402,14 +426,22 @@ public class CompilerBackend {
 
         tagToAsmLabelStack.push(tagMap);
 
+        Map<String,Integer> tagToBytesAllocated = new HashMap<>();
+        for (String tag : tags) {
+            tagToBytesAllocated.put(tag, 0);
+        }
+
+        tagToStackBytesAllocated.push(tagToBytesAllocated);
+
         return tagMap;
     }
 
     /**
      * Pop a set of tags for the current tagbody.
      */
-    public void popTags() {
+    public void leaveTagbody() {
         tagToAsmLabelStack.pop();
+        tagToStackBytesAllocated.pop();
     }
 
     public Optional<String> getAsmLabelForTag(String tagName) {
@@ -421,5 +453,38 @@ public class CompilerBackend {
             }
         }
         return Optional.empty();
+    }
+
+    /*
+     * The 'bytes' param can be negative to indicate a release of previously allocated stack has occurred.
+     */
+    public void recordStackAllocation(int bytes) {
+        // We only need to keep count if we're currently within a tagbody (as we can encounter early exit from a structure
+        // of special forms such as 'if' and we'll need to do our own stack cleanup.
+        // We need to account for the allocation for all tags which we could currently jump to.  Inefficient but ok for now.
+        if (!tagToStackBytesAllocated.isEmpty()) {
+            for (Map<String,Integer> tagBodyTags : tagToStackBytesAllocated) {
+                for (String tag : tagBodyTags.keySet()) {
+                    int curr = tagBodyTags.get(tag);
+                    if (curr + bytes < 0) {
+                        throw new RuntimeException("Recorded stack allocation has become negative: " + tagToStackBytesAllocated);
+                    }
+
+                    tagBodyTags.put(tag, curr + bytes);
+                }
+            }
+        }
+    }
+
+    public int getAllocatedBytesFromNearestTag(String tag) {
+        Iterator<Map<String, Integer>> mapIterator = tagToStackBytesAllocated.descendingIterator();
+        while (mapIterator.hasNext()) {
+            Map<String, Integer> currentTagScope = mapIterator.next();
+            if (currentTagScope.containsKey(tag)) {
+                return currentTagScope.get(tag);
+            }
+        }
+
+        return 0;
     }
 }
