@@ -371,6 +371,11 @@ public class CompilerBackend {
         asmGenerator.untagAndAccessFunctionPtr();
     }
 
+    // Expects the name starting with underscore
+    public void callFunction(String functionName) {
+        asmGenerator.callFunction(functionName);
+    }
+
     public void callFunction(int functionPtrRegister) {
         System.out.printf("Calling function ptr in register %d\n", functionPtrRegister);
         asmGenerator.callFunction(functionPtrRegister);

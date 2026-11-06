@@ -81,6 +81,7 @@ class CompilerSpec extends Specification {
         "(cdr (list 1 2 3))"                                 || "(2 . (3 . nil))"
         "(mapcar (function oneplus) (list 1 2))"             || "(2 . (3 . nil))"
         "(mapcar #'oneplus (list 1 2))"                      || "(2 . (3 . nil))"
+        // TODO need to invoke list with symbol args and it should evaluate them.
     }
 
     def "lambda tests"() {
@@ -185,6 +186,7 @@ class CompilerSpec extends Specification {
         "'nil"  || "nil"
         "'1"    || "1"
         // TODO need a test for a non-existing symbol and should still work.
+        "'(1 2 3)"                                       || "(1 . (2 . (3 . nil)))"
     }
 
     def compile(String program) {

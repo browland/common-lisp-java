@@ -150,6 +150,12 @@ public class AsmGenerator {
     """.formatted(functionPtrRegister));
     }
 
+    public void callFunction(String functionName) {
+        context.write("""
+      bl %s
+    """.formatted(functionName));
+    }
+
     public void freeSpaceOnStack(int stackBytes) {
         context.write("""
                   add sp, sp, #%d
