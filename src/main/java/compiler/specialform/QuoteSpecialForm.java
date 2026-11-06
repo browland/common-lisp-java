@@ -34,15 +34,21 @@ public class QuoteSpecialForm implements SpecialForm {
             for (int pos = 0; pos<lenList; pos++) {
                 Node node = quotedRlist.nodes().get(pos);
 
-                // hardcode for fixnums for now
                 if (node instanceof Atom atom) {
                     TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
                     if (typedAtom instanceof IntAtom intAtom) {
                         backend.handleIntOperand(intAtom);
                         backend.storeResultToStack(pos);
                     }
+                    else if (typedAtom instanceof SymbolAtom symbolAtom) {
+                        // Does a no-op if symbol table entry already exists
+                        backend.initialiseSymbol(symbolAtom.getValue());
+                        backend.handleSymbolOperandNoLookup(symbolAtom.getValue());
+                        backend.storeResultToStack(pos);
+                    }
                 }
             }
+
             // 3. Move start address of args on stack to x0
             backend.moveStackPointerToRegister(0, 0);
 

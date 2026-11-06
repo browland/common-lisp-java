@@ -180,6 +180,16 @@ public class AsmGenerator {
 """.formatted(symPointerName, symPointerName, offset));
     }
 
+    public void loadSymbolTaggedPtr(String symbolName) {
+        String symPointerName = "_" + symbolName + "_sym";
+        int offset = 0;  // We want to reference the symbol entry struct itself
+        context.write("""
+  adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
+  add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
+  orr x0, x0, #4                       ; tag the symbol ptr
+""".formatted(symPointerName, symPointerName, offset));
+    }
+
     /*
      Creates a symbol table entry, initialising data and function namespace to null.
      */

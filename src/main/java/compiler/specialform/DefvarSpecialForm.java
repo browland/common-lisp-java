@@ -21,7 +21,10 @@ public class DefvarSpecialForm implements SpecialForm {
         backend.recordVariableExists(symbolValue);
 
         // Generate the global variable for this symbol
-        backend.initialiseSymbol(symbolValue);
+        boolean symbolCreated = backend.initialiseSymbol(symbolValue);
+        if (!symbolCreated) {
+            throw new IllegalArgumentException("Trying to re-create symbol table entry for " + symbolValue);
+        }
 
         // Reserve space on stack - pretend 2 variables to get multiple of 16 bytes
         backend.reserveStackForVariables(2);

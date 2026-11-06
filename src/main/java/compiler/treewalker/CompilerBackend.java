@@ -96,6 +96,11 @@ public class CompilerBackend {
         }
     }
 
+    public void handleSymbolOperandNoLookup(String symbol) {
+        // TODO okay that we only interact with sym table and bindings don't come into it - I think ok?
+        asmGenerator.loadSymbolTaggedPtr(symbol);
+    }
+
     public void handleIntOperand(IntAtom intAtom) {
         System.out.printf("Storing int literal operand %d to register 0\n", intAtom.getValue());
         asmGenerator.writeLongToRegister(0, intAtom.getFixNum());
@@ -114,12 +119,14 @@ public class CompilerBackend {
         functionPrologue(name);
     }
 
-    public void initialiseSymbol(String symbol) {
+    // returns true if was created; false if already existed.
+    public boolean initialiseSymbol(String symbol) {
         if (definedSymbolsInNamespace.contains(symbol)) {
-            throw new IllegalArgumentException("Trying to re-create symbol table entry for " + symbol);
+            return false;
         }
         asmGenerator.initSymbolTableEntry(symbol);
         definedSymbolsInNamespace.add(symbol);
+        return true;
     }
 
     public void initialiseFunctionSymbol(String symbol) {
