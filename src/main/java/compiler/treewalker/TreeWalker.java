@@ -70,9 +70,18 @@ public class TreeWalker {
     // We call into our NodeListener for individual atoms as well as the overall form at each level while we still
     // evolve the design.
     public void walkTopLevelNodes(List<Node> nodes) {
+        // Expand macros.
+        // Go through top-level nodes.  If we see a defmacro then use similar code to DefMacro to create a Macro object (just breaks out bindings, body nodes, name).
+        // Keep names of defined macros somewhere.
+        // Now for all nodes which follow which are rlists, look for an invocation for an existing macro.
+        // We now use similar code to MacroExpand1 except much simpler as no need to deal with Value; it's just nodes.
+        // List<Node> transformedNodes = macroExpander.expand(nodes);
+        MacroTranslator macroTranslator = new MacroTranslator();
+        List<Node> expandedNodes = macroTranslator.transformMacros(nodes);
+
         backend.startProgram();
 
-        for (Node node : nodes) {
+        for (Node node : expandedNodes) {
             walkTree(node);
         }
 
@@ -123,6 +132,11 @@ public class TreeWalker {
 
     private void handleFormWithSymbolOperator(RList rlist, SymbolAtom sa) {
         System.out.println("Handling form with symbol operator");
+
+        // Check for ignored special operators which are only consumed by the macro expansion pass
+        if ("defmacro".equals(sa.getValue())) {
+            return;
+        }
 
         // First check operator symbol for match on special forms which are statically defined.
         SpecialForm specialForm = specialForms.get(sa.getValue());

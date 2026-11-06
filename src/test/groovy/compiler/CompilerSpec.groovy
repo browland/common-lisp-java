@@ -189,6 +189,18 @@ class CompilerSpec extends Specification {
         "'(x)"               || "(x . nil)"
     }
 
+    def "macro tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program                                              || expectedResult
+        "(defmacro testing (x y) `(+ ,x ,y)) (testing 1 2)"  || "3"
+    }
+
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();
         List<Node> nodes = nodeBuilder.build(program)
