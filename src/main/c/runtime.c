@@ -471,3 +471,13 @@ uintptr_t eq(uintptr_t val1, uintptr_t val2) {
         return nil_sym.variableSlot;
     }
 }
+
+void inc_global(uintptr_t symbolEntry) {
+    typecheck_symbol(symbolEntry);
+    struct SymbolEntry *symEntry = (struct SymbolEntry*)(symbolEntry & 0xFFFFFFFFFFFFFFF8);
+    uintptr_t currentVal = symEntry->variableSlot;
+    typecheck_fixnum(currentVal);
+
+    // Instead of incrementing fixnum by 1, we increment by 8 as the low 3 bits are for the type tag
+    symEntry->variableSlot = symEntry->variableSlot+8;
+}

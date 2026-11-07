@@ -500,4 +500,8 @@ public class CompilerBackend {
 
         return 0;
     }
+
+    public void writeAsm(String asm) {
+        asmGenerator.writeAsm(asm);
+    }
 }

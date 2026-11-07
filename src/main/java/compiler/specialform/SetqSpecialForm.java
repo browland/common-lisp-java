@@ -22,12 +22,13 @@ public class SetqSpecialForm implements SpecialForm {
 
         boolean isGlobalVariable = backend.getDeclaredVariableNames().contains(symbolValue);
 
-        // Step 2: Check symbol is bound to a global variable
+        // Step 2: Check symbol exists somehow
         if (!isLexicallyBound && !isGlobalVariable) {
             throw new IllegalArgumentException("setq: symbol is not bound");
         }
 
         // Reserve space on stack - pretend 2 variables to get multiple of 16 bytes
+        // TODO can just use 1?
         backend.reserveStackForVariables(2);
 
         // Evaluate value node; the result will end up in x0

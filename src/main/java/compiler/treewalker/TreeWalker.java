@@ -31,6 +31,7 @@ public class TreeWalker {
         specialForms.put("tagbody", new TagbodySpecialForm());
         specialForms.put("go", new GoSpecialForm());
         specialForms.put("quote", new QuoteSpecialForm());
+        specialForms.put("incf", new IncfSpecialForm());
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

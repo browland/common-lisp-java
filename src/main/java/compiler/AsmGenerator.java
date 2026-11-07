@@ -413,4 +413,8 @@ public class AsmGenerator {
                 add x%d, sp, #%d
                 """.formatted(regNum, offsetFromStackPointer));
     }
+
+    public void writeAsm(String asm) {
+        context.write(asm);
+    }
 }

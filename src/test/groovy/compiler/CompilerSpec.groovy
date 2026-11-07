@@ -189,6 +189,19 @@ class CompilerSpec extends Specification {
         "'(x)"               || "(x . nil)"
     }
 
+    def "incf tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program                                              || expectedResult
+        "(defvar x 1) (incf x) x"                            || "2"
+        "(let ((x 1)) (incf x) x)"                           || "2"
+    }
+
     def "macro tests"() {
         when:
         compile(program)
