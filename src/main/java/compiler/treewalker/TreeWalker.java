@@ -114,6 +114,9 @@ public class TreeWalker {
             // Operand index 0 since this is a bare atom
             backend.handleIntOperand(intAtom);
         }
+        else if (typedAtom instanceof StringAtom stringAtom) {
+            backend.handleStringLiteral(stringAtom);
+        }
         else {
             throw new UnsupportedOperationException("unsupported to eval other types of atoms");
 

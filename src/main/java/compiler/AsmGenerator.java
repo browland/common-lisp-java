@@ -22,6 +22,7 @@ public class AsmGenerator {
         // TODO refactor this
         dataSegmentContext.write(".data\n");
         cstringContext.write(".cstring\n");
+        cstringContext.write(".p2align 3\n");
     }
 
     // Probably will only have depth of 2 max?  Usually main context unless we're defining a function when we're 2 deep.
@@ -351,6 +352,15 @@ public class AsmGenerator {
                 """.formatted(sourceFramePointerOffset, captureIndex));
     }
 
+    public String createStringLiteral(String string, long counter) {
+        switchToCStringContext();
+        String stringLabel = "str_lit_" + counter;
+        context.write(stringLabel + ":\n");
+        context.write("  .asciz \"%s\"\n".formatted(string));
+        switchFromCStringContext();
+        return stringLabel;
+    }
+
     public void putClosure(String name, List<String> bindingNames) {
         String bindingNamesString = String.join(" ", bindingNames);
         String debugStringTemplate = "(lambda (%s) ())".formatted(bindingNamesString);
@@ -418,5 +428,14 @@ public class AsmGenerator {
 
     public void writeAsm(String asm) {
         context.write(asm);
+    }
+
+    public void loadStringLiteralTaggedPtr(String stringLabel) {
+        int offset = 0;  // We want to reference the symbol entry struct itself
+        context.write("""
+  adrp x0, %s@PAGE                     ; get page of tagged symbol pointer variable
+  add x0, x0, %s@PAGEOFF               ; add offset of tagged symbol pointer variable so x0 contains its address
+  orr x0, x0, #6                       ; tag the string ptr
+""".formatted(stringLabel, stringLabel, offset));
     }
 }

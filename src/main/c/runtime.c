@@ -218,6 +218,11 @@ void printResult(uintptr_t result) {
         sprintf(hexMemoryAddress, "%lx",  untaggedClosurePtr);
         printf("#<FUNCTION %s {%s}\n", debugString, hexMemoryAddress);
     }
+    else if (tag == TYPE_TAG_STR) {
+        char *rawString = (char*)(result & 0xFFFFFFFFFFFFFFF8);
+        printf("\"%s\"\n", rawString);
+
+    }
     else {
         printf("printResult: type error for: 0x%lx\n", result);
         exit(-1);

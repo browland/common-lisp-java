@@ -53,6 +53,8 @@ public class CompilerBackend {
      */
     private final Deque<Map<String,Integer>> tagToStackBytesAllocated = new LinkedList<>();
 
+    private long stringLiteralCounter = 0;
+
     public CompilerBackend() {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
         // operator name.
@@ -510,5 +512,10 @@ public class CompilerBackend {
 
     public void writeAsm(String asm) {
         asmGenerator.writeAsm(asm);
+    }
+
+    public void handleStringLiteral(StringAtom stringAtom) {
+        String stringLabel = asmGenerator.createStringLiteral(stringAtom.value, stringLiteralCounter++);
+        asmGenerator.loadStringLiteralTaggedPtr(stringLabel);
     }
 }
