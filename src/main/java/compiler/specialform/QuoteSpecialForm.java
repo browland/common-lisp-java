@@ -42,7 +42,7 @@ public class QuoteSpecialForm implements SpecialForm {
                     }
                     else if (typedAtom instanceof SymbolAtom symbolAtom) {
                         // Does a no-op if symbol table entry already exists
-                        backend.initialiseSymbol(symbolAtom.getValue());
+                        backend.initialiseSymbol(symbolAtom.getValue(), false);
                         backend.handleSymbolOperandNoLookup(symbolAtom.getValue());
                         backend.storeResultToStack(pos);
                     }

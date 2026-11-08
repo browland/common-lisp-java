@@ -214,6 +214,20 @@ class CompilerSpec extends Specification {
         "(defmacro testing (x y) `(+ ,x ,y)) (testing 1 2)"  || "3"
     }
 
+    def "keyword tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program                                               || expectedResult
+        ":foo"                                                || ":foo"
+        "(eq :foo :foo)"                                      || "t"
+        "(defun checker (sym) (eq sym :foo)) (checker :foo)"  || "t"
+    }
+
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();
         List<Node> nodes = nodeBuilder.build(program)

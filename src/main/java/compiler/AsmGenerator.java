@@ -193,25 +193,27 @@ public class AsmGenerator {
     /*
      Creates a symbol table entry, initialising data and function namespace to null.
      */
-    public String initSymbolTableEntry(String symbolName) {
+    public String initSymbolTableEntry(String plainSymbol, String mangledSymbol, boolean keyword) {
         // Generate the well-defined name of the runtime symbol holding the tagged pointer
-        String symPointerName = "_" + symbolName + "_sym";
-        String strPointerName = "_" + symbolName + "_str";
+        String symPointerName = "_" + mangledSymbol + "_sym";
+        String strPointerName = "_" + mangledSymbol + "_str";
 
         switchToDataSegmentContext();
+
+        String variableSlot = keyword ? symPointerName + " + 4" : "0";
 
         context.write("""
 .p2align 3
 %s:
     .quad %s
+    .quad %s
     .quad 0
-    .quad 0
-                """.formatted(symPointerName, strPointerName));
+                """.formatted(symPointerName, strPointerName, variableSlot));
         switchFromDataSegmentContext();
 
         switchToCStringContext();
         context.write(strPointerName + ":\n");
-        context.write("  .asciz \"" + symbolName + "\"\n");
+        context.write("  .asciz \"" + plainSymbol + "\"\n");
         switchFromCStringContext();
         return strPointerName;
     }

@@ -102,6 +102,12 @@ public class TreeWalker {
         TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
         if (typedAtom instanceof SymbolAtom symbolAtom) {
             String symbol = symbolAtom.getValue();
+            // If this is a keyword then record in symbol table if not already there
+            if (symbol.startsWith(":")) {
+                backend.initialiseSymbol(symbol, true);
+            }
+
+            // Look up symbol value from variable namespace - the result of evaluating the symbol atom.
             backend.handleSymbolOperand(symbol, Namespace.VARIABLE);
         }
         else if (typedAtom instanceof IntAtom intAtom) {
@@ -205,6 +211,12 @@ public class TreeWalker {
                     }
                     else {
                         String symbol = symbolAtom.getValue();
+                        // If this is a keyword then record in symbol table if not already there
+                        if (symbol.startsWith(":")) {
+                            backend.initialiseSymbol(symbol, true);
+                        }
+
+                        // Look up symbol value from variable namespace - the result of evaluating the symbol atom.
                         backend.handleSymbolOperand(symbol, Namespace.VARIABLE);
                         backend.storeResultToStack(slot++);
                     }

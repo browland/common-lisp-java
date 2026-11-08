@@ -92,13 +92,15 @@ public class CompilerBackend {
         }
         else {
             // check our mappings to stack offsets first (bindings for the current function)
-            asmGenerator.generateSymbolLookup(symbol, namespace);
+            String mangledSymbol = SymbolMangling.mangle(symbol);
+            asmGenerator.generateSymbolLookup(mangledSymbol, namespace);
         }
     }
 
     public void handleSymbolOperandNoLookup(String symbol) {
         // TODO okay that we only interact with sym table and bindings don't come into it - I think ok?
-        asmGenerator.loadSymbolTaggedPtr(symbol);
+        String mangledSymbol = SymbolMangling.mangle(symbol);
+        asmGenerator.loadSymbolTaggedPtr(mangledSymbol);
     }
 
     public void handleIntOperand(IntAtom intAtom) {
@@ -120,11 +122,15 @@ public class CompilerBackend {
     }
 
     // returns true if was created; false if already existed.
-    public boolean initialiseSymbol(String symbol) {
+    public boolean initialiseSymbol(String symbol, boolean keyword) {
         if (definedSymbolsInNamespace.contains(symbol)) {
             return false;
         }
-        asmGenerator.initSymbolTableEntry(symbol);
+
+        // Determine mangled symbol to avoid conflicts with aarch64 labelling
+        String mangledSymbol = SymbolMangling.mangle(symbol);
+
+        asmGenerator.initSymbolTableEntry(symbol, mangledSymbol, keyword);
         definedSymbolsInNamespace.add(symbol);
         return true;
     }
@@ -192,7 +198,8 @@ public class CompilerBackend {
 
     public void storeResultToSymbolValue(String symbolName) {
         // TODO we're coupling to aarch64 here
-        asmGenerator.writeRegisterToSymbolValue(0, symbolName);
+        String mangledSymbol = SymbolMangling.mangle(symbolName);
+        asmGenerator.writeRegisterToSymbolValue(0, mangledSymbol);
     }
 
     public void storeResultToStack(int variableIndex) {
