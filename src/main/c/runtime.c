@@ -28,6 +28,12 @@ struct Function {
     uintptr_t rawFxnPtr;
 };
 
+// Only the ptr to the Object struct is tagged; the contents of the struct don't need tagging so we use raw pointers etc within.
+struct Object {
+    long type;  // Maps to OBJ_TYPE_...
+    void *rawPtr;
+};
+
 // Forward references for built-in functions - these are just statically defined as C functions and directly referenced
 // in the symbol table provided at runtime.
 uintptr_t add(uintptr_t val1, uintptr_t val2);
@@ -38,6 +44,9 @@ uintptr_t cdr(uintptr_t taggedCons);
 uintptr_t mapcar(uintptr_t functionObj, uintptr_t taggedCons);
 uintptr_t oneplus(uintptr_t val);
 uintptr_t eq(uintptr_t val1, uintptr_t val2);
+uintptr_t open(uintptr_t fileSpec);
+uintptr_t close(uintptr_t taggedStreamObj);
+uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult);
 
 // Function objects
 struct Function add_fxn = {
@@ -80,6 +89,21 @@ struct Function eq_fxn = {
     (uintptr_t)&eq
 };
 
+struct Function open_fxn = {
+    "open",
+    (uintptr_t)&open
+};
+
+struct Function close_fxn = {
+    "close",
+    (uintptr_t)&close
+};
+
+struct Function readLine_fxn = {
+    "readLine",
+    (uintptr_t)&readLine
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -94,6 +118,9 @@ struct SymbolEntry cdr_sym = {"cdr", (uintptr_t)NULL, (uintptr_t)&cdr_fxn + TYPE
 struct SymbolEntry mapcar_sym = {"mapcar", (uintptr_t)NULL, (uintptr_t)&mapcar_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry oneplus_sym = {"oneplus", (uintptr_t)NULL, (uintptr_t)&oneplus_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry eq_sym = {"eq", (uintptr_t)NULL, (uintptr_t)&eq_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry open_sym = {"open", (uintptr_t)NULL, (uintptr_t)&open_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry close_sym = {"close", (uintptr_t)NULL, (uintptr_t)&close_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry readLine_sym = {"read-line", (uintptr_t)NULL, (uintptr_t)&readLine_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -125,6 +152,10 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
         return TYPE_FUNCTION;
     } else if (tag == TYPE_TAG_CONS) {
         return TYPE_CONS;
+    } else if (tag == TYPE_TAG_STR) {
+        return TYPE_STR;
+    } else if (tag == TYPE_TAG_OBJ) {
+        return TYPE_OBJ;
     } else {
         return TYPE_UNKNOWN;
     }
@@ -135,7 +166,8 @@ char *printValue(uintptr_t taggedValue) {
     long tag = taggedValue & tagMask;
     long value = 0L;
 
-    char *resultStr = (char*)malloc(25 * sizeof(char));
+    // TODO Be careful with string termination at 255 chars
+    char *resultStr = (char*)malloc(255 * sizeof(char));
 
     if (tag == TYPE_TAG_FIXNUM) {
         value = taggedValue >> 3;
@@ -162,6 +194,11 @@ char *printValue(uintptr_t taggedValue) {
         char *carStr = printValue(car);
         char *cdrStr = printValue(cdr);
         sprintf(resultStr, "(%s . %s)", carStr, cdrStr);
+        return resultStr;
+    }
+    else if (tag == TYPE_TAG_STR) {
+        char *rawString = (char*)(taggedValue & 0xFFFFFFFFFFFFFFF8);
+        sprintf(resultStr, "\"%s\"", rawString);
         return resultStr;
     }
     else {
@@ -223,6 +260,17 @@ void printResult(uintptr_t result) {
         printf("\"%s\"\n", rawString);
 
     }
+    else if (tag == TYPE_TAG_OBJ) {
+        uintptr_t untaggedPtr = result & 0xFFFFFFFFFFFFFFF8;
+        struct Object *objectPtr = (struct Object*)untaggedPtr;
+        if (objectPtr->type == OBJ_TYPE_STREAM) {
+            printf("#<STREAM %p>\n", objectPtr->rawPtr);
+        }
+        else {
+            printf("printResult: unknown object type: %ld\n", objectPtr->type);
+            exit(-1);
+        }
+    }
     else {
         printf("printResult: type error for: 0x%lx\n", result);
         exit(-1);
@@ -263,6 +311,24 @@ void typecheck_cons(uintptr_t val) {
 
     if (type != TYPE_CONS) {
         printf("Type error; expect cons for value 0x%lx\n", val);
+        exit(-1);
+    }
+}
+
+void typecheck_string(uintptr_t val) {
+    RUNTIME_TYPE type = determineType(val);
+
+    if (type != TYPE_STR) {
+        printf("Type error; expect string for value 0x%lx\n", val);
+        exit(-1);
+    }
+}
+
+void typecheck_obj(uintptr_t val) {
+    RUNTIME_TYPE type = determineType(val);
+
+    if (type != TYPE_OBJ) {
+        printf("Type error; expect object for value 0x%lx\n", val);
         exit(-1);
     }
 }
@@ -485,4 +551,73 @@ void inc_global(uintptr_t symbolEntry) {
 
     // Instead of incrementing fixnum by 1, we increment by 8 as the low 3 bits are for the type tag
     symEntry->variableSlot = symEntry->variableSlot+8;
+}
+
+uintptr_t open(uintptr_t fileSpec) {
+    typecheck_string(fileSpec);
+    char *fileSpecRaw = (char*)(fileSpec & 0xFFFFFFFFFFFFFFF8);
+    if (DEBUG == 1) {
+        printf("opening file %s\n", fileSpecRaw);
+    }
+
+    // open file ro for now
+    FILE *streamPtr = fopen(fileSpecRaw, "r");
+    if (streamPtr == NULL) {
+        printf("File open error");
+        exit(-1);
+    }
+
+    struct Object obj = {OBJ_TYPE_STREAM, streamPtr};
+    void *heapObjPtr = malloc(sizeof(struct Object));
+    memcpy(heapObjPtr, &obj, sizeof(struct Object));
+
+    // tag the heap ptr
+    uintptr_t taggedHeapPtr = (uintptr_t)heapObjPtr;
+    taggedHeapPtr = taggedHeapPtr | TYPE_TAG_OBJ;
+
+    if (DEBUG == 1) {
+        printf("open: created stream obj with heapObjPtr %p, tagged heap ptr 0x%lx\n", heapObjPtr, taggedHeapPtr);
+    }
+    return taggedHeapPtr;
+}
+
+uintptr_t close(uintptr_t taggedStreamObj) {
+    typecheck_obj(taggedStreamObj);
+    struct Object *rawObjectPtr = (struct Object*)(taggedStreamObj & 0xFFFFFFFFFFFFFFF8);
+    if (rawObjectPtr->type != OBJ_TYPE_STREAM) {
+        printf("Expected stream obj!");
+        exit(-1);
+    }
+    void *streamPtr = rawObjectPtr->rawPtr;
+    fclose(streamPtr);
+    return t_sym.variableSlot;
+}
+
+uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult) {
+    typecheck_obj(taggedStreamObj);
+    struct Object *rawObjectPtr = (struct Object*)(taggedStreamObj & 0xFFFFFFFFFFFFFFF8);
+    if (rawObjectPtr->type != OBJ_TYPE_STREAM) {
+        printf("Expected stream obj!");
+        exit(-1);
+    }
+    void *streamPtr = rawObjectPtr->rawPtr;
+
+    char *line = NULL;
+    size_t len = 0;
+
+    // getline allocates/resizes *line automatically
+    ssize_t read_bytes = getline(&line, &len, streamPtr);
+    if (read_bytes == -1) {
+        return terminateResult;
+    }
+
+    // Strip trailing newline if present
+    if (read_bytes > 0 && line[read_bytes - 1] == '\n') {
+        line[read_bytes - 1] = '\0';
+        read_bytes--;
+    }
+
+    uintptr_t lineTaggedPtr = (uintptr_t)line;
+    lineTaggedPtr = lineTaggedPtr | TYPE_TAG_STR;
+    return lineTaggedPtr;
 }

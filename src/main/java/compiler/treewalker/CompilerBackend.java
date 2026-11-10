@@ -67,6 +67,9 @@ public class CompilerBackend {
         functionsMap.put("mapcar", new Function("mapcar", false));
         functionsMap.put("oneplus", new Function("oneplus", false));
         functionsMap.put("eq", new Function("eq", false));
+        functionsMap.put("open", new Function("open", false));
+        functionsMap.put("close", new Function("close", false));
+        functionsMap.put("read-line", new Function("readLine", false));
     }
 
     public void startProgram() {

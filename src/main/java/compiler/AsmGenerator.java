@@ -22,7 +22,6 @@ public class AsmGenerator {
         // TODO refactor this
         dataSegmentContext.write(".data\n");
         cstringContext.write(".cstring\n");
-        cstringContext.write(".p2align 3\n");
     }
 
     // Probably will only have depth of 2 max?  Usually main context unless we're defining a function when we're 2 deep.

@@ -2,6 +2,8 @@
 #define TYPE_SYMBOL 2
 #define TYPE_FUNCTION 3
 #define TYPE_CONS 4
+#define TYPE_STR 5
+#define TYPE_OBJ 6
 #define TYPE_UNKNOWN 999
 
 #define TYPE_MASK 0x7
@@ -11,6 +13,9 @@
 #define TYPE_TAG_SYMBOL 0x4L
 #define TYPE_TAG_CONS 0x5L
 #define TYPE_TAG_STR 0x6L
+#define TYPE_TAG_OBJ 0x7L
+
+#define OBJ_TYPE_STREAM 0x1L
 
 #define NAMESPACE_VARIABLE 0
 #define NAMESPACE_FUNCTION 1

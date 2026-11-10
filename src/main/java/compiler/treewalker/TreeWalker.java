@@ -224,6 +224,10 @@ public class TreeWalker {
                         backend.storeResultToStack(slot++);
                     }
                 }
+                else if (typedAtom instanceof StringAtom stringAtom) {
+                    backend.handleStringLiteral(stringAtom);
+                    backend.storeResultToStack(slot++);
+                }
             }
             else if (childNode instanceof RList innerRList) {
                 // We have a form to evaluate.

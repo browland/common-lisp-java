@@ -4,6 +4,7 @@ import compiler.treewalker.TreeWalker
 import reader.NodeBuilder
 import spock.lang.Specification
 import syntaxtree.Node
+import java.nio.file.Files;
 
 class CompilerSpec extends Specification {
 
@@ -228,6 +229,95 @@ class CompilerSpec extends Specification {
         ":foo"                                                || ":foo"
         "(eq :foo :foo)"                                      || "t"
         "(defun checker (sym) (eq sym :foo)) (checker :foo)"  || "t"
+    }
+
+    def "open test"() {
+        when:
+        def tmpPath = Files.createTempFile("CompilerSpec", "tmp")
+        compile("(let ((in (open \"${tmpPath}\"))) in)")
+        def result = run()
+
+        then:
+        result.matches("#<STREAM 0x.*>")
+        Files.delete(tmpPath);
+    }
+
+    def "close test"() {
+        when:
+        def tmpPath = Files.createTempFile("CompilerSpec", "tmp")
+        compile("(let ((in (open \"${tmpPath}\"))) (close in))")
+        def result = run()
+
+        then:
+        result.matches("t")
+        Files.delete(tmpPath);
+    }
+
+    def "read-line test"() {
+        when:
+        def tmpPath = Files.createTempFile("CompilerSpec", "tmp")
+        Files.write(tmpPath, List.of("hello world"))
+        compile("(let ((in (open \"${tmpPath}\")) (line nil)) (setq line (read-line in nil)) (close in) line)")
+        def result = run()
+
+        then:
+        result == "\"hello world\""
+        Files.delete(tmpPath);
+    }
+
+    def "with-open-file test"() {
+        when:
+        def tmpPath = Files.createTempFile("CompilerSpec", "tmp")
+        Files.write(tmpPath, List.of("hello world"))
+
+        def program = """
+(defmacro with-open-file (file sref_var &rest forms)
+    `(let ((,sref_var (open ,file)))
+            ,@forms
+            (close ,sref_var)))
+            
+(let ((str nil))
+    (with-open-file "${tmpPath}" in
+        (setq str (read-line in)))
+    str)
+        """
+        compile(program)
+        def result = run()
+
+        then:
+        result == "\"hello world\""
+        Files.delete(tmpPath);
+    }
+
+    def "read lines in loop test"() {
+        when:
+
+        def program = """
+(defvar line nil)
+(defvar lines nil)
+
+(defmacro with-open-file (file sref_var &rest forms)
+    `(let ((,sref_var (open ,file)))
+            ,@forms
+            (close ,sref_var)))
+
+(with-open-file "/Users/ben/git/lisp/aoc/2025/1/test.txt" infile
+    (block fileLoop
+        (tagbody
+            top
+            (setq line (read-line infile nil))
+            (if (eq line nil)
+                (go end) t)
+            (setq lines (cons line lines))
+            (go top)
+            end)))
+lines
+        """
+        compile(program)
+        def result = run()
+
+        then:
+        result == "(\"L82\" . (\"R14\" . (\"L99\" . (\"L1\" . (\"L55\" . (\"R60\" . (\"L5\" . (\"R48\" . (\"L30\" . (\"L68\" . nil))))))))))"
     }
 
     def compile(String program) {
