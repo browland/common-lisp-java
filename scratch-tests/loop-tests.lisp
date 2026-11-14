@@ -2,4 +2,4 @@
 ;    ((> i 5) 'done)      ; Stop when 'i' > 5, then return 'done'
 ;  (format t "Current i: ~A~%" i))
 
-'done
+'(:val1 1 :val2 2 :val3 3)

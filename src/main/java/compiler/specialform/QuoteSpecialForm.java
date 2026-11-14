@@ -1,6 +1,5 @@
 package compiler.specialform;
 
-import compiler.Namespace;
 import compiler.treewalker.*;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -9,7 +8,12 @@ import syntaxtree.RList;
 public class QuoteSpecialForm implements SpecialForm {
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
-        if(rlist.nodes().get(1) instanceof Atom atom) {
+        Node quotedNode = rlist.nodes().get(1);
+        handleQuotedNode(quotedNode, backend);
+    }
+
+    public void handleQuotedNode(Node quotedNode, CompilerBackend backend) {
+        if(quotedNode instanceof Atom atom) {
             TypedAtom<?> typedAtom = TypedAtom.fromAtom(atom);
             switch(typedAtom) {
                 case SymbolAtom s:
@@ -26,7 +30,7 @@ public class QuoteSpecialForm implements SpecialForm {
                     break;
             }
         }
-        else if (rlist.nodes().get(1) instanceof RList quotedRlist) {
+        else if (quotedNode instanceof RList quotedRlist) {
             int lenList = quotedRlist.size();
 
             // variadic args based on no. of nodes in this quoted list - use similar code to TreeWalker:223
@@ -49,6 +53,11 @@ public class QuoteSpecialForm implements SpecialForm {
                         backend.handleSymbolOperandNoLookup(symbolAtom.getValue());
                         backend.storeResultToStack(pos);
                     }
+                }
+                else if (node instanceof RList innerRlist) {
+                    // This element is itself a list; recurse
+                    handleQuotedNode(innerRlist, backend);
+                    backend.storeResultToStack(pos);
                 }
             }
 

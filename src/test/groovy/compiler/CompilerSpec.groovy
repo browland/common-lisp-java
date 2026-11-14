@@ -85,6 +85,10 @@ class CompilerSpec extends Specification {
         "(cdr (list 1 2 3))"                                 || "(2 . (3 . nil))"
         "(mapcar (function 1+) (list 1 2))"                  || "(2 . (3 . nil))"
         "(mapcar #'1+ (list 1 2))"                           || "(2 . (3 . nil))"
+        "'(:foo 1)"                                          || "(:foo . (1 . nil))"
+        "'((:foo 1))"                                        || "((:foo . (1 . nil)) . nil)"
+        "'((:foo 1) (:bar 2))"                               || "((:foo . (1 . nil)) . ((:bar . (2 . nil)) . nil))"
+//        "(assoc :foo '((:foo 1) (:bar 2)))"                  || "(:foo . (1 . nil))"
     }
 
     def "lambda tests"() {
