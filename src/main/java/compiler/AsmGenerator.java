@@ -212,6 +212,7 @@ public class AsmGenerator {
         switchFromDataSegmentContext();
 
         switchToCStringContext();
+        context.write(".p2align 3\n");
         context.write(strPointerName + ":\n");
         context.write("  .asciz \"" + plainSymbol + "\"\n");
         switchFromCStringContext();
@@ -252,6 +253,7 @@ public class AsmGenerator {
         switchFromDataSegmentContext();
 
         switchToCStringContext();
+        context.write(".p2align 3\n");
         context.write(strPointerName + ":\n");
         context.write("  .asciz \"" + symbolName + "\"\n");
         switchFromCStringContext();
@@ -354,6 +356,7 @@ public class AsmGenerator {
     public String createStringLiteral(String string, long counter) {
         switchToCStringContext();
         String stringLabel = "str_lit_" + counter;
+        context.write(".p2align 3\n");
         context.write(stringLabel + ":\n");
         context.write("  .asciz \"%s\"\n".formatted(string));
         switchFromCStringContext();
@@ -367,6 +370,7 @@ public class AsmGenerator {
         // Write the debug string
         switchToCStringContext();
         String debugStringName = name + "_debug";
+        context.write(".p2align 3\n");
         context.write(debugStringName + ":\n");
         context.write("  .asciz \"%s\"\n".formatted(debugStringTemplate));
         switchFromCStringContext();

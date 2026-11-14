@@ -14,7 +14,7 @@ public class AsmContext {
 
     public void dumpAsm(BufferedWriter bw) throws IOException {
         for (String line : lines) {
-            bw.write(".p2align 3\n");
+//            bw.write(".p2align 3\n");
             bw.write(line + "\n");
         }
     }

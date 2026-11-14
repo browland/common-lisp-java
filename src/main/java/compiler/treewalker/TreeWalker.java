@@ -8,9 +8,12 @@ import syntaxtree.Node;
 import syntaxtree.RList;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
@@ -39,7 +42,16 @@ public class TreeWalker {
 
         TreeWalker walker = new TreeWalker();
 
-        String program = "(+ 1 2)";
+        String program;
+        if (args.length > 0) {
+            String filename = args[0];
+            List<String> lines = Files.readAllLines(Path.of(filename));
+            program = String.join("\n", lines);
+        }
+        else {
+            program = "(+ 1 2)";
+        }
+
         List<Node> nodes = nodeBuilder.build(program);
         walker.walkTopLevelNodes(nodes);
 
