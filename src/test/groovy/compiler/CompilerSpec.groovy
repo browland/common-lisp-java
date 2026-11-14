@@ -36,12 +36,14 @@ class CompilerSpec extends Specification {
         where:
         program                                              || expectedResult
         "2"                                                  || "2"
-        "(oneplus 1)"                                        || "2"
+        "(1+ 1)"                                             || "2"
         "nil"                                                || "nil"
         "t"                                                  || "t"
         "(add 1 2)"                                          || "3"
         "(+ 1 2)"                                            || "3"
         "(+ 1 (+ 1 2))"                                      || "4"
+        "(> 2 1)"                                            || "t"
+        "(> 1 2)"                                            || "nil"
         "(defvar two (+ 1 1)) (if t two (+ 1 2))"            || "2"
         "(defvar x 2) (if nil nil x)"                        || "2"
         "(let ((x 1)) (+ x 1))"                              || "2"
@@ -49,7 +51,6 @@ class CompilerSpec extends Specification {
         "(defvar x 1) (setq x 2) x"                          || "2"
         "(let ((x 1)) (setq x 2) x)"                         || "2"
         "\"hello world\""                                    || "\"hello world\""
-
     }
 
     def "conditionals tests"() {
@@ -82,8 +83,8 @@ class CompilerSpec extends Specification {
         "(list 1 2 3)"                                       || "(1 . (2 . (3 . nil)))"
         "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
         "(cdr (list 1 2 3))"                                 || "(2 . (3 . nil))"
-        "(mapcar (function oneplus) (list 1 2))"             || "(2 . (3 . nil))"
-        "(mapcar #'oneplus (list 1 2))"                      || "(2 . (3 . nil))"
+        "(mapcar (function 1+) (list 1 2))"                  || "(2 . (3 . nil))"
+        "(mapcar #'1+ (list 1 2))"                           || "(2 . (3 . nil))"
     }
 
     def "lambda tests"() {
@@ -190,6 +191,7 @@ class CompilerSpec extends Specification {
         "'(1 2 3)"           || "(1 . (2 . (3 . nil)))"
         "(defvar x 1) '(x)"  || "(x . nil)"
         "'(x)"               || "(x . nil)"
+        "'done"              || "done"
     }
 
     def "incf tests"() {

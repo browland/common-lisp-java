@@ -17,7 +17,7 @@ public class SymbolMangling {
     }
 
     public static boolean needsMangling(String symbol) {
-        return symbol.contains(":") || symbol.contains("+");
+        return symbol.contains(":") || symbol.contains("+") || symbol.contains(">");
     }
 
 //    public static String unmangle(String mangledSymbol) {

@@ -65,7 +65,8 @@ public class CompilerBackend {
         functionsMap.put("car", new Function("car", false));
         functionsMap.put("cdr", new Function("cdr", false));
         functionsMap.put("mapcar", new Function("mapcar", false));
-        functionsMap.put("oneplus", new Function("oneplus", false));
+        functionsMap.put("1+", new Function(SymbolMangling.mangle("1+"), false));
+        functionsMap.put(">", new Function(SymbolMangling.mangle(">"), false));
         functionsMap.put("eq", new Function("eq", false));
         functionsMap.put("open", new Function("open", false));
         functionsMap.put("close", new Function("close", false));

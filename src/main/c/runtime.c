@@ -44,6 +44,7 @@ uintptr_t cdr(uintptr_t taggedCons);
 uintptr_t mapcar(uintptr_t functionObj, uintptr_t taggedCons);
 uintptr_t oneplus(uintptr_t val);
 uintptr_t eq(uintptr_t val1, uintptr_t val2);
+uintptr_t gt(uintptr_t val1, uintptr_t val2);
 uintptr_t open(uintptr_t fileSpec);
 uintptr_t close(uintptr_t taggedStreamObj);
 uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult);
@@ -81,7 +82,7 @@ struct Function mapcar_fxn = {
 };
 
 struct Function oneplus_fxn = {
-    "oneplus",
+    "1+",
     (uintptr_t)&oneplus
 };
 
@@ -110,6 +111,11 @@ struct Function format_fxn = {
     (uintptr_t)&format
 };
 
+struct Function gt_fxn = {
+    ">",
+    (uintptr_t)&gt
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -122,7 +128,8 @@ struct SymbolEntry list_sym = {"list", (uintptr_t)NULL, (uintptr_t)&list_fxn + T
 struct SymbolEntry car_sym = {"car", (uintptr_t)NULL, (uintptr_t)&car_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry cdr_sym = {"cdr", (uintptr_t)NULL, (uintptr_t)&cdr_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry mapcar_sym = {"mapcar", (uintptr_t)NULL, (uintptr_t)&mapcar_fxn + TYPE_TAG_FUNCTION};
-struct SymbolEntry oneplus_sym = {"oneplus", (uintptr_t)NULL, (uintptr_t)&oneplus_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry CL_312B_sym = {"1+", (uintptr_t)NULL, (uintptr_t)&oneplus_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry CL_3E_sym = {">", (uintptr_t)NULL, (uintptr_t)&gt_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry eq_sym = {"eq", (uintptr_t)NULL, (uintptr_t)&eq_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry open_sym = {"open", (uintptr_t)NULL, (uintptr_t)&open_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry close_sym = {"close", (uintptr_t)NULL, (uintptr_t)&close_fxn + TYPE_TAG_FUNCTION};
@@ -358,9 +365,8 @@ uintptr_t add(uintptr_t val1, uintptr_t val2) {
 // returns 0 if val is t; for example allows a subsequent cbz or cbnz instruction to react to zero when the last result
 // was t.
 // This is made easier since we intern t by always using the same pointer for it.
-// TODO be careful this checks for equality with the t symbol table entry, not the variable slot!
-long is_t(uintptr_t val) {
-    void *untagged_val = (void*)(val & 0xFFFFFFFFFFFFFFF8);
+long is_t(uintptr_t taggedVal) {
+    void *untagged_val = (void*)(taggedVal & 0xFFFFFFFFFFFFFFF8);
     if (untagged_val == &t_sym) {
         return 0;
     }
@@ -658,5 +664,20 @@ uintptr_t format(uintptr_t *args, long numArgs) {
     else {
         printf("Unhandled stream designator (not symbol) for format in: (%d)\n", type);
         exit(-1);
+    }
+}
+
+uintptr_t gt(uintptr_t arg1, uintptr_t arg2) {
+    typecheck_fixnum(arg1);
+    typecheck_fixnum(arg2);
+
+    long val1 = arg1 >> 3;
+    long val2 = arg2 >> 3;
+
+    if (val1 > val2) {
+        return t_sym.variableSlot;
+    }
+    else {
+        return nil_sym.variableSlot;
     }
 }

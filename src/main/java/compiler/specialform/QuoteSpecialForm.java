@@ -14,7 +14,10 @@ public class QuoteSpecialForm implements SpecialForm {
             switch(typedAtom) {
                 case SymbolAtom s:
                     String symString = s.getValue();
-                    backend.handleSymbolOperand(symString, Namespace.VARIABLE);
+                    // When quoting a symbol, no matter whether it has a global value or it's lexically-scoped we still
+                    // init a symbol table entry (if not already existing) as this is how symbol values are defined.
+                    backend.initialiseSymbol(symString, false);
+                    backend.handleSymbolOperandNoLookup(symString);
                     break;
                 case IntAtom i:
                     backend.handleIntOperand(i);
