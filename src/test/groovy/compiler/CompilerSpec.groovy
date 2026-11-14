@@ -320,6 +320,18 @@ lines
         result == "(\"L82\" . (\"R14\" . (\"L99\" . (\"L1\" . (\"L55\" . (\"R60\" . (\"L5\" . (\"R48\" . (\"L30\" . (\"L68\" . nil))))))))))"
     }
 
+    def "format test"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program                                               || expectedResult
+        "(format t \"Hello world\")"                          || "Hello world"
+    }
+
     def compile(String program) {
         NodeBuilder nodeBuilder = new NodeBuilder();
         List<Node> nodes = nodeBuilder.build(program)

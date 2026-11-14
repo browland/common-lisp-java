@@ -47,6 +47,7 @@ uintptr_t eq(uintptr_t val1, uintptr_t val2);
 uintptr_t open(uintptr_t fileSpec);
 uintptr_t close(uintptr_t taggedStreamObj);
 uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult);
+uintptr_t format(uintptr_t* args, long numArgs);
 
 // Function objects
 struct Function add_fxn = {
@@ -104,6 +105,11 @@ struct Function readLine_fxn = {
     (uintptr_t)&readLine
 };
 
+struct Function format_fxn = {
+    "format",
+    (uintptr_t)&format
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -121,6 +127,7 @@ struct SymbolEntry eq_sym = {"eq", (uintptr_t)NULL, (uintptr_t)&eq_fxn + TYPE_TA
 struct SymbolEntry open_sym = {"open", (uintptr_t)NULL, (uintptr_t)&open_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry close_sym = {"close", (uintptr_t)NULL, (uintptr_t)&close_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry readLine_sym = {"read-line", (uintptr_t)NULL, (uintptr_t)&readLine_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry format_sym = {"format", (uintptr_t)NULL, (uintptr_t)&format_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -351,6 +358,7 @@ uintptr_t add(uintptr_t val1, uintptr_t val2) {
 // returns 0 if val is t; for example allows a subsequent cbz or cbnz instruction to react to zero when the last result
 // was t.
 // This is made easier since we intern t by always using the same pointer for it.
+// TODO be careful this checks for equality with the t symbol table entry, not the variable slot!
 long is_t(uintptr_t val) {
     void *untagged_val = (void*)(val & 0xFFFFFFFFFFFFFFF8);
     if (untagged_val == &t_sym) {
@@ -620,4 +628,35 @@ uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult) {
     uintptr_t lineTaggedPtr = (uintptr_t)line;
     lineTaggedPtr = lineTaggedPtr | TYPE_TAG_STR;
     return lineTaggedPtr;
+}
+
+uintptr_t format(uintptr_t *args, long numArgs) {
+    // Minimum of 2 args (stream designator and control string).  Optionally can have format arguments used in control string.
+    // For now stream designator is assumed to be t (stdout)
+    // We only handle ~S general placeholders for now.
+    if (numArgs < 2) {
+        printf("Too few arguments to format (%ld)\n", numArgs);
+        exit(-1);
+    }
+
+    uintptr_t streamDesignator = args[0];
+    RUNTIME_TYPE type = determineType(streamDesignator);
+    if (type == TYPE_SYMBOL) {
+        if (args[0] == t_sym.variableSlot) {
+            // Not handling placeholders yet
+            uintptr_t taggedFormatString = args[1];
+            typecheck_string(taggedFormatString);
+            char *formatStringRaw = (char*)(taggedFormatString & 0xFFFFFFFFFFFFFFF8);
+            printf("%s\n", formatStringRaw);
+            return t_sym.variableSlot;
+        }
+        else {
+            printf("Unhandled stream designator (not t) for format in: (%lx)\n", args[0]);
+            exit(-1);
+        }
+    }
+    else {
+        printf("Unhandled stream designator (not symbol) for format in: (%d)\n", type);
+        exit(-1);
+    }
 }

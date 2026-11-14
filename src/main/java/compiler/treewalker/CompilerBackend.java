@@ -70,6 +70,7 @@ public class CompilerBackend {
         functionsMap.put("open", new Function("open", false));
         functionsMap.put("close", new Function("close", false));
         functionsMap.put("read-line", new Function("readLine", false));
+        functionsMap.put("format", new Function("format", true));
     }
 
     public void startProgram() {
