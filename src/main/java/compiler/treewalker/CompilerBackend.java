@@ -72,6 +72,7 @@ public class CompilerBackend {
         functionsMap.put("close", new Function("close", false));
         functionsMap.put("read-line", new Function("readLine", false));
         functionsMap.put("format", new Function("format", true));
+        functionsMap.put("assoc", new Function("assoc", false));
     }
 
     public void startProgram() {

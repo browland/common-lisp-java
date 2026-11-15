@@ -49,6 +49,7 @@ uintptr_t open(uintptr_t fileSpec);
 uintptr_t close(uintptr_t taggedStreamObj);
 uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult);
 uintptr_t format(uintptr_t* args, long numArgs);
+uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons);
 
 // Function objects
 struct Function add_fxn = {
@@ -116,6 +117,11 @@ struct Function gt_fxn = {
     (uintptr_t)&gt
 };
 
+struct Function assoc_fxn = {
+    "assoc",
+    (uintptr_t)&assoc
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -135,6 +141,7 @@ struct SymbolEntry open_sym = {"open", (uintptr_t)NULL, (uintptr_t)&open_fxn + T
 struct SymbolEntry close_sym = {"close", (uintptr_t)NULL, (uintptr_t)&close_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry readLine_sym = {"read-line", (uintptr_t)NULL, (uintptr_t)&readLine_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry format_sym = {"format", (uintptr_t)NULL, (uintptr_t)&format_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry assoc_sym = {"assoc", (uintptr_t)NULL, (uintptr_t)&assoc_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -680,4 +687,67 @@ uintptr_t gt(uintptr_t arg1, uintptr_t arg2) {
     else {
         return nil_sym.variableSlot;
     }
+}
+
+
+uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons) {
+    RUNTIME_TYPE keyType = determineType(taggedKey);
+    if (keyType == TYPE_UNKNOWN) {
+        printf("Unknown key value type in: 0x%lx\n", taggedKey);
+        exit(-1);
+    }
+
+    typecheck_cons(taggedCons);
+
+    void* untaggedConsPtr = (void*)untag_ptr(taggedCons);
+    struct ConsCell *cons = (struct ConsCell*)untaggedConsPtr;
+
+    uintptr_t car;
+
+    // TODO assuming no more than a 10 element cons list!  Could add the length to the ConsCell struct.
+    // Each element is itself a 2-element list and we check the first element of each one for a match to taggedKey.
+    for (int i=0; i<10; i++) {
+        car = cons->car;
+        RUNTIME_TYPE carType = determineType(car);
+        if (carType != TYPE_CONS) {
+            printf("assoc: element is not a list: 0x%lx\n", car);
+            exit(-1);
+        }
+
+        void* untaggedInnerConsPtr = (void*)untag_ptr(car);
+        struct ConsCell *innerCons = (struct ConsCell*)untaggedInnerConsPtr;
+        uintptr_t innerCar = innerCons->car;
+        if (taggedKey == innerCar) {
+            // TODO check if safe to return a direct pointer to the inner list, should be ok as immutable?
+            return car;
+        }
+
+        // We've not found the entry in the current car; now inspect the cdr which can only be either the next cons cell, or nil.
+
+        uintptr_t cdr = cons->cdr;
+        RUNTIME_TYPE cdrType = determineType(cdr);
+        if (cdrType == TYPE_CONS) {
+            void *cdrPtr = (void*)(untag_ptr(cdr));
+            cons = (struct ConsCell*)cdrPtr;
+            // Next loop for next cons cell
+            continue;
+        }
+        // Otherwise must be nil at end of list
+        else if(cdrType == TYPE_SYMBOL) {
+            void *cdrPtr = (void*)(untag_ptr(cdr));
+            struct SymbolEntry *symbolEntry = (struct SymbolEntry*)cdrPtr;
+            if (symbolEntry->variableSlot == nil_sym.variableSlot) {
+                break;
+            }
+
+            printf("assoc: cdr is a symbol but not nil: 0x%lx\n", cdr);
+            exit(-1);
+        }
+        else {
+            printf("assoc: cdr is not nil or a list: 0x%lx\n", cdr);
+            exit(-1);
+        }
+    }
+
+    return nil_sym.variableSlot;
 }

@@ -88,7 +88,9 @@ class CompilerSpec extends Specification {
         "'(:foo 1)"                                          || "(:foo . (1 . nil))"
         "'((:foo 1))"                                        || "((:foo . (1 . nil)) . nil)"
         "'((:foo 1) (:bar 2))"                               || "((:foo . (1 . nil)) . ((:bar . (2 . nil)) . nil))"
-//        "(assoc :foo '((:foo 1) (:bar 2)))"                  || "(:foo . (1 . nil))"
+        "(assoc :foo '((:foo 1) (:bar 2)))"                  || "(:foo . (1 . nil))"
+        "(assoc :bar '((:foo 1) (:bar 2)))"                  || "(:bar . (2 . nil))"
+        "(assoc :baz '((:foo 1) (:bar 2)))"                  || "nil"
     }
 
     def "lambda tests"() {
