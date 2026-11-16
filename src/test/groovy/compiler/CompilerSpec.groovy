@@ -17,7 +17,7 @@ class CompilerSpec extends Specification {
 
         where:
         program || _
-        "(defvar x 1) (defvar x 2)"                        || _
+        "(defvar *x* 1) (defvar *x* 2)"                    || _
         "(setq x 1)"                                       || _
         "(block (+ 1 1))"                                  || _
         "(block 1)"                                        || _
@@ -45,10 +45,10 @@ class CompilerSpec extends Specification {
         "(> 2 1)"                                            || "t"
         "(> 1 2)"                                            || "nil"
         "(defvar two (+ 1 1)) (if t two (+ 1 2))"            || "2"
-        "(defvar x 2) (if nil nil x)"                        || "2"
+        "(defvar *x* 2) (if nil nil *x*)"                    || "2"
         "(let ((x 1)) (+ x 1))"                              || "2"
         "(let ((x 1)) (let ((y 2)) (+ x y)))"                || "3"
-        "(defvar x 1) (setq x 2) x"                          || "2"
+        "(defvar *x* 1) (setq *x* 2) *x*"                    || "2"
         "(let ((x 1)) (setq x 2) x)"                         || "2"
         "\"hello world\""                                    || "\"hello world\""
     }
@@ -107,7 +107,7 @@ class CompilerSpec extends Specification {
         "((lambda (x y) (+ x y)) 1 2)"                       || "3"                || false
         "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"                || false
         "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"                || false
-        "(defvar x 1) ((lambda (y) (+ y x)) 2)"              || "3"                || false
+        "(defvar *x* 1) ((lambda (y) (+ y *x*)) 2)"          || "3"                || false
     }
 
     def "function tests"() {
@@ -191,13 +191,13 @@ class CompilerSpec extends Specification {
         run() == expectedResult
 
         where:
-        program              || expectedResult
-        "'nil"               || "nil"
-        "'1"                 || "1"
-        "'(1 2 3)"           || "(1 . (2 . (3 . nil)))"
-        "(defvar x 1) '(x)"  || "(x . nil)"
-        "'(x)"               || "(x . nil)"
-        "'done"              || "done"
+        program                  || expectedResult
+        "'nil"                   || "nil"
+        "'1"                     || "1"
+        "'(1 2 3)"               || "(1 . (2 . (3 . nil)))"
+        "(defvar *x* 1) '(*x*)"  || "(*x* . nil)"
+        "'(x)"                   || "(x . nil)"
+        "'done"                  || "done"
     }
 
     def "incf tests"() {
@@ -209,7 +209,7 @@ class CompilerSpec extends Specification {
 
         where:
         program                                              || expectedResult
-        "(defvar x 1) (incf x) x"                            || "2"
+        "(defvar *x* 1) (incf *x*) *x*"                      || "2"
         "(let ((x 1)) (incf x) x)"                           || "2"
     }
 
@@ -301,8 +301,8 @@ class CompilerSpec extends Specification {
         when:
 
         def program = """
-(defvar line nil)
-(defvar lines nil)
+(defvar *line* nil)
+(defvar *lines* nil)
 
 (defmacro with-open-file (file sref_var &rest forms)
     `(let ((,sref_var (open ,file)))
@@ -313,13 +313,13 @@ class CompilerSpec extends Specification {
     (block fileLoop
         (tagbody
             top
-            (setq line (read-line infile nil))
-            (if (eq line nil)
+            (setq *line* (read-line infile nil))
+            (if (eq *line* nil)
                 (go end) t)
-            (setq lines (cons line lines))
+            (setq *lines* (cons *line* *lines*))
             (go top)
             end)))
-lines
+*lines*
         """
         compile(program)
         def result = run()
@@ -338,10 +338,10 @@ lines
         where:
         program                                               || expectedResult
         "(format t \"Hello world\")"                          || "Hello world"
-        "(format t \"~S\" \"cruel\" )"                        || "\"cruel\""
-        "(format t \"1~S2\" \"cruel\" )"                      || "1\"cruel\"2"
-        "(format t \"Hello ~S world\" \"cruel\" )"            || "Hello \"cruel\" world"
-        "(format t \"Hello ~S ~S\" \"cruel\" \"world\" )"     || "Hello \"cruel\" \"world\""
+        "(format t \"~S\" \"cruel\" )"                        || "cruel"
+        "(format t \"1~S2\" \"cruel\" )"                      || "1cruel2"
+        "(format t \"Hello ~S world\" \"cruel\" )"            || "Hello cruel world"
+        "(format t \"Hello ~S ~S\" \"cruel\" \"world\" )"     || "Hello cruel world"
     }
 
     def compile(String program) {

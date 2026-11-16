@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include "runtime.h"
+#include <stdbool.h>
 
 #define DEBUG 0
 
@@ -182,7 +183,7 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
     }
 }
 
-char *printValue(uintptr_t taggedValue) {
+char *printValue(uintptr_t taggedValue, bool useQuotes) {
     long tagMask = 0x7;
     long tag = taggedValue & tagMask;
     long value = 0L;
@@ -212,14 +213,19 @@ char *printValue(uintptr_t taggedValue) {
         struct ConsCell *c = (struct ConsCell*)valuePtr;
         uintptr_t car = c->car;
         uintptr_t cdr = c->cdr;
-        char *carStr = printValue(car);
-        char *cdrStr = printValue(cdr);
+        char *carStr = printValue(car, true);
+        char *cdrStr = printValue(cdr, true);
         sprintf(resultStr, "(%s . %s)", carStr, cdrStr);
         return resultStr;
     }
     else if (tag == TYPE_TAG_STR) {
         char *rawString = (char*)(taggedValue & 0xFFFFFFFFFFFFFFF8);
-        sprintf(resultStr, "\"%s\"", rawString);
+        if (useQuotes) {
+            sprintf(resultStr, "\"%s\"", rawString);
+        }
+        else {
+            sprintf(resultStr, "%s", rawString);
+        }
         return resultStr;
     }
     else {
@@ -260,8 +266,8 @@ void printResult(uintptr_t result) {
         struct ConsCell *c = (struct ConsCell*)valuePtr;
         uintptr_t car = c->car;
         uintptr_t cdr = c->cdr;
-        char *carStr = printValue(car);
-        char *cdrStr = printValue(cdr);
+        char *carStr = printValue(car, true);
+        char *cdrStr = printValue(cdr, true);
         printf("(%s . %s)\n", carStr, cdrStr);
     }
     else if (tag == TYPE_TAG_FUNCTION) {
@@ -392,7 +398,7 @@ uintptr_t *add_capture(uintptr_t *capturesPtr, uintptr_t value, int index) {
     // returns capturesPtr* back to caller as we often need it in x0 for adding multiple captures in sequence
     capturesPtr[index] = value;
     if (DEBUG == 1) {
-        printf("add_capture: added value %s into captures at index %d resulting in val %s\n", printValue(value), index, printValue(capturesPtr[index]));
+        printf("add_capture: added value %s into captures at index %d resulting in val %s\n", printValue(value, true), index, printValue(capturesPtr[index], true));
     }
     return capturesPtr;
 }
@@ -645,12 +651,13 @@ uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult) {
 
 char *rewriteFormattedString(char* formatString, uintptr_t *formatArgs, size_t lenPlaceholders) {
     char *result;
-    char *tempInput = malloc(strlen(formatString));
+    char *tempInput = malloc(strlen(formatString)+1);  // Include null char terminator
     if (!tempInput) {
         printf("format: could not allocate\n");
         exit(-1);
     }
-    tempInput = formatString;
+
+    memcpy(tempInput, formatString, strlen(formatString));
 
     for (int placeholderIx = 0; placeholderIx<lenPlaceholders; placeholderIx++) {
         char *placeholderPos = strstr(tempInput, "~S");
@@ -659,13 +666,14 @@ char *rewriteFormattedString(char* formatString, uintptr_t *formatArgs, size_t l
             exit(-1);
         }
 
-        char *currentReplacement = printValue(formatArgs[placeholderIx]);
+        char *currentReplacement = printValue(formatArgs[placeholderIx], false);
 
         size_t lenPrefix = placeholderPos - tempInput;
         size_t lenReplacement = strlen(currentReplacement);
         size_t lenRemainingFormatString = strlen(tempInput)-lenPrefix-2;  // Every placeholder is 2 chars long
+        size_t totalLength = lenPrefix + lenReplacement + lenRemainingFormatString;
 
-        result = malloc(lenPrefix + lenReplacement + lenRemainingFormatString + 1);  // plus 1 for null terminator
+        result = malloc(totalLength + 1);  // plus 1 for null terminator
         if (!result) {
             printf("format: could not allocate string\n");
             exit(-1);
@@ -674,6 +682,11 @@ char *rewriteFormattedString(char* formatString, uintptr_t *formatArgs, size_t l
         memcpy(result, tempInput, lenPrefix);
         memcpy(result + lenPrefix, currentReplacement, lenReplacement);
         memcpy(result + lenPrefix + lenReplacement, tempInput + lenPrefix + 2, lenRemainingFormatString);
+        result[totalLength] = '\0';
+
+        memcpy(tempInput, result, strlen(result));
+        free(tempInput);
+        free(currentReplacement);
 
         tempInput = result;
     }
