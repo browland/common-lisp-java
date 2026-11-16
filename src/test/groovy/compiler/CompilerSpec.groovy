@@ -341,6 +341,7 @@ lines
         "(format t \"~S\" \"cruel\" )"                        || "\"cruel\""
         "(format t \"1~S2\" \"cruel\" )"                      || "1\"cruel\"2"
         "(format t \"Hello ~S world\" \"cruel\" )"            || "Hello \"cruel\" world"
+        "(format t \"Hello ~S ~S\" \"cruel\" \"world\" )"     || "Hello \"cruel\" \"world\""
     }
 
     def compile(String program) {

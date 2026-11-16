@@ -643,35 +643,42 @@ uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult) {
     return lineTaggedPtr;
 }
 
-char *rewriteFormattedString(char* formatString, uintptr_t *formatArgs) {
-    char buffer[1024];  // TODO deal with resizing
-    int formatStringPos = 0;
-    int bufferPos = 0;
-    char c = formatString[0];
-
-    while (1) {
-        if (c == '~' && formatString[formatStringPos+1] == 'S') {
-            char *placeholderVal = printValue(formatArgs[0]);  // TODO handle multiple
-            int placeholderCharIx = 0;
-            char placeholderChar = placeholderVal[placeholderCharIx];
-            while (1) {
-                if (placeholderChar == '\0') {
-                    formatStringPos+=2; // Skip the two chars in ~S for example
-                    c = formatString[formatStringPos];  // Overwrite the c we already had before the inner loop; it's currently '~'
-                    break;
-                }
-                buffer[bufferPos++] = placeholderChar;
-                placeholderCharIx++;
-                placeholderChar = placeholderVal[placeholderCharIx];
-            }
-        }
-        buffer[bufferPos++] = c;
-        if (c == '\0') {
-            break;
-        }
-        c = formatString[++formatStringPos];
+char *rewriteFormattedString(char* formatString, uintptr_t *formatArgs, size_t lenPlaceholders) {
+    char *result;
+    char *tempInput = malloc(strlen(formatString));
+    if (!tempInput) {
+        printf("format: could not allocate\n");
+        exit(-1);
     }
-    return strdup(buffer);
+    tempInput = formatString;
+
+    for (int placeholderIx = 0; placeholderIx<lenPlaceholders; placeholderIx++) {
+        char *placeholderPos = strstr(tempInput, "~S");
+        if (!placeholderPos) {
+            printf("Missing placeholder in: %s (expected %zu placeholders)\n", formatString, lenPlaceholders);
+            exit(-1);
+        }
+
+        char *currentReplacement = printValue(formatArgs[placeholderIx]);
+
+        size_t lenPrefix = placeholderPos - tempInput;
+        size_t lenReplacement = strlen(currentReplacement);
+        size_t lenRemainingFormatString = strlen(tempInput)-lenPrefix-2;  // Every placeholder is 2 chars long
+
+        result = malloc(lenPrefix + lenReplacement + lenRemainingFormatString + 1);  // plus 1 for null terminator
+        if (!result) {
+            printf("format: could not allocate string\n");
+            exit(-1);
+        }
+
+        memcpy(result, tempInput, lenPrefix);
+        memcpy(result + lenPrefix, currentReplacement, lenReplacement);
+        memcpy(result + lenPrefix + lenReplacement, tempInput + lenPrefix + 2, lenRemainingFormatString);
+
+        tempInput = result;
+    }
+
+    return result;
 }
 
 uintptr_t format(uintptr_t *args, long numArgs) {
@@ -694,7 +701,7 @@ uintptr_t format(uintptr_t *args, long numArgs) {
 
             char *formattedString;
             if (numArgs > 2) {
-                formattedString = rewriteFormattedString(formatStringRaw, &(args[2]));
+                formattedString = rewriteFormattedString(formatStringRaw, &(args[2]), numArgs-2);
             }
             else {
                 formattedString = formatStringRaw;
