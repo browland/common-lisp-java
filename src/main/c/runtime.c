@@ -643,6 +643,37 @@ uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult) {
     return lineTaggedPtr;
 }
 
+char *rewriteFormattedString(char* formatString, uintptr_t *formatArgs) {
+    char buffer[1024];  // TODO deal with resizing
+    int formatStringPos = 0;
+    int bufferPos = 0;
+    char c = formatString[0];
+
+    while (1) {
+        if (c == '~' && formatString[formatStringPos+1] == 'S') {
+            char *placeholderVal = printValue(formatArgs[0]);  // TODO handle multiple
+            int placeholderCharIx = 0;
+            char placeholderChar = placeholderVal[placeholderCharIx];
+            while (1) {
+                if (placeholderChar == '\0') {
+                    formatStringPos+=2; // Skip the two chars in ~S for example
+                    c = formatString[formatStringPos];  // Overwrite the c we already had before the inner loop; it's currently '~'
+                    break;
+                }
+                buffer[bufferPos++] = placeholderChar;
+                placeholderCharIx++;
+                placeholderChar = placeholderVal[placeholderCharIx];
+            }
+        }
+        buffer[bufferPos++] = c;
+        if (c == '\0') {
+            break;
+        }
+        c = formatString[++formatStringPos];
+    }
+    return strdup(buffer);
+}
+
 uintptr_t format(uintptr_t *args, long numArgs) {
     // Minimum of 2 args (stream designator and control string).  Optionally can have format arguments used in control string.
     // For now stream designator is assumed to be t (stdout)
@@ -660,7 +691,15 @@ uintptr_t format(uintptr_t *args, long numArgs) {
             uintptr_t taggedFormatString = args[1];
             typecheck_string(taggedFormatString);
             char *formatStringRaw = (char*)(taggedFormatString & 0xFFFFFFFFFFFFFFF8);
-            printf("%s\n", formatStringRaw);
+
+            char *formattedString;
+            if (numArgs > 2) {
+                formattedString = rewriteFormattedString(formatStringRaw, &(args[2]));
+            }
+            else {
+                formattedString = formatStringRaw;
+            }
+            printf("%s\n", formattedString);
             return t_sym.variableSlot;
         }
         else {

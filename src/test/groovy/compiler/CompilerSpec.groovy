@@ -338,6 +338,9 @@ lines
         where:
         program                                               || expectedResult
         "(format t \"Hello world\")"                          || "Hello world"
+        "(format t \"~S\" \"cruel\" )"                        || "\"cruel\""
+        "(format t \"1~S2\" \"cruel\" )"                      || "1\"cruel\"2"
+        "(format t \"Hello ~S world\" \"cruel\" )"            || "Hello \"cruel\" world"
     }
 
     def compile(String program) {
