@@ -16,6 +16,8 @@ public class NodeBuilder {
     private RList currentList;
 
     // Returns list of top level forms
+    // If 'program' represents a form which isn't closed yet, then we return null but will retain state so further calls
+    // with subsequent parts of the program will append to the state until we can finally return a completed List<Node>.
     public List<Node> build(String program) {
         List<Node> result = new ArrayList<>();
 

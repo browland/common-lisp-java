@@ -39,7 +39,6 @@ public class TreeWalker {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         NodeBuilder nodeBuilder = new NodeBuilder();
-
         TreeWalker walker = new TreeWalker();
 
         String program;

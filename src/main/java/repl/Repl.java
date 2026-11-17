@@ -1,11 +1,9 @@
 package repl;
 
-import evaluator.Evaluator;
+import evaluator.Interpreter;
 import evaluator.env.Environment;
 import exception.EvaluationException;
 import function.FunctionDefinitions;
-import reader.NodeBuilder;
-import syntaxtree.Node;
 import syntaxtree.ReaderException;
 import value.Value;
 
@@ -16,6 +14,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class Repl {
@@ -24,9 +23,8 @@ public class Repl {
 
     private static final Repl repl = new Repl();
 
-    private final NodeBuilder nodeBuilder = new NodeBuilder();
-    private final Evaluator evaluator = new Evaluator();
     private final Environment env = new Environment();
+    private final Interpreter interpreter = new Interpreter(env);
 
     public static void main(String[] args) throws IOException {
         if(args.length == 1) {
@@ -73,23 +71,22 @@ public class Repl {
         }
     }
 
+    // Can handle multiple forms
     public void run(String initialForms) throws IOException {
         BufferedReader br = new BufferedReader(new StringReader(initialForms));
         String line = br.readLine();
 
-        while(line != null) {
-            List<Node> forms = nodeBuilder.build(line);
-            if (forms != null) {
-                for (Node form : forms) {
-                    try {
-                        Value<?> result = evaluator.evaluate(form, env);
-                        System.out.println(result);
-                    } catch (EvaluationException e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
+        try {
+            while (line != null) {
+                Optional<List<Value<?>>> optionalValues = interpreter.interpretPartial(line);
+                optionalValues.ifPresent(values -> System.out.println(values.getLast()));
+
+                line = br.readLine();
             }
-            line = br.readLine();
+        }
+        catch(EvaluationException e) {
+            System.out.println(e.getMessage());
+            throw e;
         }
     }
 
@@ -105,30 +102,24 @@ public class Repl {
 
         while(true) {
             String line = br.readLine();
-            List<Node> forms = null;
+
             try {
-                forms = nodeBuilder.build(line);
+                Optional<List<Value<?>>> optionalValues = interpreter.interpretPartial(line);
+                if (optionalValues.isPresent()) {
+                    List<Value<?>> values = optionalValues.get();
+                    System.out.println(values.getLast());
+                    promptForNewForm();
+                }
+                else {
+                    promptForMidForm();
+                }
             }
             catch(ReaderException e) {
                 System.out.println(e.getMessage());
                 promptForNewForm();
-                continue;
             }
-
-            if(forms != null) {
-                for(Node form : forms) {
-                    try {
-                        Value<?> result = evaluator.evaluate(form, env);
-                        System.out.println(result);
-                    }
-                    catch(EvaluationException e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
-                promptForNewForm();
-            }
-            else {
-                promptForMidForm();
+            catch(EvaluationException e) {
+                System.out.println(e.getMessage());
             }
         }
     }
