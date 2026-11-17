@@ -13,15 +13,15 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
     private final CompilerBackend backend = new CompilerBackend();
     private final Map<String, SpecialForm> specialForms = new HashMap<>();
+    private final MacroTranslator macroTranslator;
 
-    public TreeWalker() {
+    public TreeWalker(boolean loadScripts) {
         specialForms.put("if", new IfSpecialForm());
         specialForms.put("defun", new DefunSpecialForm());
         specialForms.put("defvar", new DefvarSpecialForm());
@@ -35,11 +35,13 @@ public class TreeWalker {
         specialForms.put("go", new GoSpecialForm());
         specialForms.put("quote", new QuoteSpecialForm());
         specialForms.put("incf", new IncfSpecialForm());
+
+        macroTranslator = new MacroTranslator(loadScripts);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         NodeBuilder nodeBuilder = new NodeBuilder();
-        TreeWalker walker = new TreeWalker();
+        TreeWalker walker = new TreeWalker(false);
 
         String program;
         if (args.length > 0) {
@@ -88,7 +90,6 @@ public class TreeWalker {
         // Now for all nodes which follow which are rlists, look for an invocation for an existing macro.
         // We now use similar code to MacroExpand1 except much simpler as no need to deal with Value; it's just nodes.
         // List<Node> transformedNodes = macroExpander.expand(nodes);
-        MacroTranslator macroTranslator = new MacroTranslator();
         List<Node> expandedNodes = macroTranslator.transformMacros(nodes);
 
         backend.startProgram();

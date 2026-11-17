@@ -1,6 +1,7 @@
 package repl;
 
 import evaluator.Interpreter;
+import evaluator.ScriptLoader;
 import evaluator.env.Environment;
 import exception.EvaluationException;
 import function.FunctionDefinitions;
@@ -15,16 +16,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public class Repl {
     private static final String LISP_SOURCES_DIR = "LISP_SOURCES_DIR";
-    private static final String LISP_LIB_DIR = "LISP_LIB_DIR";
 
     private static final Repl repl = new Repl();
 
     private final Environment env = new Environment();
     private final Interpreter interpreter = new Interpreter(env);
+    private final ScriptLoader scriptLoader = new ScriptLoader(interpreter);
 
     public static void main(String[] args) throws IOException {
         if(args.length == 1) {
@@ -57,21 +57,7 @@ public class Repl {
         }
     }
 
-    private static void loadLibrary() throws IOException {
-        String lispLibDir = getLispLibDir();
-        Path lispLibPath = Path.of(lispLibDir);
-        if(!Files.exists(lispLibPath)) {
-            throw new RuntimeException("LISP_LIB_PATH does not exist (set to %s)".formatted(lispLibDir));
-        }
-
-        try(Stream<Path> initialFormsStream = Files.list(lispLibPath)
-                .filter(path -> path.toString().endsWith("lisp"))
-                .sorted()) {
-            initialFormsStream.forEach(Repl::loadFile);
-        }
-    }
-
-    // Can handle multiple forms
+    // Takes multiple forms in one big string, evals one line at a time and prints result of each
     public void run(String initialForms) throws IOException {
         BufferedReader br = new BufferedReader(new StringReader(initialForms));
         String line = br.readLine();
@@ -92,7 +78,7 @@ public class Repl {
 
     private void init() throws IOException {
         FunctionDefinitions.addFunctionDefinitions(env);
-        loadLibrary();
+        scriptLoader.loadLibrary();
     }
 
     public void run() throws IOException{
@@ -130,14 +116,6 @@ public class Repl {
             throw new RuntimeException("Please set environment variable LISP_SOURCES_DIR");
         }
         return sourcesDirEnvVar;
-    }
-
-    private static String getLispLibDir() {
-        String libDirEnvVar = System.getenv(LISP_LIB_DIR);
-        if(libDirEnvVar == null) {
-            throw new RuntimeException("Please set environment variable LISP_LIB_DIR");
-        }
-        return libDirEnvVar;
     }
 
     public void promptForNewForm() {

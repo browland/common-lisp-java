@@ -37,6 +37,10 @@ public class Interpreter {
      */
     public Value<?> interpret(String program) {
         List<Node> nodes = nodeBuilder.build(program);
+        if (nodes == null) {
+            throw new IllegalStateException("Incomplete form in program");
+        }
+
         Value<?> result = null;
         for(Node node : nodes) {
             result = evaluator.evaluate(node, environment);
@@ -56,7 +60,7 @@ public class Interpreter {
             return Optional.empty();
         }
 
-        Value<?> result = null;
+        Value<?> result;
         for(Node node : nodes) {
             result = evaluator.evaluate(node, environment);
             if (result == null) {

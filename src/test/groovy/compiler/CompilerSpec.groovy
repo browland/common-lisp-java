@@ -1,10 +1,8 @@
 package compiler
 
-import compiler.treewalker.TreeWalker
-import reader.NodeBuilder
 import spock.lang.Specification
-import syntaxtree.Node
-import java.nio.file.Files;
+
+import java.nio.file.Files
 
 class CompilerSpec extends Specification {
 
@@ -344,11 +342,22 @@ class CompilerSpec extends Specification {
         "(format t \"Hello ~S ~S\" \"cruel\" \"world\" )"     || "Hello cruel world"
     }
 
+    def "funcall test"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program                                               || expectedResult
+        "(funcall (lambda () (+ 1 1)))"                       || "2"
+        "(let ((x 1)) (funcall (lambda () (+ x 1))))"         || "2"
+    }
+
     def compile(String program) {
-        NodeBuilder nodeBuilder = new NodeBuilder();
-        List<Node> nodes = nodeBuilder.build(program)
-        TreeWalker walker = new TreeWalker();
-        walker.walkTopLevelNodes(nodes)
+        Compiler compiler = new Compiler(false)
+        compiler.compile(program)
 
         // Assemble
         // We use -falign-functions=8 to ensure we can use pointer tagging for our built-in functions.  We could mark

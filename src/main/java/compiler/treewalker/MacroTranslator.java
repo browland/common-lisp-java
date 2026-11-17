@@ -1,13 +1,17 @@
 package compiler.treewalker;
 
 import evaluator.Evaluator;
+import evaluator.Interpreter;
+import evaluator.ScriptLoader;
 import evaluator.env.Environment;
 import evaluator.macro.MacroExpander;
+import function.FunctionDefinitions;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.Macro;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +26,20 @@ public class MacroTranslator {
     private final MacroExpander macroExpander = new MacroExpander();
     private final Evaluator evaluator = new Evaluator();
     private final Environment environment = new Environment();
+    private final Interpreter interpreter = new Interpreter(environment);
+    private final ScriptLoader scriptLoader = new ScriptLoader(interpreter);
+
+    public MacroTranslator(boolean loadScripts) {
+        FunctionDefinitions.addFunctionDefinitions(environment);
+        if (!loadScripts) {
+            return;
+        }
+        try {
+            scriptLoader.loadLibrary();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public List<Node> transformMacros(List<Node> nodes) {
         // First pass: look for any top-level defmacro forms and store them.  This has the side-effect of allowing macros

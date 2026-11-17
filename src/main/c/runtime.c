@@ -51,6 +51,7 @@ uintptr_t close(uintptr_t taggedStreamObj);
 uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult);
 uintptr_t format(uintptr_t* args, long numArgs);
 uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons);
+uintptr_t funcall(uintptr_t* args, long numArgs);
 
 // Function objects
 struct Function add_fxn = {
@@ -123,6 +124,11 @@ struct Function assoc_fxn = {
     (uintptr_t)&assoc
 };
 
+struct Function funcall_fxn = {
+    "funcall",
+    (uintptr_t)&funcall
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -143,6 +149,7 @@ struct SymbolEntry close_sym = {"close", (uintptr_t)NULL, (uintptr_t)&close_fxn 
 struct SymbolEntry readLine_sym = {"read-line", (uintptr_t)NULL, (uintptr_t)&readLine_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry format_sym = {"format", (uintptr_t)NULL, (uintptr_t)&format_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry assoc_sym = {"assoc", (uintptr_t)NULL, (uintptr_t)&assoc_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry funcall_sym = {"funcall", (uintptr_t)NULL, (uintptr_t)&funcall_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -178,6 +185,8 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
         return TYPE_STR;
     } else if (tag == TYPE_TAG_OBJ) {
         return TYPE_OBJ;
+    } else if (tag == TYPE_TAG_CLOSURE) {
+        return TYPE_CLOSURE;
     } else {
         return TYPE_UNKNOWN;
     }
@@ -809,4 +818,44 @@ uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons) {
     }
 
     return nil_sym.variableSlot;
+}
+
+uintptr_t funcall(uintptr_t *args, long numArgs) {
+    uintptr_t taggedFunctionPtr = *args;
+    RUNTIME_TYPE functionObjType = determineType(taggedFunctionPtr);
+    if (functionObjType != TYPE_FUNCTION && functionObjType != TYPE_CLOSURE) {
+        printf("funcall: expect a function object but received: 0x%lx\n", taggedFunctionPtr);
+        exit(-1);
+    }
+
+    if (functionObjType == TYPE_CLOSURE) {
+        uintptr_t untaggedClosurePtr = taggedFunctionPtr & 0xFFFFFFFFFFFFFFF8;
+        void *closureStructPtr = (void*)untaggedClosurePtr;
+        struct Closure *closurePtr = (struct Closure*)closureStructPtr;
+        uintptr_t result;
+        void *rawFunctionPtr = closurePtr->fxnPtr;
+
+        // TODO this asm block is AI-generated, spend time understanding and tidying it
+        // Jump to the closure function pointer, passing the closure pointer which provides captures, and (later) we also need to pass bindings
+        __asm__ __volatile__ (
+            "mov x0, %[closure]\n\t"     /* 1. Put the tagged closure pointer in x0 (environment/self) */
+            "mov x9, %[fn]\n\t"          /* 2. Load the raw machine code function pointer into scratch register x9 */
+            "blr x9\n\t"                 /* 3. Branch with link to x9 (jumps to function, saves return in x30) */
+            "mov %[res], x0\n\t"         /* 4. Capture the return value from x0 */
+            : [res] "=r" (result)        /* Output: C variable to hold the return value */
+            : [closure] "r" (taggedFunctionPtr), /* Input 1: The closure pointer */
+              [fn] "r" (rawFunctionPtr)  /* Input 2: The raw function pointer */
+            : "x0", "x9", "x30", "memory", "cc" /* Clobbers: registers and flags modified */
+        );
+
+        return result;
+    }
+    else {
+        printf("funcall: unimplemented for functions (only for closures)\n");
+        exit(-1);
+    }
+
+//     long fakeResult = 2;
+//     uintptr_t res = (fakeResult << 3) | TYPE_TAG_FIXNUM;
+//     return res;
 }

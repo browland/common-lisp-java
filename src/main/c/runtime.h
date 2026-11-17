@@ -4,6 +4,7 @@
 #define TYPE_CONS 4
 #define TYPE_STR 5
 #define TYPE_OBJ 6
+#define TYPE_CLOSURE 7
 #define TYPE_UNKNOWN 999
 
 #define TYPE_MASK 0x7
