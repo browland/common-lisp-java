@@ -38,6 +38,9 @@ public class Tagbody implements SpecialForm {
             }
         }
 
+        // Log the tags available in this tagbody so we can check for reachability when 'go' is issued
+        environment.pushTags(tags.keySet());
+
         Value<?> result = Value.nil();
         for (int i = 0; i< operandNodes.size(); i++) {
             Node node = operandNodes.get(i);
@@ -65,6 +68,10 @@ public class Tagbody implements SpecialForm {
                 }
             }
         }
+
+        // Now remove tags as they only work within the tagbody
+        environment.popTags();
+
         return result;
     }
 }

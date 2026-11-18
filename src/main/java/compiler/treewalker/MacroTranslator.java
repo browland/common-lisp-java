@@ -40,9 +40,7 @@ public class MacroTranslator {
     }
 
     public List<Node> transformMacros(List<Node> nodes) {
-        // First pass: look for any top-level defmacro forms and store them.  This has the side-effect of allowing macros
-        // to be invoked before declaration, but for now no big deal.
-
+        // First pass: look for any top-level defmacro forms and store them.
         for (Node node : nodes) {
             if (node instanceof RList rlist) {
                 Node firstNode = rlist.nodes().getFirst();
@@ -55,15 +53,25 @@ public class MacroTranslator {
             }
         }
 
+        // TODO need to ensure we eval top-level forms so we get defined functions which are needed by macro expansion.
+        //      But need to avoid regular evaluation behaviour which will treat macro invocations as "expand and then
+        //      eval resulting code" and instead just replace them in-place with the expanded code.
+        //      Can cheat by just eval'ing each form naively and then reprocess it via macro translator?
+
+        for (Node node : nodes) {
+            evaluator.evaluate(node, environment);
+        }
+
         // Second pass: Do recursive traversal of Nodes and look for invocations of any defined macros.
+        // We still need to evaluate any forms we encounter as macro definitions might use them.
         List<Node> transformedNodes = new ArrayList<>();
         for (Node node : nodes) {
-            transformedNodes.add(expandNodeIfMacro(macros, node));
+            transformedNodes.add(expandNodeIfMacroCall(macros, node));
         }
         return transformedNodes;
     }
 
-    private Node expandNodeIfMacro(Map<String,Macro> macros, Node node) {
+    private Node expandNodeIfMacroCall(Map<String,Macro> macros, Node node) {
         if (node instanceof RList rlist) {
             if (rlist.nodes().isEmpty()) {
                 return node;
@@ -75,15 +83,16 @@ public class MacroTranslator {
                     Node expandedNode = macroExpander.expand(macro, rlist, evaluator, environment);
 
                     // Always look for a macro call one more time when if we found a macro to deal with inner macro calls
-                    return expandNodeIfMacro(macros, expandedNode);
+                    return expandNodeIfMacroCall(macros, expandedNode);
                 }
             }
 
+            // Look for macro calls somewhere within this form
             RList transformedList = new RList();
             for (Node innerNode : rlist.nodes()) {
-                Node transformedNode = expandNodeIfMacro(macros, innerNode);
+                Node transformedNode = expandNodeIfMacroCall(macros, innerNode);
                 // Always look for a macro call one more time when if we found a macro to deal with inner macro calls
-                transformedNode = expandNodeIfMacro(macros, transformedNode);
+                transformedNode = expandNodeIfMacroCall(macros, transformedNode);
                 transformedList.add(transformedNode);
             }
             return transformedList;

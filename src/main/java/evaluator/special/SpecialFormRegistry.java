@@ -13,6 +13,7 @@ public class SpecialFormRegistry {
         registry.put("defvar", new Defvar());
         registry.put("defparameter", new Defvar());
         registry.put("setq", new Setq());
+        registry.put("incf", new Incf());
         registry.put("if", new If());
         registry.put("defmacro", new DefMacro());
         registry.put("quote", new Quote());

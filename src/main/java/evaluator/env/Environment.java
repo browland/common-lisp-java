@@ -6,10 +6,12 @@ import value.Value;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.Set;
 
 public class Environment {
     private final GlobalEnvironment globalEnvironment;
     private final Deque<ScopeEnvironment> scopes;
+    private final Deque<Set<Symbol>> tagbodyTags;
 
     public Environment() {
         this(new GlobalEnvironment());
@@ -18,11 +20,13 @@ public class Environment {
     public Environment(GlobalEnvironment globalEnvironment) {
         this.globalEnvironment = globalEnvironment;
         this.scopes = new LinkedList<>();
+        this.tagbodyTags = new LinkedList<>();
     }
 
     public Environment(GlobalEnvironment globalEnvironment, Deque<ScopeEnvironment> scopes) {
         this.globalEnvironment = globalEnvironment;
         this.scopes = scopes;
+        this.tagbodyTags = new LinkedList<>();
     }
 
     public Optional<Value<?>> getVariable(Symbol symbol) {
@@ -165,5 +169,22 @@ public class Environment {
         // This is fulfilled by using the Environment copy constructor above, which points to the existing (single) global
         // environment.
         return new Environment(this.globalEnvironment, new LinkedList<>(this.scopes));
+    }
+
+    public void pushTags(Set<Symbol> tags) {
+        tagbodyTags.push(tags);
+    }
+
+    public void popTags() {
+        tagbodyTags.pop();
+    }
+
+    public boolean tagReachable(Symbol tag) {
+        for (Set<Symbol> thisTagbodyTags : tagbodyTags) {
+            if (thisTagbodyTags.contains(tag)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

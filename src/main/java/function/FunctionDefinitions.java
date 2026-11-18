@@ -7,6 +7,7 @@ import value.FunctionValue;
 public class FunctionDefinitions {
     public static void addFunctionDefinitions(Environment env) {
         env.setFunction(Symbols.internSymbol("+"), new FunctionValue(new Add()));
+        env.setFunction(Symbols.internSymbol("1+"), new FunctionValue(new OnePlus()));
         env.setFunction(Symbols.internSymbol("add"), new FunctionValue(new Add()));
         env.setFunction(Symbols.internSymbol("subtract"), new FunctionValue(new Subtract()));
         env.setFunction(Symbols.internSymbol("-"), new FunctionValue(new Subtract()));
@@ -27,6 +28,7 @@ public class FunctionDefinitions {
         env.setFunction(Symbols.internSymbol(">"), new FunctionValue(new GreaterThan()));
         env.setFunction(Symbols.internSymbol("macroexpand-1"), new FunctionValue(new Macroexpand1()));
         env.setFunction(Symbols.internSymbol("rplaca"), new FunctionValue(new RPlaca()));
+        env.setFunction(Symbols.internSymbol("mapcar"), new FunctionValue(new Mapcar()));
         env.setFunction(Symbols.internSymbol("symbolp"), new FunctionValue(new Symbolp()));
         env.setFunction(Symbols.internSymbol("listp"), new FunctionValue(new Listp()));
         env.setFunction(Symbols.internSymbol("funcall"), new FunctionValue(new Funcall()));
@@ -40,6 +42,7 @@ public class FunctionDefinitions {
         env.setFunction(Symbols.internSymbol("open"), new FunctionValue(new Open()));
         env.setFunction(Symbols.internSymbol("close"), new FunctionValue(new Close()));
         env.setFunction(Symbols.internSymbol("read-char"), new FunctionValue(new ReadChar()));
+        env.setFunction(Symbols.internSymbol("read-line"), new FunctionValue(new ReadLine()));
         env.setFunction(Symbols.internSymbol("gensym"), new FunctionValue(new Gensym()));
     }
 }

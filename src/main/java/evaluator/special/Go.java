@@ -22,6 +22,11 @@ public class Go implements SpecialForm {
         String symbolStr = symbolAtom.value();
         Symbol symbol = Symbols.internSymbol(symbolStr);
 
-        throw new GoException(symbol);
+        if (environment.tagReachable(symbol)) {
+            throw new GoException(symbol);
+        }
+        else {
+            throw new IllegalArgumentException("go: tag not reachable (not currently in a tagbody containing tag " + symbolStr);
+        }
     }
 }

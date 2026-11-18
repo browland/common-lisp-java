@@ -16,23 +16,26 @@ public class Eq implements Function {
         Value<?> operand1 = operands.get(0);
         Value<?> operand2 = operands.get(1);
 
-        if(operand1.getClass() != operand2.getClass()) {
+        if (operand1.getClass() != operand2.getClass()) {
             return new SymbolValue(Symbols.nil());
         }
 
-        if(operand1 instanceof SymbolValue && operand2 instanceof SymbolValue) {
+        if (operand1 instanceof SymbolValue && operand2 instanceof SymbolValue) {
             Symbol sym1 = ((SymbolValue)operand1).getValue();
             Symbol sym2 = ((SymbolValue)operand2).getValue();
 
             return sym1.equals(sym2) ? new SymbolValue(Symbols.t())
                     : new SymbolValue(Symbols.nil());
         }
-        else if(operand1 instanceof IntegerValue && operand2 instanceof IntegerValue) {
+        else if (operand1 instanceof IntegerValue && operand2 instanceof IntegerValue) {
             int int1 = ((IntegerValue)operand1).getValue();
             int int2 = ((IntegerValue)operand2).getValue();
 
             return int1 == int2 ? new SymbolValue(Symbols.t())
                     : new SymbolValue(Symbols.nil());
+        }
+        else if (operand1 instanceof ConsCellValue consValue1 && operand2 instanceof ConsCellValue consValue2) {
+            return consValue1.equals(consValue2) ? new SymbolValue(Symbols.t()) : new SymbolValue(Symbols.nil());
         }
         throw new IllegalArgumentException("eq not fully implemented");
     }
