@@ -38,4 +38,15 @@ class TypeCoercerSpec extends Specification {
         typedAtom instanceof SymbolAtom
     }
 
+    def "detects gensym symbol typed atom"() {
+        given:
+        Atom atom = new Atom("#:G1")
+
+        when:
+        TypedAtom<?> typedAtom = TypeCoercer.coerceType(atom)
+
+        then:
+        typedAtom instanceof SymbolAtom
+    }
+
 }

@@ -64,7 +64,10 @@ public class CompilerBackend {
      */
     private final Deque<Map<String,Integer>> tagToStackBytesAllocated = new LinkedList<>();
 
+    private final Deque<Map<String,String>> blockToAsmBlockNameStack = new LinkedList<>();
+
     private long stringLiteralCounter = 0;
+    private long tagCounter = 0;
 
     public CompilerBackend() {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
@@ -476,13 +479,16 @@ public class CompilerBackend {
     /**
      * Push a set of tags for the current tagbody.  Returns original tag names mapped to their asm label name, avoiding
      * re-use of labels for different tagbody depths.
+     * TODO using depth for uniqueness isn't enough when multiple tagbodies at same depth with same tags
      */
     public Map<String,String> enterTagbody(Set<String> tags) {
-        int newDepth = tagToAsmLabelStack.size() + 1;
+//        int newDepth = tagToAsmLabelStack.size() + 1;
         Map<String,String> tagMap = new HashMap<>();
         for (String tag : tags) {
-            String label = "tag_" + tag + "_" + newDepth;
-            tagMap.put(tag, label);
+            String label = "tag_" + tag + "_" + tagCounter;
+            String mangledLabel = SymbolMangling.mangle(label);
+            tagMap.put(tag, mangledLabel);
+            tagCounter++;
         }
 
         tagToAsmLabelStack.push(tagMap);
@@ -503,6 +509,25 @@ public class CompilerBackend {
     public void leaveTagbody() {
         tagToAsmLabelStack.pop();
         tagToStackBytesAllocated.pop();
+    }
+
+    public void enterBlock(String blockName, String asmBlockName) {
+        Map<String,String> blockNameToAsmName = new HashMap<>();
+        blockNameToAsmName.put(blockName, asmBlockName);
+        blockToAsmBlockNameStack.push(blockNameToAsmName);
+    }
+
+    public void leaveBlock() {
+        blockToAsmBlockNameStack.pop();
+    }
+
+    public String findBlockAsmName(String name) {
+        for (Map<String,String> blockToAsmName : blockToAsmBlockNameStack) {
+            if (blockToAsmName.containsKey(name)) {
+                return blockToAsmName.get(name);
+            }
+        }
+        throw new IllegalStateException("Block name not found: " + name);
     }
 
     public Optional<String> getAsmLabelForTag(String tagName) {

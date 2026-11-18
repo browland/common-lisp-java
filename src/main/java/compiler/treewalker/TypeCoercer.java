@@ -26,6 +26,9 @@ public class TypeCoercer {
             if ('\\' == stringValue.charAt(1)) {
                 // We can't super-easily parse the character due to special char values like #\Newline so we dispatch to something else
                 return CharAtom.parse(atom);
+            } else if (':' == stringValue.charAt(1)) {
+                // gensym symbol
+                return new SymbolAtom(atom, stringValue);
             } else {
                 throw new IllegalArgumentException("Unhandled atom for type co-ercing: " + atom);
             }

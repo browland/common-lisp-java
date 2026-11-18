@@ -40,7 +40,8 @@ public class ReturnFromSpecialForm implements SpecialForm {
             treeWalker.walkTree(returnValueNode);
         }
 
-        String endLabel = "block_" + returnFromName + "_end";
+        String asmBlockName = backend.findBlockAsmName(returnFromName);
+        String endLabel = "block_" + asmBlockName + "_end";
         backend.jumpToLabel(endLabel);
     }
 }

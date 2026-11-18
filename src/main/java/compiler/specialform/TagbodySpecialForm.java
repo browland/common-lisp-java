@@ -12,6 +12,8 @@ import syntaxtree.RList;
 import java.util.*;
 
 public class TagbodySpecialForm implements SpecialForm {
+    private static int counter = 0;
+
     @Override
     public void walkTree(RList rlist, TreeWalker treeWalker, CompilerBackend backend) {
         // TODO Each tag has its own lexical scope, e.g. setf of variable bound outside won't affect the outer scope.
