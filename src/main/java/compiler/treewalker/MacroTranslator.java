@@ -12,10 +12,7 @@ import syntaxtree.RList;
 import value.Macro;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Separate phase where the program is inspected for any macro definitions - these are stored and then any invocations
@@ -28,6 +25,7 @@ public class MacroTranslator {
     private final Environment environment = new Environment();
     private final Interpreter interpreter = new Interpreter(environment);
     private final ScriptLoader scriptLoader = new ScriptLoader(interpreter);
+    private final Map<String,Macro> macros = new HashMap<>();
 
     public MacroTranslator(boolean loadScripts) {
         FunctionDefinitions.addFunctionDefinitions(environment);
@@ -45,7 +43,6 @@ public class MacroTranslator {
         // First pass: look for any top-level defmacro forms and store them.  This has the side-effect of allowing macros
         // to be invoked before declaration, but for now no big deal.
 
-        Map<String,Macro> macros = new HashMap<>();
         for (Node node : nodes) {
             if (node instanceof RList rlist) {
                 Node firstNode = rlist.nodes().getFirst();
@@ -75,12 +72,18 @@ public class MacroTranslator {
             if (operatorNode instanceof Atom operatorAtom) {
                 if (macros.containsKey(operatorAtom.value())) {
                     Macro macro = macros.get(operatorAtom.value());
-                    return macroExpander.expand(macro, rlist, evaluator, environment);
+                    Node expandedNode = macroExpander.expand(macro, rlist, evaluator, environment);
+
+                    // Always look for a macro call one more time when if we found a macro to deal with inner macro calls
+                    return expandNodeIfMacro(macros, expandedNode);
                 }
             }
+
             RList transformedList = new RList();
             for (Node innerNode : rlist.nodes()) {
                 Node transformedNode = expandNodeIfMacro(macros, innerNode);
+                // Always look for a macro call one more time when if we found a macro to deal with inner macro calls
+                transformedNode = expandNodeIfMacro(macros, transformedNode);
                 transformedList.add(transformedNode);
             }
             return transformedList;
@@ -101,5 +104,9 @@ public class MacroTranslator {
         String name = nameAtom.value();
 
         return new Macro(bindings, bodyNodes, name);
+    }
+
+    Set<String> getMacroNames() {
+        return macros.keySet();
     }
 }

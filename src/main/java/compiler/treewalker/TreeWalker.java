@@ -1,47 +1,34 @@
 package compiler.treewalker;
 
-import compiler.*;
-import compiler.specialform.*;
+import compiler.Namespace;
+import compiler.specialform.SpecialForm;
 import reader.NodeBuilder;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 // Beginnings of compiler and might end up being retro-fitted to the existing interpreter as a general case of tree-
 // walking.
 public class TreeWalker {
     private final CompilerBackend backend = new CompilerBackend();
-    private final Map<String, SpecialForm> specialForms = new HashMap<>();
     private final MacroTranslator macroTranslator;
 
     public TreeWalker(boolean loadScripts) {
-        specialForms.put("if", new IfSpecialForm());
-        specialForms.put("defun", new DefunSpecialForm());
-        specialForms.put("defvar", new DefvarSpecialForm());
-        specialForms.put("lambda", new LambdaSpecialForm());
-        specialForms.put("let", new LetSpecialForm());
-        specialForms.put("function", new FunctionSpecialForm());
-        specialForms.put("setq", new SetqSpecialForm());
-        specialForms.put("block", new BlockSpecialForm());
-        specialForms.put("return-from", new ReturnFromSpecialForm());
-        specialForms.put("tagbody", new TagbodySpecialForm());
-        specialForms.put("go", new GoSpecialForm());
-        specialForms.put("quote", new QuoteSpecialForm());
-        specialForms.put("incf", new IncfSpecialForm());
-
         macroTranslator = new MacroTranslator(loadScripts);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         NodeBuilder nodeBuilder = new NodeBuilder();
-        TreeWalker walker = new TreeWalker(false);
+        TreeWalker walker = new TreeWalker(false);  // TODO put this back to true
 
         String program;
         if (args.length > 0) {
@@ -91,6 +78,8 @@ public class TreeWalker {
         // We now use similar code to MacroExpand1 except much simpler as no need to deal with Value; it's just nodes.
         // List<Node> transformedNodes = macroExpander.expand(nodes);
         List<Node> expandedNodes = macroTranslator.transformMacros(nodes);
+        Set<String> declaredMacroNames = macroTranslator.getMacroNames();
+        backend.registerMacros(declaredMacroNames);
 
         backend.startProgram();
 
@@ -161,7 +150,7 @@ public class TreeWalker {
         }
 
         // First check operator symbol for match on special forms which are statically defined.
-        SpecialForm specialForm = specialForms.get(sa.getValue());
+        SpecialForm specialForm = backend.findSpecialForm(sa.getValue());
         if (specialForm != null) {
             System.out.println("Found special form for symbol " + sa.getValue());
             specialForm.walkTree(rlist, this, backend);

@@ -37,7 +37,7 @@ class CompilerSpec extends Specification {
         "(1+ 1)"                                             || "2"
         "nil"                                                || "nil"
         "t"                                                  || "t"
-        "(add 1 2)"                                          || "3"
+        "(+ 1 2)"                                            || "3"
         "(+ 1 2)"                                            || "3"
         "(+ 1 (+ 1 2))"                                      || "4"
         "(> 2 1)"                                            || "t"
@@ -63,6 +63,8 @@ class CompilerSpec extends Specification {
         "(if t 1 2)"                                         || "1"
         "(if nil 1 2)"                                       || "2"
         "(+ 1 (if t 1 2))"                                   || "2"
+        "(if t 'true)"                                       || "true"
+        "(if nil 'neverseethis)"                             || "nil"
     }
 
     def "cons and list tests"() {
@@ -106,6 +108,8 @@ class CompilerSpec extends Specification {
         "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"                || false
         "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"                || false
         "(defvar *x* 1) ((lambda (y) (+ y *x*)) 2)"          || "3"                || false
+        "((lambda (x) (if x 'true 'false)) t)"               || "true"             || false
+        "(defmacro foo () 1) ((lambda () (+ (foo) 1)))"      || "2"                || false
     }
 
     def "function tests"() {
@@ -113,15 +117,22 @@ class CompilerSpec extends Specification {
         compile(program)
 
         then:
-        run() == expectedResult
+        checkContains ? run().contains(expectedResult) : run() == expectedResult
 
         where:
-        program || expectedResult
-        "(defun foo () 2) (foo)"                             || "2"
-        "(defun foo () (add 1 1)) (if t (foo) (add 1 2))"    || "2"
-        "(defun first (x y) x) (first 1 2)"                  || "1"
-        "(defun adder (x y) (+ x y)) (adder 1 2)"            || "3"
-        "(function add)"                                     || "#<FUNCTION add>"
+        program                                              || expectedResult               || checkContains
+        "(defun foo () 2) (foo)"                             || "2"                          || false
+        "(defun foo () (+ 1 1)) (if t (foo) (+ 1 2))"        || "2"                          || false
+        "(defun first (x y) x) (first 1 2)"                  || "1"                          || false
+        "(defun adder (x y) (+ x y)) (adder 1 2)"            || "3"                          || false
+        "(function +)"                                       || "#<FUNCTION +>"              || false
+        "#'+"                                                || "#<FUNCTION +>"              || false
+        "(function (lambda (x) (if x 'true 'false)))"        || "#<FUNCTION (lambda (x) ())" || true
+        "(let ((x 1)) ((lambda () (+ 1 x))))"                || "2"                          || false
+        "(let ((x 1)) ((lambda () (+ 1 1))) x)"              || "1"                          || false
+        "(let ((x 1)) #'(lambda () (+ 1 1)) x)"              || "1"                          || false    // TODO the bug I'm trying to fix; lambda poisons function stack in CompilerBackend - it becomes current stack frame which is wrong
+//        "(defun foo () (let ((x 1)) (+ x 1))) (foo)"         || "2"                          || false  // TODO this hangs!
+
     }
 
     def "block tests"() {

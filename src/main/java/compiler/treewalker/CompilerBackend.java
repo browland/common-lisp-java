@@ -2,6 +2,7 @@ package compiler.treewalker;
 
 import compiler.AsmGenerator;
 import compiler.Namespace;
+import compiler.specialform.*;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 
@@ -14,7 +15,13 @@ public class CompilerBackend {
     private final AsmGenerator asmGenerator = new AsmGenerator();
 
     /*
-     Used for keeping track of stack offsets as we create new scopes.
+     Used for keeping track of stack offsets as we create new scopes.  Each of these either represents a function call,
+     or lambda evaluation.  We keep this stack, as if function a calls function b, then b shouldn't see a's lexical scope.
+     But when b returns, a's lexical scope is once again available.
+     Each Function has a stack of bindings (e.g. function or let bindings) within, all visible to that function.
+     There's a quirk with lambdas - they also use this approach in order to keep track of offsets during nested evaluation.
+     E.g. one lambda may call another, like functions.  But lambdas are closures and they capture outer scopes, but this is
+     handled separately (escape analysis).
      */
     private final Deque<Function> functionStack = new LinkedList<>();
 
@@ -25,6 +32,8 @@ public class CompilerBackend {
      */
     private final Map<String,Function> functionsMap = new HashMap<>();
 
+    private final Map<String, SpecialForm> specialForms = new HashMap<>();
+
     /*
      Used to avoid double-allocating a symbol, as we create the entry statically.
      */
@@ -34,6 +43,8 @@ public class CompilerBackend {
      Symbols which have a value in the data namespace.
      */
     private final Set<String> declaredVariableNames = new HashSet<>();
+
+    private final Set<String> declaredMacroNames = new HashSet<>();
 
     /*
      * Each Map in the Deque represents a tagbody in the current lexical scope; multiple Maps imply nested tagbodys.
@@ -58,8 +69,7 @@ public class CompilerBackend {
     public CompilerBackend() {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
         // operator name.
-        functionsMap.put("add", new Function("add", false));
-        functionsMap.put("+", new Function("add", false));
+        functionsMap.put("+", new Function("+", false));
         functionsMap.put("cons", new Function("cons", false));
         functionsMap.put("list", new Function("list", true));
         functionsMap.put("car", new Function("car", false));
@@ -74,6 +84,23 @@ public class CompilerBackend {
         functionsMap.put("format", new Function("format", true));
         functionsMap.put("assoc", new Function("assoc", false));
         functionsMap.put("funcall", new Function("funcall", true));
+
+        specialForms.put("if", new IfSpecialForm());
+        specialForms.put("defun", new DefunSpecialForm());
+        specialForms.put("defvar", new DefvarSpecialForm());
+        specialForms.put("lambda", new LambdaSpecialForm());
+        specialForms.put("let", new LetSpecialForm());
+        specialForms.put("function", new FunctionSpecialForm());
+        specialForms.put("setq", new SetqSpecialForm());
+        specialForms.put("block", new BlockSpecialForm());
+        specialForms.put("return-from", new ReturnFromSpecialForm());
+        specialForms.put("tagbody", new TagbodySpecialForm());
+        specialForms.put("go", new GoSpecialForm());
+        specialForms.put("quote", new QuoteSpecialForm());
+        specialForms.put("incf", new IncfSpecialForm());
+
+        declaredVariableNames.add("t");
+        declaredVariableNames.add("nil");
     }
 
     public void startProgram() {
@@ -203,6 +230,7 @@ public class CompilerBackend {
         asmGenerator.freeSpaceOnStack(stackBytes);
         asmGenerator.endFunction();
         asmGenerator.endFunctionDef();
+        functionStack.pop();
     }
 
     public void storeResultToSymbolValue(String symbolName) {
@@ -412,6 +440,10 @@ public class CompilerBackend {
         return functionsMap.get(symbol);
     }
 
+    public SpecialForm findSpecialForm(String symbol) {
+        return specialForms.get(symbol);
+    }
+
     public Set<String> getDeclaredFunctionNames() {
         return functionsMap.keySet();
     }
@@ -524,5 +556,17 @@ public class CompilerBackend {
     public void handleStringLiteral(StringAtom stringAtom) {
         String stringLabel = asmGenerator.createStringLiteral(stringAtom.value, stringLiteralCounter++);
         asmGenerator.loadStringLiteralTaggedPtr(stringLabel);
+    }
+
+    public Set<String> getSpecialFormNames() {
+        return specialForms.keySet();
+    }
+
+    public void registerMacros(Set<String> declaredMacroNames) {
+        this.declaredMacroNames.addAll(declaredMacroNames);
+    }
+
+    public Set<String> getMacroNames() {
+        return declaredMacroNames;
     }
 }

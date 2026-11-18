@@ -55,7 +55,7 @@ uintptr_t funcall(uintptr_t* args, long numArgs);
 
 // Function objects
 struct Function add_fxn = {
-    "add",
+    "+",
     (uintptr_t)&add
 };
 
@@ -135,7 +135,7 @@ struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
 
 // Populate symbol table with functions
 // We need to tag them using + rather than | so we achieve compile-time constants
-struct SymbolEntry add_sym = {"add", (uintptr_t)NULL, (uintptr_t)&add_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry CL_2B_sym = {"+", (uintptr_t)NULL, (uintptr_t)&add_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry cons_sym = {"cons", (uintptr_t)NULL, (uintptr_t)&cons_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry list_sym = {"list", (uintptr_t)NULL, (uintptr_t)&list_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry car_sym = {"car", (uintptr_t)NULL, (uintptr_t)&car_fxn + TYPE_TAG_FUNCTION};

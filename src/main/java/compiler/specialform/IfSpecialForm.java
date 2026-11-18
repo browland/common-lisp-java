@@ -1,5 +1,6 @@
 package compiler.specialform;
 
+import compiler.Namespace;
 import compiler.treewalker.CompilerBackend;
 import compiler.treewalker.TreeWalker;
 import syntaxtree.Node;
@@ -14,7 +15,9 @@ public class IfSpecialForm implements SpecialForm {
         // if we eval the first form then we'll end up with the result in x0.
         Node conditionNode = rlist.get(1);
         Node trueNode = rlist.get(2);
-        Node falseNode = rlist.get(3);
+
+        // The 'else' node is optional; if omitted and the 'true' branch is false then no action is taken and nil is returned.
+        Node falseNode = rlist.size() > 3 ? rlist.get(3) : null;
 
         treeWalker.walkTree(conditionNode);
 
@@ -32,14 +35,23 @@ public class IfSpecialForm implements SpecialForm {
         // check for t, will set x0 to 0 if result was true
         backend.resultWasT();
 
-        // generate code to inspect result and depending on whether it's t or not then evaluate the appropriate form
         long thisBranchCounter = BRANCH_COUNTER++;
-        String falseLabel = "if_false_" + thisBranchCounter;
-        String trueLabel = "if_true" + thisBranchCounter;
+
+        String nilLabel = "if_nil" + thisBranchCounter;
         String exitLabel = "if_exit" + thisBranchCounter;
+        if (falseNode == null) {
+            backend.jumpToLabelIfResultNonZero(nilLabel);
+        }
+
+        // generate code to inspect result and depending on whether it's t or not then evaluate the appropriate form
+        String trueLabel = "if_true" + thisBranchCounter;
 
         // Jump to false if required; we fall through to code for true branch
-        backend.jumpToLabelIfResultNonZero(falseLabel);
+        String falseLabel = null;
+        if (falseNode != null) {
+            falseLabel = "if_false_" + thisBranchCounter;
+            backend.jumpToLabelIfResultNonZero(falseLabel);
+        }
 
         // generate code for the two branches, each with a label; true first.  We also need an exit label.
         backend.generateLabel(trueLabel);
@@ -47,9 +59,17 @@ public class IfSpecialForm implements SpecialForm {
         backend.jumpToLabel(exitLabel);  // jump to exit
 
         // generate false branch code
-        backend.generateLabel(falseLabel);
-        treeWalker.walkTree(falseNode);
-        backend.jumpToLabel(exitLabel);  // jump to exit
+        if (falseNode != null) {
+            backend.generateLabel(falseLabel);
+            treeWalker.walkTree(falseNode);
+            backend.jumpToLabel(exitLabel);  // jump to exit
+        }
+        else {
+            // generate code for the nil branch (condition false and no else clause)
+            backend.generateLabel(nilLabel);
+            backend.handleSymbolOperand("nil", Namespace.VARIABLE);
+            backend.jumpToLabel(exitLabel);  // jump to exit
+        }
 
         backend.generateLabel(exitLabel);
 
