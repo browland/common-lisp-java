@@ -6,7 +6,7 @@
             ,@forms
             (close ,sref_var)))
 
-(with-open-file (infile "/Users/ben/git/lisp/aoc/2025/1/test.txt")
+(with-open-file (infile "/Users/ben/git/lisp/aoc/2025/1/input.txt")
     (block fileLoop
         (tagbody
             top

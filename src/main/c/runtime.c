@@ -197,21 +197,24 @@ char *printValue(uintptr_t taggedValue, bool useQuotes) {
     long tag = taggedValue & tagMask;
     long value = 0L;
 
-    // TODO Be careful with string termination at 255 chars
-    char *resultStr = (char*)malloc(255 * sizeof(char));
-
     if (tag == TYPE_TAG_FIXNUM) {
+        // TODO Be careful with string termination at 255 chars
+        char *resultStr = (char*)malloc(255 * sizeof(char));
         value = taggedValue >> 3;
         sprintf(resultStr, "%ld", value);
         return resultStr;
     }
     else if (tag == TYPE_TAG_CLOSURE ) {
+        // TODO Be careful with string termination at 255 chars
+        char *resultStr = (char*)malloc(255 * sizeof(char));
         value = taggedValue & 0xFFFFFFFFFFFFFFF8;
         void *closurePtr = (void*)value;
         sprintf(resultStr, "%p", closurePtr);
         return resultStr;
     }
     else if (tag == TYPE_TAG_SYMBOL) {
+        // TODO Be careful with string termination at 255 chars
+        char *resultStr = (char*)malloc(255 * sizeof(char));
         struct SymbolEntry *symEntry = (struct SymbolEntry*)(taggedValue & 0xFFFFFFFFFFFFFFF8);
         sprintf(resultStr, "%s", symEntry->symbol);
         return resultStr;
@@ -224,10 +227,17 @@ char *printValue(uintptr_t taggedValue, bool useQuotes) {
         uintptr_t cdr = c->cdr;
         char *carStr = printValue(car, true);
         char *cdrStr = printValue(cdr, true);
+
+        // Allocate result buffer which is size of car and cdr, plus the enclosing brackets, spaces and dot and null char.
+        size_t resultSize = strlen(carStr) + strlen(cdrStr) + 5 +1;
+        char *resultStr = malloc(resultSize * sizeof(char));
+
         sprintf(resultStr, "(%s . %s)", carStr, cdrStr);
         return resultStr;
     }
     else if (tag == TYPE_TAG_STR) {
+        // TODO Be careful with string termination at 255 chars
+        char *resultStr = (char*)malloc(255 * sizeof(char));
         char *rawString = (char*)(taggedValue & 0xFFFFFFFFFFFFFFF8);
         if (useQuotes) {
             sprintf(resultStr, "\"%s\"", rawString);
