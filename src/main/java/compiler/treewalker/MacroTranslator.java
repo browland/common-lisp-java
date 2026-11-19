@@ -4,12 +4,16 @@ import evaluator.Evaluator;
 import evaluator.Interpreter;
 import evaluator.ScriptLoader;
 import evaluator.env.Environment;
+import evaluator.env.Symbols;
 import evaluator.macro.MacroExpander;
 import function.FunctionDefinitions;
 import syntaxtree.Atom;
 import syntaxtree.Node;
 import syntaxtree.RList;
 import value.Macro;
+import value.MacroValue;
+import value.Symbol;
+import value.Value;
 
 import java.io.IOException;
 import java.util.*;
@@ -25,7 +29,7 @@ public class MacroTranslator {
     private final Environment environment = new Environment();
     private final Interpreter interpreter = new Interpreter(environment);
     private final ScriptLoader scriptLoader = new ScriptLoader(interpreter);
-    private final Map<String,Macro> macros = new HashMap<>();
+    private final Map<String,Macro> localMacros = new HashMap<>();
 
     public MacroTranslator(boolean loadScripts) {
         FunctionDefinitions.addFunctionDefinitions(environment);
@@ -47,7 +51,7 @@ public class MacroTranslator {
                 if (firstNode instanceof Atom atom) {
                     if ("defmacro".equals(atom.value())) {
                         Macro macro = createMacro(rlist);
-                        macros.put(macro.getName(), macro);
+                        localMacros.put(macro.getName(), macro);
                     }
                 }
             }
@@ -66,7 +70,7 @@ public class MacroTranslator {
         // We still need to evaluate any forms we encounter as macro definitions might use them.
         List<Node> transformedNodes = new ArrayList<>();
         for (Node node : nodes) {
-            transformedNodes.add(expandNodeIfMacroCall(macros, node));
+            transformedNodes.add(expandNodeIfMacroCall(localMacros, node));
         }
 
         return transformedNodes;
@@ -78,11 +82,24 @@ public class MacroTranslator {
                 return node;
             }
             Node operatorNode = rlist.nodes().getFirst();
-            if (operatorNode instanceof Atom operatorAtom) {
-                if (macros.containsKey(operatorAtom.value())) {
-                    Macro macro = macros.get(operatorAtom.value());
-                    Node expandedNode = macroExpander.expand(macro, rlist, evaluator, environment);
+            if (operatorNode instanceof Atom(String value)) {
+                Macro matchedMacro = null;
 
+                if (macros.containsKey(value)) {
+                    matchedMacro = macros.get(value);
+                }
+                else if (environment.getMacro(Symbols.internSymbol(value)).isPresent()) {
+                    Symbol macroSymbol = Symbols.internSymbol(value);
+                    Optional<Value<?>> optionalMacroValue = environment.getMacro(macroSymbol);
+                    if (optionalMacroValue.isPresent()) {
+                        Value<?> possibleMacroValue = optionalMacroValue.get();
+                        if (possibleMacroValue instanceof MacroValue macroValue)
+                            matchedMacro = macroValue.getValue();
+                    }
+                }
+
+                if (matchedMacro != null) {
+                    Node expandedNode = macroExpander.expand(matchedMacro, rlist, evaluator, environment);
                     // Always look for a macro call one more time when if we found a macro to deal with inner macro calls
                     return expandNodeIfMacroCall(macros, expandedNode);
                 }
@@ -117,6 +134,6 @@ public class MacroTranslator {
     }
 
     Set<String> getMacroNames() {
-        return macros.keySet();
+        return localMacros.keySet();
     }
 }
