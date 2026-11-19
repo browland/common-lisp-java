@@ -64,6 +64,11 @@ public class CompilerBackend {
      */
     private final Deque<Map<String,Integer>> tagToStackBytesAllocated = new LinkedList<>();
 
+    /*
+     * Same idea as tagToStackBytesAllocated, but for blocks
+     */
+    private final Deque<Map<String,Integer>> blockToStackBytesAllocated = new LinkedList<>();
+
     private final Deque<Map<String,String>> blockToAsmBlockNameStack = new LinkedList<>();
 
     private long stringLiteralCounter = 0;
@@ -515,10 +520,15 @@ public class CompilerBackend {
         Map<String,String> blockNameToAsmName = new HashMap<>();
         blockNameToAsmName.put(blockName, asmBlockName);
         blockToAsmBlockNameStack.push(blockNameToAsmName);
+
+        Map<String,Integer> blockNameToBytesAllocated = new HashMap<>();
+        blockNameToBytesAllocated.put(blockName, 0);
+        blockToStackBytesAllocated.push(blockNameToBytesAllocated);
     }
 
     public void leaveBlock() {
         blockToAsmBlockNameStack.pop();
+        blockToStackBytesAllocated.pop();
     }
 
     public String findBlockAsmName(String name) {
@@ -560,14 +570,47 @@ public class CompilerBackend {
                 }
             }
         }
+
+        if (!blockToStackBytesAllocated.isEmpty()) {
+            for (Map<String,Integer> blockToBytesAllocated : blockToStackBytesAllocated) {
+                // Map should be single-valued
+                if (blockToBytesAllocated.size() != 1) {
+                    throw new IllegalStateException("Block to bytes allocated does not have 1 entry!");
+                }
+
+                int newBytes = 0;
+                String blockName = null;
+
+                // Weird to use map iterator as there's exactly 1 entry
+                for (Map.Entry<String,Integer> entry : blockToBytesAllocated.entrySet()) {
+                    int bytesAllocated = entry.getValue();
+                    newBytes = bytesAllocated + bytes;
+                    blockName = entry.getKey();
+                }
+
+                blockToBytesAllocated.put(blockName, newBytes);
+            }
+        }
     }
 
     public int getAllocatedBytesFromNearestTag(String tag) {
-        Iterator<Map<String, Integer>> mapIterator = tagToStackBytesAllocated.descendingIterator();
-        while (mapIterator.hasNext()) {
-            Map<String, Integer> currentTagScope = mapIterator.next();
+        Iterator<Map<String, Integer>> tagbodyIterator = tagToStackBytesAllocated.descendingIterator();
+        while (tagbodyIterator.hasNext()) {
+            Map<String, Integer> currentTagScope = tagbodyIterator.next();
             if (currentTagScope.containsKey(tag)) {
                 return currentTagScope.get(tag);
+            }
+        }
+
+        return 0;
+    }
+
+    public int getAllocatedBytesFromNearestBlock(String blockName) {
+        Iterator<Map<String, Integer>> blockIterator = blockToStackBytesAllocated.descendingIterator();
+        while (blockIterator.hasNext()) {
+            Map<String, Integer> blockToBytes = blockIterator.next();
+            if (blockToBytes.containsKey(blockName)) {
+                return blockToBytes.get(blockName);
             }
         }
 

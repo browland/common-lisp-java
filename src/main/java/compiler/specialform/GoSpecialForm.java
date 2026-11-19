@@ -28,11 +28,14 @@ public class GoSpecialForm implements SpecialForm {
             throw new IllegalArgumentException("No tag supplied in go: " + rlist);
         }
 
-        String asmLabel = backend.getAsmLabelForTag(tagName).orElseThrow(() -> new IllegalArgumentException("Cannot find tag in current scope: " + rlist));
+        // Free any stack bytes left allocated beyond the tag we're jumping to; free those to prevent a stack leak
         int stackBytesStillAllocated = backend.getAllocatedBytesFromNearestTag(tagName);
         if (stackBytesStillAllocated > 0) {
             backend.freeStackBytes(stackBytesStillAllocated);
         }
+
+        String asmLabel = backend.getAsmLabelForTag(tagName)
+                .orElseThrow(() -> new IllegalArgumentException("Cannot find tag in current scope: " + rlist));
         backend.jumpToLabel(asmLabel);
     }
 }

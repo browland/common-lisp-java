@@ -68,6 +68,7 @@ public class MacroTranslator {
         for (Node node : nodes) {
             transformedNodes.add(expandNodeIfMacroCall(macros, node));
         }
+
         return transformedNodes;
     }
 

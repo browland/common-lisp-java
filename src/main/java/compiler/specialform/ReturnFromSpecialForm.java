@@ -40,6 +40,13 @@ public class ReturnFromSpecialForm implements SpecialForm {
             treeWalker.walkTree(returnValueNode);
         }
 
+
+        // Free any stack bytes left allocated beyond the tag we're jumping to; free those to prevent a stack leak
+        int stackBytesStillAllocated = backend.getAllocatedBytesFromNearestBlock(returnFromName);
+        if (stackBytesStillAllocated > 0) {
+            backend.freeStackBytes(stackBytesStillAllocated);
+        }
+
         String asmBlockName = backend.findBlockAsmName(returnFromName);
         String endLabel = "block_" + asmBlockName + "_end";
         backend.jumpToLabel(endLabel);
