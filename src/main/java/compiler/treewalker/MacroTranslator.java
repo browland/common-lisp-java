@@ -73,6 +73,8 @@ public class MacroTranslator {
             transformedNodes.add(expandNodeIfMacroCall(localMacros, node));
         }
 
+        System.out.println("Transformed forms: " + transformedNodes);
+
         return transformedNodes;
     }
 

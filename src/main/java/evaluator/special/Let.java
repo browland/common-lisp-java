@@ -48,11 +48,15 @@ public class Let implements SpecialForm {
 
         for(Node bindingNode : bindings.nodes()) {
             if(bindingNode instanceof RList bindingList) {
-                Atom name = (Atom)bindingList.get(0);
-                Symbol nameSymbol = Symbols.internSymbol(name.value());
-                Node value = bindingList.get(1);
-                Value<?> evaluatedValue = evaluator.evaluate(value, environment);
-                evaluatedBindings.put(nameSymbol, evaluatedValue);
+                if (bindingList.get(0) instanceof Atom(String bindingName)) {
+                    Symbol nameSymbol = Symbols.internSymbol(bindingName);
+                    Node value = bindingList.get(1);
+                    Value<?> evaluatedValue = evaluator.evaluate(value, environment);
+                    evaluatedBindings.put(nameSymbol, evaluatedValue);
+                }
+                else {
+                    throw new EvaluationException("unexpected binding name - was a list and not an atom");
+                }
             }
             else {
                 throw new EvaluationException("let binding name must be an atom but was %s".formatted(bindingNode));
