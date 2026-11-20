@@ -131,8 +131,9 @@ class CompilerSpec extends Specification {
         "(function (lambda (x) (if x 'true 'false)))"        || "#<FUNCTION (lambda (x) ())" || true
         "(let ((x 1)) ((lambda () (+ 1 x))))"                || "2"                          || false
         "(let ((x 1)) ((lambda () (+ 1 1))) x)"              || "1"                          || false
-        "(let ((x 1)) #'(lambda () (+ 1 1)) x)"              || "1"                          || false    // TODO the bug I'm trying to fix; lambda poisons function stack in CompilerBackend - it becomes current stack frame which is wrong
-//        "(defun foo () (let ((x 1)) (+ x 1))) (foo)"         || "2"                          || false  // TODO this hangs!
+        "(let ((x 1)) #'(lambda () (+ 1 1)) x)"              || "1"                          || false
+        "(defvar x 10) (defun test (x) x) (test 9)"          || "9"                          || false
+        "(defun foo () (let ((x 1)) (+ x 1))) (foo)"         || "2"                          || false
 
     }
 

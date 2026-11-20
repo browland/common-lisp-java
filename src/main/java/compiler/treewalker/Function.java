@@ -64,6 +64,10 @@ public class Function {
         stackOffsetsStack.push(new HashMap<>());
     }
 
+    public void popStackOffsetFrame() {
+        stackOffsetsStack.pop();
+    }
+
     public void pushStackOffset(String name, int offset) {
         Map<String,Integer> stackOffsets = stackOffsetsStack.peek();
         stackOffsets.put(name, offset);

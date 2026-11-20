@@ -264,6 +264,13 @@ public class CompilerBackend {
         currentScope.pushStackOffsetFrame();
     }
 
+    public void popStackOffsetFrame() {
+        // for let bindings; nested frames of stack offsets within current function stack frame; we need to update our tracking of them once each let block ends
+        // (otherwise when the enclosing function ends our calculation of how much stack bytes to free will still include these allocations)
+        Function currentScope = functionStack.peek();
+        currentScope.popStackOffsetFrame();
+    }
+
     public void storeResultingLetBindingToStack(int numBindings, int bindingIndex, String bindingName) {
         System.out.println("let: copying operand from register %d to stack at sp+%d\n".formatted(bindingIndex, bindingIndex*8));
         asmGenerator.storeResultToStack(bindingIndex);

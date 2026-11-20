@@ -43,6 +43,7 @@ public class LetSpecialForm implements SpecialForm {
         }
 
         backend.freeStackForVariables(numBindings);
+        backend.popStackOffsetFrame();
         backend.writeComment("end let: " + rlist);
     }
 }
