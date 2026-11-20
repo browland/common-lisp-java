@@ -34,6 +34,7 @@ class CompilerSpec extends Specification {
         where:
         program                                              || expectedResult
         "2"                                                  || "2"
+        "-2"                                                 || "-2"
         "(1+ 1)"                                             || "2"
         "nil"                                                || "nil"
         "t"                                                  || "t"
@@ -220,6 +221,21 @@ class CompilerSpec extends Specification {
         program                                              || expectedResult
         "(defvar *x* 1) (incf *x*) *x*"                      || "2"
         "(let ((x 1)) (incf x) x)"                           || "2"
+    }
+
+    def "mod tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program           || expectedResult
+        "(mod 18 100)"    || "18"
+        "(mod 118 100)"   || "18"
+        "(mod -18 100)"   || "82"
+        "(mod -118 100)"  || "82"
     }
 
     def "macro tests"() {

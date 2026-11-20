@@ -5,22 +5,23 @@ import syntaxtree.Atom;
 public class TypeCoercer {
     public static TypedAtom<?> coerceType(Atom atom) {
         String stringValue = atom.value();
+
+        try {
+            int val = Integer.parseInt(stringValue);
+            return new IntAtom(atom, val);
+        }
+        catch(NumberFormatException e) {}
+
+        try {
+            double val = Double.parseDouble(stringValue);
+            return new FloatAtom(atom, val);
+        }
+        catch(NumberFormatException e) {}
+
         char firstChar = stringValue.charAt(0);
         if (firstChar == '"') {
             String stringValueNoQuotes = stringValue.replace("\"", "");
             return new StringAtom(atom, stringValueNoQuotes);
-        } else if (Character.isDigit(firstChar) && (!stringValue.equals("1+"))) {  // todo fix this; symbol mangling scheme isn't enough
-            // must be either int or float
-            for (int j = 1; j < stringValue.length(); j++) {  // inner loop to detect decimal point
-                char innerC = stringValue.charAt(j);
-                if (innerC == '.') {
-                    Double d = Double.parseDouble(stringValue);
-                    return new FloatAtom(atom, d);
-                }
-            }
-            // at this point it must be an integer type
-            Integer intValue = Integer.parseInt(stringValue);
-            return new IntAtom(atom, intValue);
         } else if (firstChar == '#') {
             // only known case now is character literal (we've already handled other things like function quote in the Tokeniser
             if ('\\' == stringValue.charAt(1)) {

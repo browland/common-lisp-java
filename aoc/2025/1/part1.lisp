@@ -5,12 +5,17 @@
 
 (defvar lines nil)
 
-(with-open-file (infile "/Users/ben/git/lisp/aoc/2025/1/input.txt")
+(with-open-file (infile "/Users/ben/git/lisp/aoc/2025/1/test.txt")
   (do ((line nil line) (done nil done))
     ((eq done t) lines)
-    (format t "here")
     (setq line (read-line infile nil))
-    (if (eq line nil) (setq done t) (push line lines))
-    (format t "current line: ~S" line)))
+    (if (eq line nil) (setq done t) (push line lines))))
 
 lines
+
+(defun rotate (start clockwise steps)
+  (if clockwise (mod (+ start steps) 100)
+    (mod (- start steps) 100)))
+
+;(rotate 50 nil 68)
+(- 50 68)

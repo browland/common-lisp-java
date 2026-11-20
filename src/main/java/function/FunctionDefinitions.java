@@ -7,6 +7,7 @@ import value.FunctionValue;
 public class FunctionDefinitions {
     public static void addFunctionDefinitions(Environment env) {
         env.setFunction(Symbols.internSymbol("+"), new FunctionValue(new Add()));
+        env.setFunction(Symbols.internSymbol("-"), new FunctionValue(new Minus()));
         env.setFunction(Symbols.internSymbol("1+"), new FunctionValue(new OnePlus()));
         env.setFunction(Symbols.internSymbol("add"), new FunctionValue(new Add()));
         env.setFunction(Symbols.internSymbol("subtract"), new FunctionValue(new Subtract()));
@@ -44,5 +45,6 @@ public class FunctionDefinitions {
         env.setFunction(Symbols.internSymbol("read-char"), new FunctionValue(new ReadChar()));
         env.setFunction(Symbols.internSymbol("read-line"), new FunctionValue(new ReadLine()));
         env.setFunction(Symbols.internSymbol("gensym"), new FunctionValue(new Gensym()));
+        env.setFunction(Symbols.internSymbol("mod"), new FunctionValue(new Mod()));
     }
 }

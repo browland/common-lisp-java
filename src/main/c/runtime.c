@@ -38,6 +38,8 @@ struct Object {
 // Forward references for built-in functions - these are just statically defined as C functions and directly referenced
 // in the symbol table provided at runtime.
 uintptr_t add(uintptr_t val1, uintptr_t val2);
+uintptr_t minus(uintptr_t val1, uintptr_t val2);
+uintptr_t mod(uintptr_t numberTaggedFixnum, uintptr_t modulusTaggedFixnum);
 uintptr_t cons(uintptr_t car, uintptr_t cdr);
 uintptr_t list(uintptr_t *args, long numArgs);
 uintptr_t car(uintptr_t taggedCons);
@@ -57,6 +59,16 @@ uintptr_t funcall(uintptr_t* args, long numArgs);
 struct Function add_fxn = {
     "+",
     (uintptr_t)&add
+};
+
+struct Function minus_fxn = {
+    "-",
+    (uintptr_t)&minus
+};
+
+struct Function mod_fxn = {
+    "mod",
+    (uintptr_t)&mod
 };
 
 struct Function cons_fxn = {
@@ -136,6 +148,8 @@ struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
 // Populate symbol table with functions
 // We need to tag them using + rather than | so we achieve compile-time constants
 struct SymbolEntry CL_2B_sym = {"+", (uintptr_t)NULL, (uintptr_t)&add_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry CL_2D_sym = {"-", (uintptr_t)NULL, (uintptr_t)&minus_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry mod_sym = {"mod", (uintptr_t)NULL, (uintptr_t)&mod_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry cons_sym = {"cons", (uintptr_t)NULL, (uintptr_t)&cons_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry list_sym = {"list", (uintptr_t)NULL, (uintptr_t)&list_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry car_sym = {"car", (uintptr_t)NULL, (uintptr_t)&car_fxn + TYPE_TAG_FUNCTION};
@@ -272,7 +286,8 @@ void printResult(uintptr_t result) {
     long value = 0L;
 
     if (tag == TYPE_TAG_FIXNUM) {
-        value = result >> 3;
+        // Cast result to long before shifting so it's treated as a signed type, so we get correct negative values.
+        value = (long)result >> 3;
         printf("%ld\n", value);
     }
     else if (tag == TYPE_TAG_SYMBOL) {
@@ -381,7 +396,7 @@ void typecheck_obj(uintptr_t val) {
 
 long tagged_ptr_to_fixnum(uintptr_t val) {
     typecheck_fixnum(val);
-    return val >> 3;
+    return (long)val >> 3;
 }
 
 uintptr_t add(uintptr_t val1, uintptr_t val2) {
@@ -389,6 +404,32 @@ uintptr_t add(uintptr_t val1, uintptr_t val2) {
     long raw2 = tagged_ptr_to_fixnum(val2);
 
     long result = raw1 + raw2;
+
+    uintptr_t res = ((uintptr_t)result << 3) | 0x1;
+    return res;
+}
+
+uintptr_t minus(uintptr_t val1, uintptr_t val2) {
+    long raw1 = tagged_ptr_to_fixnum(val1);
+    long raw2 = tagged_ptr_to_fixnum(val2);
+
+    long result = raw1 - raw2;
+
+    uintptr_t res = ((uintptr_t)result << 3) | 0x1;
+    return res;
+}
+
+uintptr_t mod(uintptr_t numberTaggedFixnum, uintptr_t modulusTaggedFixnum) {
+    long rawNumber = tagged_ptr_to_fixnum(numberTaggedFixnum);
+    long rawModulus = tagged_ptr_to_fixnum(modulusTaggedFixnum);
+
+    long result = rawNumber % rawModulus;
+
+    // Quirk of Common Lisp - if the result is negative, then we subtract if from the modulus (essentially going round
+    // the ring clockwise) so we never get a negative result from mod.
+    if (result < 0) {
+        result = rawModulus + result;  // result is negative
+    }
 
     uintptr_t res = ((uintptr_t)result << 3) | 0x1;
     return res;

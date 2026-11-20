@@ -78,6 +78,8 @@ public class CompilerBackend {
         // Set up built-in functions.  We only *really* need these mappings so we can look up the asm name for the Lisp
         // operator name.
         functionsMap.put("+", new Function("+", false));
+        functionsMap.put("-", new Function("-", false));
+        functionsMap.put("mod", new Function("mod", false));
         functionsMap.put("cons", new Function("cons", false));
         functionsMap.put("list", new Function("list", true));
         functionsMap.put("car", new Function("car", false));

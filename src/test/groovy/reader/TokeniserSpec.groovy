@@ -108,17 +108,18 @@ class TokeniserSpec extends Specification {
 
     def "numeric types"() {
         given:
-        def program = "1 3.14159s0 3.14159d0"
+        def program = "1 3.14159s0 3.14159d0 -1"
         Tokeniser tokeniser = new Tokeniser()
 
         when:
         def result = tokeniser.tokenise(program)
 
         then:
-        result.size() == 3
+        result.size() == 4
         result.get(0) == "1"
         result.get(1) == "3.14159s0"
         result.get(2) == "3.14159d0"
+        result.get(3) == "-1"
     }
 
     def "string and double-quote escaping"() {
