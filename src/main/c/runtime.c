@@ -54,6 +54,7 @@ uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult);
 uintptr_t format(uintptr_t* args, long numArgs);
 uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons);
 uintptr_t funcall(uintptr_t* args, long numArgs);
+uintptr_t subseq(uintptr_t* args, long numArgs);
 
 // Function objects
 struct Function add_fxn = {
@@ -141,6 +142,11 @@ struct Function funcall_fxn = {
     (uintptr_t)&funcall
 };
 
+struct Function subseq_fxn = {
+    "subseq",
+    (uintptr_t)&subseq
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -164,6 +170,7 @@ struct SymbolEntry readLine_sym = {"read-line", (uintptr_t)NULL, (uintptr_t)&rea
 struct SymbolEntry format_sym = {"format", (uintptr_t)NULL, (uintptr_t)&format_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry assoc_sym = {"assoc", (uintptr_t)NULL, (uintptr_t)&assoc_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry funcall_sym = {"funcall", (uintptr_t)NULL, (uintptr_t)&funcall_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry subseq_sym = {"subseq", (uintptr_t)NULL, (uintptr_t)&subseq_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -909,4 +916,43 @@ uintptr_t funcall(uintptr_t *args, long numArgs) {
 //     long fakeResult = 2;
 //     uintptr_t res = (fakeResult << 3) | TYPE_TAG_FIXNUM;
 //     return res;
+}
+
+
+uintptr_t subseq(uintptr_t *args, long numArgs) {
+    if (numArgs < 2 || numArgs > 3) {
+        printf("subseq: expect 2 or 3 args\n");
+        exit(-1);
+    }
+
+    // type-check and acquire input string
+    uintptr_t inStringTaggedPtr = (uintptr_t)args[0];
+    typecheck_string(inStringTaggedPtr);
+    char *rawInputStr = (char*)(inStringTaggedPtr & 0xFFFFFFFFFFFFFFF8);
+
+    // type-check and acquire start offset
+    uintptr_t startPosTaggedPtr = args[1];
+    typecheck_fixnum(startPosTaggedPtr);
+    long startPos = (long)(startPosTaggedPtr >> 3);
+
+    long endPos = strlen(rawInputStr);
+    if (numArgs == 3) {
+        uintptr_t endPosTaggedPtr = args[2];
+        typecheck_fixnum(endPosTaggedPtr);
+        endPos = (long)(endPosTaggedPtr >> 3);
+    }
+
+    long length = endPos - startPos;
+
+    char *resRawStr = (char*)malloc(length + 1);
+    memcpy(resRawStr, rawInputStr+startPos, length);
+    resRawStr[length] = '\0';
+
+    uintptr_t stringTaggedPtr = (uintptr_t)resRawStr;
+    if ((stringTaggedPtr & 0x7) != 0) {
+        printf("subseq: raw string result ptr not aligned to 8 bytes \n");
+        exit(-1);
+    }
+
+    return (uintptr_t)stringTaggedPtr | TYPE_TAG_STR;
 }

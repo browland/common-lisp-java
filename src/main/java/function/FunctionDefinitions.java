@@ -37,6 +37,7 @@ public class FunctionDefinitions {
         env.setFunction(Symbols.internSymbol("assoc"), new FunctionValue(new Assoc()));
         env.setFunction(Symbols.internSymbol("null"), new FunctionValue(new Null()));
         env.setFunction(Symbols.internSymbol("string="), new FunctionValue(new StringEqual()));
+        env.setFunction(Symbols.internSymbol("subseq"), new FunctionValue(new Subseq()));
         env.setFunction(Symbols.internSymbol("evenp"), new FunctionValue(new Evenp()));
         env.setFunction(Symbols.internSymbol("values"), new FunctionValue(new Values()));
         env.setFunction(Symbols.internSymbol("floor"), new FunctionValue(new Floor()));

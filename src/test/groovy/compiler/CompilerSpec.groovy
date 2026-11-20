@@ -49,7 +49,20 @@ class CompilerSpec extends Specification {
         "(let ((x 1)) (let ((y 2)) (+ x y)))"                || "3"
         "(defvar *x* 1) (setq *x* 2) *x*"                    || "2"
         "(let ((x 1)) (setq x 2) x)"                         || "2"
+    }
+
+    def "string tests"() {
+        when:
+        compile(program)
+
+        then:
+        run() == expectedResult
+
+        where:
+        program                                              || expectedResult
         "\"hello world\""                                    || "\"hello world\""
+        "(subseq \"hello world\" 2 5)"                       || "\"llo\""
+        "(subseq \"hello world\" 2)"                         || "\"llo world\""
     }
 
     def "conditionals tests"() {
