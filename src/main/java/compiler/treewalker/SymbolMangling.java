@@ -17,7 +17,7 @@ public class SymbolMangling {
     }
 
     public static boolean needsMangling(String symbol) {
-        return symbol.contains(":") || symbol.contains("+") || symbol.contains(">") || symbol.contains("*") || symbol.contains("-");
+        return symbol.contains(":") || symbol.contains("+") || symbol.contains(">") || symbol.contains("*") || symbol.contains("-") || symbol.contains("=");
     }
 
 //    public static String unmangle(String mangledSymbol) {
@@ -28,4 +28,9 @@ public class SymbolMangling {
 //        byte[] bytes = HexFormat.of().parseHex(mangledSymbol.substring(3));
 //        return new String(bytes, StandardCharsets.UTF_8);
 //    }
+
+    // Stub for finding hashed value of a symbol requiring mangling
+    public static void main(String[] args) {
+        System.out.println(mangle("string="));
+    }
 }

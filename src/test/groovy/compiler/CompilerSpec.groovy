@@ -63,6 +63,8 @@ class CompilerSpec extends Specification {
         "\"hello world\""                                    || "\"hello world\""
         "(subseq \"hello world\" 2 5)"                       || "\"llo\""
         "(subseq \"hello world\" 2)"                         || "\"llo world\""
+        "(string= \"hello\" \"hello\")"                      || "t"
+        "(string= \"hello\" \"hello1\")"                     || "nil"
     }
 
     def "conditionals tests"() {

@@ -66,6 +66,19 @@ public class Function {
 
     public void popStackOffsetFrame() {
         stackOffsetsStack.pop();
+
+        // recalc min offset
+        int recalcMinOffset = 0;
+        Iterator<Map<String,Integer>> iter = stackOffsetsStack.descendingIterator();
+        while (iter.hasNext()) {
+            Map<String, Integer> stackOffsets = iter.next();
+            for (int val : stackOffsets.values()) {
+                if (val < recalcMinOffset) {
+                    recalcMinOffset = val;
+                }
+            }
+        }
+        minOffset = recalcMinOffset;
     }
 
     public void pushStackOffset(String name, int offset) {

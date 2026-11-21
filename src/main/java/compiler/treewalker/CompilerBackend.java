@@ -95,6 +95,7 @@ public class CompilerBackend {
         functionsMap.put("assoc", new Function("assoc", false));
         functionsMap.put("funcall", new Function("funcall", true));
         functionsMap.put("subseq", new Function("subseq", true));
+        functionsMap.put("string=", new Function("string=", false));
 
         specialForms.put("if", new IfSpecialForm());
         specialForms.put("defun", new DefunSpecialForm());

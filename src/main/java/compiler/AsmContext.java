@@ -7,7 +7,7 @@ import java.util.List;
 
 public class AsmContext {
     // 0-based, i.e. instruction part occupies indices 0 to 49, and comment starts index 50
-    private final int COMMENT_INDEX = 50;
+    private final int COMMENT_INDEX = 80;
 
     private List<String> lines = new ArrayList<>();
 

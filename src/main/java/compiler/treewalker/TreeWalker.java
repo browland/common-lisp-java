@@ -241,6 +241,7 @@ public class TreeWalker {
 
         // Now the evaluated operands are on the stack, load them into registers ready for our operator call
         // Operands will be stored in registers in incrementing order as per usual calling convention
+        // TODO redundant for variadic calls (we already set up the only 3 registers needed in the else case below
         for (int operandNum = 0; operandNum<numOperands; operandNum++) {
             // Zero-indexed operands are aligned with registers, but stack pos is one pos higher (above the function ptr slot)
             backend.loadVariableFromStackIntoRegister(operandNum+1, operandNum);

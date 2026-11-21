@@ -55,6 +55,7 @@ uintptr_t format(uintptr_t* args, long numArgs);
 uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons);
 uintptr_t funcall(uintptr_t* args, long numArgs);
 uintptr_t subseq(uintptr_t* args, long numArgs);
+uintptr_t stringequal(uintptr_t taggedStr1, uintptr_t taggedStr2);
 
 // Function objects
 struct Function add_fxn = {
@@ -147,6 +148,11 @@ struct Function subseq_fxn = {
     (uintptr_t)&subseq
 };
 
+struct Function stringequal_fxn = {
+    "string=",
+    (uintptr_t)&stringequal
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -171,6 +177,7 @@ struct SymbolEntry format_sym = {"format", (uintptr_t)NULL, (uintptr_t)&format_f
 struct SymbolEntry assoc_sym = {"assoc", (uintptr_t)NULL, (uintptr_t)&assoc_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry funcall_sym = {"funcall", (uintptr_t)NULL, (uintptr_t)&funcall_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry subseq_sym = {"subseq", (uintptr_t)NULL, (uintptr_t)&subseq_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry CL_737472696E673D_sym = {"string=", (uintptr_t)NULL, (uintptr_t)&stringequal_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -213,6 +220,9 @@ RUNTIME_TYPE determineType(uintptr_t taggedVal) {
     }
 }
 
+// forward declaration needed for printValue()
+char *get_closure_debugString(uintptr_t taggedClosurePtr);
+
 char *printValue(uintptr_t taggedValue, bool useQuotes) {
     long tagMask = 0x7;
     long tag = taggedValue & tagMask;
@@ -228,9 +238,17 @@ char *printValue(uintptr_t taggedValue, bool useQuotes) {
     else if (tag == TYPE_TAG_CLOSURE ) {
         // TODO Be careful with string termination at 255 chars
         char *resultStr = (char*)malloc(255 * sizeof(char));
+        char *debugString = get_closure_debugString(taggedValue);
         value = taggedValue & 0xFFFFFFFFFFFFFFF8;
-        void *closurePtr = (void*)value;
-        sprintf(resultStr, "%p", closurePtr);
+        sprintf(resultStr, "#<FUNCTION %s 0x%lx\n", debugString, value);
+        return resultStr;
+    }
+    else if (tag == TYPE_TAG_FUNCTION) {
+        // TODO Be careful with string termination at 255 chars
+        char *resultStr = (char*)malloc(255 * sizeof(char));
+        uintptr_t untaggedPtr = taggedValue & 0xFFFFFFFFFFFFFFF8;
+        struct Function *functionPtr = (struct Function*)untaggedPtr;
+        sprintf(resultStr, "#<FUNCTION %s>\n", functionPtr->name);
         return resultStr;
     }
     else if (tag == TYPE_TAG_SYMBOL) {
@@ -273,9 +291,6 @@ char *printValue(uintptr_t taggedValue, bool useQuotes) {
         exit(-1);
     }
 }
-
-// forward declaration needed for printResult()
-char *get_closure_debugString(uintptr_t taggedClosurePtr);
 
 void printResult(uintptr_t result) {
     if (DEBUG == 1) {
@@ -378,7 +393,7 @@ void typecheck_cons(uintptr_t val) {
     RUNTIME_TYPE type = determineType(val);
 
     if (type != TYPE_CONS) {
-        printf("Type error; expect cons for value 0x%lx\n", val);
+        printf("Type error; expect cons for value %s\n", printValue(val, false));
         exit(-1);
     }
 }
@@ -912,12 +927,7 @@ uintptr_t funcall(uintptr_t *args, long numArgs) {
         printf("funcall: unimplemented for functions (only for closures)\n");
         exit(-1);
     }
-
-//     long fakeResult = 2;
-//     uintptr_t res = (fakeResult << 3) | TYPE_TAG_FIXNUM;
-//     return res;
 }
-
 
 uintptr_t subseq(uintptr_t *args, long numArgs) {
     if (numArgs < 2 || numArgs > 3) {
@@ -955,4 +965,19 @@ uintptr_t subseq(uintptr_t *args, long numArgs) {
     }
 
     return (uintptr_t)stringTaggedPtr | TYPE_TAG_STR;
+}
+
+uintptr_t stringequal(uintptr_t taggedStr1, uintptr_t taggedStr2) {
+    typecheck_string(taggedStr1);
+    char *rawInputStr1 = (char*)(taggedStr1 & 0xFFFFFFFFFFFFFFF8);
+
+    typecheck_string(taggedStr2);
+    char *rawInputStr2 = (char*)(taggedStr2 & 0xFFFFFFFFFFFFFFF8);
+
+    if (strcmp(rawInputStr1, rawInputStr2) == 0) {
+        return t_sym.variableSlot;
+    }
+    else {
+        return nil_sym.variableSlot;
+    }
 }
