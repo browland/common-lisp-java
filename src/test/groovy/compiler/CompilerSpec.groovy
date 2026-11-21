@@ -128,6 +128,7 @@ class CompilerSpec extends Specification {
         "((lambda (x) (if x 'true 'false)) t)"               || "true"             || false
         "(defmacro foo () 1) ((lambda () (+ (foo) 1)))"      || "2"                || false
         "((lambda () (let ((x 1)) (+ x 1))))"                || "2"                || false
+        // TODO test for captured variable but it's also shadowed by an inner let, and both vars are in use
     }
 
     def "function tests"() {
@@ -151,6 +152,7 @@ class CompilerSpec extends Specification {
         "(let ((x 1)) #'(lambda () (+ 1 1)) x)"              || "1"                          || false
         "(defvar x 10) (defun test (x) x) (test 9)"          || "9"                          || false
         "(defun foo () (let ((x 1)) (+ x 1))) (foo)"         || "2"                          || false
+        "(defun foo (a) (let ((x 1)) (+ x 1))) (foo 3)"      || "2"                          || false
 
     }
 

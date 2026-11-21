@@ -57,7 +57,7 @@ public class LambdaEvaluator {
         Set<String> declaredVariableNames = backend.getDeclaredVariableNames();
         Set<String> declaredSpecialForms = backend.getSpecialFormNames();
         Set<String> declaredMacroNames = backend.getMacroNames();
-        List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, declaredSpecialForms, declaredMacroNames, declaredVariableNames, lambdaBody);
+        List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, declaredSpecialForms, declaredMacroNames, declaredVariableNames, lambdaBody, backend);
 
         backend.createClosure(lambdaAsmName, capturedVariables, bindingNames);
 

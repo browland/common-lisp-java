@@ -23,6 +23,7 @@ public class Function {
         this.symbolStringName = symbolStringName;
         this.stackOffsetsStack = new LinkedList<>();
         this.stackOffsetsStack.push(stackOffsets);
+        recalcMinOffset();
     }
 
     public Function(String symbolStringName, boolean variadicArgs) {
@@ -64,10 +65,7 @@ public class Function {
         stackOffsetsStack.push(new HashMap<>());
     }
 
-    public void popStackOffsetFrame() {
-        stackOffsetsStack.pop();
-
-        // recalc min offset
+    private void recalcMinOffset() {
         int recalcMinOffset = 0;
         Iterator<Map<String,Integer>> iter = stackOffsetsStack.descendingIterator();
         while (iter.hasNext()) {
@@ -79,6 +77,11 @@ public class Function {
             }
         }
         minOffset = recalcMinOffset;
+    }
+
+    public void popStackOffsetFrame() {
+        stackOffsetsStack.pop();
+        recalcMinOffset();
     }
 
     public void pushStackOffset(String name, int offset) {

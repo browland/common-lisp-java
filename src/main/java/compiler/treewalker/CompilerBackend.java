@@ -278,6 +278,7 @@ public class CompilerBackend {
         asmGenerator.storeResultToStack(bindingIndex);
         Function currentScope = functionStack.peek();
 
+        // Total bytes for all let bindings
         int stackBytes = determineStackBytes(numBindings);
 
         int minOffset = currentScope.getMinOffset();
