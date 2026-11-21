@@ -120,12 +120,14 @@ class CompilerSpec extends Specification {
         program                                              || expectedResult     || checkContains
         "(lambda (x) (+ x 1))"                               || "(lambda (x) ())"  || true
         "((lambda (x) (+ x 1)) 1)"                           || "2"                || false
+        "((lambda (x) (setq x 2) (+ x 1)) 1)"                || "3"                || false
         "((lambda (x y) (+ x y)) 1 2)"                       || "3"                || false
         "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"                || false
         "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"                || false
         "(defvar *x* 1) ((lambda (y) (+ y *x*)) 2)"          || "3"                || false
         "((lambda (x) (if x 'true 'false)) t)"               || "true"             || false
         "(defmacro foo () 1) ((lambda () (+ (foo) 1)))"      || "2"                || false
+        "((lambda () (let ((x 1)) (+ x 1))))"                || "2"                || false
     }
 
     def "function tests"() {
@@ -396,6 +398,7 @@ class CompilerSpec extends Specification {
         program                                               || expectedResult
         "(funcall (lambda () (+ 1 1)))"                       || "2"
         "(let ((x 1)) (funcall (lambda () (+ x 1))))"         || "2"
+        "(let ((x 1)) (funcall (lambda (foo) (+ foo 1)) x))"  || "2"
     }
 
     def compile(String program) {

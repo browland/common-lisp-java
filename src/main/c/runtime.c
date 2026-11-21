@@ -893,6 +893,155 @@ uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons) {
     return nil_sym.variableSlot;
 }
 
+// TODO this asm block is AI-generated, spend time understanding it
+static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawFunctionPtr) {
+    if (numArgs < 1 || numArgs > 8) {
+        printf("funcall: unsupported numArgs=%ld (expected 1..8)\n", numArgs);
+        exit(-1);
+    }
+
+    uintptr_t closure = args[0];
+    register long r10 __asm__("x10") = numArgs;
+    register void *r9  __asm__("x9")  = rawFunctionPtr;
+    uintptr_t result = 0;
+
+    switch (numArgs) {
+        case 1: { /* 0 bindings; closure in x0 */
+            register uintptr_t a0 __asm__("x0") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (a0)
+                : "x1", "x2", "x3", "x4", "x5", "x6", "x7",
+                  "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+        case 2: { /* 1 binding in x0; closure in x1 */
+            register uintptr_t b0 __asm__("x0") = args[1];
+            register uintptr_t c1 __asm__("x1") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (c1)
+                : "x2", "x3", "x4", "x5", "x6", "x7",
+                  "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+        case 3: { /* 2 bindings in x0..x1; closure in x2 */
+            register uintptr_t b0 __asm__("x0") = args[1];
+            register uintptr_t b1 __asm__("x1") = args[2];
+            register uintptr_t c2 __asm__("x2") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (c2)
+                : "x3", "x4", "x5", "x6", "x7",
+                  "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+        case 4: { /* 3 bindings in x0..x2; closure in x3 */
+            register uintptr_t b0 __asm__("x0") = args[1];
+            register uintptr_t b1 __asm__("x1") = args[2];
+            register uintptr_t b2 __asm__("x2") = args[3];
+            register uintptr_t c3 __asm__("x3") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (c3)
+                : "x4", "x5", "x6", "x7",
+                  "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+        case 5: { /* 4 bindings in x0..x3; closure in x4 */
+            register uintptr_t b0 __asm__("x0") = args[1];
+            register uintptr_t b1 __asm__("x1") = args[2];
+            register uintptr_t b2 __asm__("x2") = args[3];
+            register uintptr_t b3 __asm__("x3") = args[4];
+            register uintptr_t c4 __asm__("x4") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (c4)
+                : "x5", "x6", "x7",
+                  "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+        case 6: { /* 5 bindings in x0..x4; closure in x5 */
+            register uintptr_t b0 __asm__("x0") = args[1];
+            register uintptr_t b1 __asm__("x1") = args[2];
+            register uintptr_t b2 __asm__("x2") = args[3];
+            register uintptr_t b3 __asm__("x3") = args[4];
+            register uintptr_t b4 __asm__("x4") = args[5];
+            register uintptr_t c5 __asm__("x5") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (b4), "r" (c5)
+                : "x6", "x7",
+                  "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+        case 7: { /* 6 bindings in x0..x5; closure in x6 */
+            register uintptr_t b0 __asm__("x0") = args[1];
+            register uintptr_t b1 __asm__("x1") = args[2];
+            register uintptr_t b2 __asm__("x2") = args[3];
+            register uintptr_t b3 __asm__("x3") = args[4];
+            register uintptr_t b4 __asm__("x4") = args[5];
+            register uintptr_t b5 __asm__("x5") = args[6];
+            register uintptr_t c6 __asm__("x6") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (b4), "r" (b5), "r" (c6)
+                : "x7",
+                  "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+        case 8: { /* 7 bindings in x0..x6; closure in x7 */
+            register uintptr_t b0 __asm__("x0") = args[1];
+            register uintptr_t b1 __asm__("x1") = args[2];
+            register uintptr_t b2 __asm__("x2") = args[3];
+            register uintptr_t b3 __asm__("x3") = args[4];
+            register uintptr_t b4 __asm__("x4") = args[5];
+            register uintptr_t b5 __asm__("x5") = args[6];
+            register uintptr_t b6 __asm__("x6") = args[7];
+            register uintptr_t c7 __asm__("x7") = closure;
+            __asm__ __volatile__ (
+                "blr %[fn]\n\t"
+                "mov %[res], x0\n\t"
+                : [res] "=r" (result)
+                : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (b4), "r" (b5), "r" (b6), "r" (c7)
+                : "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "memory", "cc"
+            );
+            break;
+        }
+    }
+
+    return result;
+}
+
 uintptr_t funcall(uintptr_t *args, long numArgs) {
     uintptr_t taggedFunctionPtr = *args;
     RUNTIME_TYPE functionObjType = determineType(taggedFunctionPtr);
@@ -908,20 +1057,7 @@ uintptr_t funcall(uintptr_t *args, long numArgs) {
         uintptr_t result;
         void *rawFunctionPtr = closurePtr->fxnPtr;
 
-        // TODO this asm block is AI-generated, spend time understanding and tidying it
-        // Jump to the closure function pointer, passing the closure pointer which provides captures, and (later) we also need to pass bindings
-        __asm__ __volatile__ (
-            "mov x0, %[closure]\n\t"     /* 1. Put the tagged closure pointer in x0 (environment/self) */
-            "mov x9, %[fn]\n\t"          /* 2. Load the raw machine code function pointer into scratch register x9 */
-            "blr x9\n\t"                 /* 3. Branch with link to x9 (jumps to function, saves return in x30) */
-            "mov %[res], x0\n\t"         /* 4. Capture the return value from x0 */
-            : [res] "=r" (result)        /* Output: C variable to hold the return value */
-            : [closure] "r" (taggedFunctionPtr), /* Input 1: The closure pointer */
-              [fn] "r" (rawFunctionPtr)  /* Input 2: The raw function pointer */
-            : "x0", "x9", "x30", "memory", "cc" /* Clobbers: registers and flags modified */
-        );
-
-        return result;
+        return call_closure_variadic(args, numArgs, rawFunctionPtr);
     }
     else {
         printf("funcall: unimplemented for functions (only for closures)\n");

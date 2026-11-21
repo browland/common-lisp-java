@@ -75,8 +75,9 @@ public class LambdaEvaluator {
         Function function = backend.setUpClosureFunctionStack(capturedVariables, bindingsList, lambdaFunctionName);
 
         // Function impl
-        Node bodyNode = lambdaForm.nodes().get(2);
-        treeWalker.walkTree(bodyNode);
+        for (Node bodyNode : lambdaForm.nodes().subList(2, lambdaForm.size())) {
+            treeWalker.walkTree(bodyNode);
+        }
 
         backend.endFunction(function);
     }
