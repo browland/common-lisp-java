@@ -1,6 +1,7 @@
-# Lisp Interpreter
+# Lisp Interpreter and Compiler
 
-Simple Common Lisp (tree-walking) interpreter with a REPL.  Far from complete coverage of the CL language, but support exists for lambda functions, hygienic macros, lexical scopes etc.
+Simple Common Lisp (tree-walking) interpreter with a REPL.  There's also a compiler which supports only arm64 on Apple.
+Far from complete coverage of the CL language, but support exists for lambda functions, hygienic macros, lexical scopes etc.
 
 ## Quick Example
 
@@ -143,6 +144,7 @@ On mac, with readline support for command-line history etc:
 We have a rough tree walking compiler, supporting ARM64 on Mac only.
 The ambition is mainly as a learning exercise, but more practically the aim is to be able to solve simple programming
 problems, e.g. Advent of Code.
+This is all implemented from the ground up, so this project is not based on LLVM for example.
 
 Current Issues:
 0. captured variables are not being updated within closures as there's a copy of the captures in the closure stack; need to 
