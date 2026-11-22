@@ -47,7 +47,7 @@ public class TreeWalker {
         // We use -falign-functions=8 to ensure we can use pointer tagging for our built-in functions.  We could mark
         // each function with __attribute__((aligned(8))) but this seems a cleaner option and less likely to forget
         // a case.  At the cost of a larger executable due to the extra padding needed.
-        Process clangProcess = Runtime.getRuntime().exec(new String[] {"clang", "-falign-functions=8", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
+        Process clangProcess = Runtime.getRuntime().exec(new String[] {"clang", "-falign-functions=8", "-fsanitize=address", "./src/main/asm/my-asm.s", "./src/main/c/runtime.c"});
         InputStream clangStandardError = clangProcess.getErrorStream();
         InputStreamReader clangStandardErrorReader = new InputStreamReader(clangStandardError);
         BufferedReader clangStandardErrorBufferedReader = new BufferedReader(clangStandardErrorReader);

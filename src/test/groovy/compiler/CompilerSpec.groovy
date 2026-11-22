@@ -94,24 +94,25 @@ class CompilerSpec extends Specification {
         run() ==  expectedResult
 
         where:
-        program                                              || expectedResult
-        "(cons 1 2)"                                         || "(1 . 2)"
-        "(cons 1 (cons 1 2))"                                || "(1 . (1 . 2))"
-        "(cons (+ 1 2) (+ 2 1))"                             || "(3 . 3)"
-        "(list 1 2)"                                         || "(1 . (2 . nil))"
-        "(list 1 2 3)"                                       || "(1 . (2 . (3 . nil)))"
-        "(let ((x 1) (y 2)) (list x y))"                     || "(1 . (2 . nil))"
-        "(cdr (list 1 2 3))"                                 || "(2 . (3 . nil))"
-        "(mapcar (function 1+) (list 1 2))"                  || "(2 . (3 . nil))"
-        "(mapcar #'1+ (list 1 2))"                           || "(2 . (3 . nil))"
-        "'(:foo 1)"                                          || "(:foo . (1 . nil))"
-        "'((:foo 1))"                                        || "((:foo . (1 . nil)) . nil)"
-        "'((:foo 1) (:bar 2))"                               || "((:foo . (1 . nil)) . ((:bar . (2 . nil)) . nil))"
-        "(assoc :foo '((:foo 1) (:bar 2)))"                  || "(:foo . (1 . nil))"
-        "(assoc :bar '((:foo 1) (:bar 2)))"                  || "(:bar . (2 . nil))"
-        "(assoc :baz '((:foo 1) (:bar 2)))"                  || "nil"
-        "'()"                                                || "(nil . nil)"
-        "(cons 1 '())"                                       || "(1 . nil)"
+        program                                                   || expectedResult
+        "(cons 1 2)"                                              || "(1 . 2)"
+        "(cons 1 (cons 1 2))"                                     || "(1 . (1 . 2))"
+        "(cons (+ 1 2) (+ 2 1))"                                  || "(3 . 3)"
+        "(list 1 2)"                                              || "(1 . (2 . nil))"
+        "(list 1 2 3)"                                            || "(1 . (2 . (3 . nil)))"
+        "(let ((x 1) (y 2)) (list x y))"                          || "(1 . (2 . nil))"
+        "(cdr (list 1 2 3))"                                      || "(2 . (3 . nil))"
+        "(mapcar (function 1+) (list 1 2))"                       || "(2 . (3 . nil))"
+        "(mapcar (function 1+) (list 1 2 3 4 5 6 7 8 9 10 11))"   || "(2 . (3 . (4 . (5 . (6 . (7 . (8 . (9 . (10 . (11 . (12 . nil)))))))))))"
+        "(mapcar #'1+ (list 1 2))"                                || "(2 . (3 . nil))"
+        "'(:foo 1)"                                               || "(:foo . (1 . nil))"
+        "'((:foo 1))"                                             || "((:foo . (1 . nil)) . nil)"
+        "'((:foo 1) (:bar 2))"                                    || "((:foo . (1 . nil)) . ((:bar . (2 . nil)) . nil))"
+        "(assoc :foo '((:foo 1) (:bar 2)))"                       || "(:foo . (1 . nil))"
+        "(assoc :bar '((:foo 1) (:bar 2)))"                       || "(:bar . (2 . nil))"
+        "(assoc :baz '((:foo 1) (:bar 2)))"                       || "nil"
+        "'()"                                                     || "(nil . nil)"
+        "(cons 1 '())"                                            || "(1 . nil)"
     }
 
     def "lambda tests"() {

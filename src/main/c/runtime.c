@@ -623,37 +623,62 @@ uintptr_t mapcar(uintptr_t taggedFunctionObj, uintptr_t taggedCons) {
     FuncType func = (FuncType)rawFxnPtr;
 
     // We don't know how long the list is.  For now we'll assume no more than 10 ...
-    uintptr_t *resultListPtr = (uintptr_t*)malloc(sizeof(uintptr_t) * 10);
+    size_t resultArrayLen = 10;
+    uintptr_t *resultListPtr = (uintptr_t*)malloc(sizeof(uintptr_t) * resultArrayLen);
+    if (resultListPtr == NULL) {
+        printf("mapcar: Could not reallocate result list array\n");
+        exit(-1);
+    }
+
     uintptr_t car;
-
     int numArgs = 0;
-    for (int i=0; i<10; i++) {
+    uintptr_t cdr = 0;
+    size_t offset = 0;
+
+    while (cdr == 0 || cdr != nil_sym.variableSlot) {
+        // Check if we've filled our result list array
+        if (offset >= resultArrayLen) {
+            resultArrayLen = 2 * resultArrayLen;
+            resultListPtr = realloc(resultListPtr, sizeof(uintptr_t) * resultArrayLen);
+            if (resultListPtr == NULL) {
+                printf("mapcar: Could not reallocate result list array\n");
+                exit(-1);
+            }
+        }
+
+        // Deal with current element (car): invoke function to get mapped value, push it to our array of values
         car = cons->car;
-
         uintptr_t res = func(car);
-
-        resultListPtr[i] = res;
-
+        resultListPtr[offset] = res;
         numArgs++;
 
+        // Deal with cdr: this may be one of several types and we either need to:
+        // 1. If cdr is another cons cell then dereference it and update the current cons for the next loop
+        // 2. If cdr is a symbol then we need to check for nil.  If we find it, then break out of the loop as we have all our values
+        //    We don't yet handle any other symbol in cdr.
+        // 3. Otherwise (any other value) we just put the value in the next slot (TODO feels like a bug as this should be an improper
+        //    list, but the call to list() at the end of the function won't know this?)
         uintptr_t cdr = cons->cdr;
         RUNTIME_TYPE cdrType = determineType(cdr);
+
+        // The list continues beyond this cell, update cons/offset and re-loop
         if (cdrType == TYPE_CONS) {
             void *cdrPtr = (void*)(untag_ptr(cdr));
             cons = (struct ConsCell*)cdrPtr;
+            offset++;
             continue;
         }
+        // cdr may be nil, if so then break out of the loop
         else if(cdrType == TYPE_SYMBOL) {
             void *cdrPtr = (void*)(untag_ptr(cdr));
             struct SymbolEntry *symbolEntry = (struct SymbolEntry*)cdrPtr;
             if (symbolEntry->variableSlot == nil_sym.variableSlot) {
                 break;
             }
-            cons = (struct ConsCell*)cdrPtr;
-            continue;
         }
         else {
-            resultListPtr[i+1] = cdr;
+            assert(0 && "mapcar: unhandled case: cdr is not of type cons or symbol");
+            resultListPtr[offset+1] = cdr;
             numArgs++;
             break;
         }
