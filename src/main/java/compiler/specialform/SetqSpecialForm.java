@@ -19,7 +19,6 @@ public class SetqSpecialForm implements SpecialForm {
         // Step 1: Look for symbol in current lexical scope
         Optional<Integer> optionalOffset = backend.findOffsetInLexicalScope(symbolValue);
         boolean isLexicallyBound = optionalOffset.isPresent();
-
         boolean isGlobalVariable = backend.getDeclaredVariableNames().contains(symbolValue);
 
         // Step 2: Check symbol exists somehow

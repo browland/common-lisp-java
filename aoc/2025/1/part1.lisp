@@ -3,14 +3,17 @@
             ,@forms
             (close ,sref_var)))
 
-(defvar *lines* nil)
+(defvar *lines* '())
+(defvar *zeroes* 0)
+(defvar *pos* 50)
 
-(defun rotate (start clockwise steps)
-  (if clockwise (mod (+ start steps) 100)
-    (mod (- start steps) 100)))
-
-;(rotate 50 nil 68)
-;(- 50 68)
+(defun rotate (start direction steps)
+  (let ((newPos 0))
+    (if (eq direction :cw)
+        (setq newPos (mod (+ start steps) 100))
+        (setq newPos (mod (- start steps) 100)))
+    (if (eq newPos 0) (incf *zeroes*) t)
+    newPos))
 
 (with-open-file (infile "/Users/ben/git/lisp/aoc/2025/1/test.txt")
   (do ((line nil line) (done nil done))
@@ -18,22 +21,25 @@
     (setq line (read-line infile nil))
     (if (eq line nil) (setq done t) (push line *lines*))))
 
-;*lines*
+(format t "loaded lines: ~S" *lines*)
 
-(defun extractParts (line) 
+(defvar *reversedLines* '())
+(dolist *lines* #'(lambda (x) (setq *reversedLines* (cons x *reversedLines*))))
+
+(format t "reversed lines: ~S" *reversedLines*)
+
+(defun extractParts (line)
   (list (subseq line 0 1) (subseq line 1))) 
 
-(defvar *operationPairs* (mapcar #'extractParts *lines*))
-;*operationPairs*
-
-(defvar *test* '((a 1) (b 2)))
-
-;(format t "hello ~S ~S" (car *test*) (car (cdr *test*)))
-
-;(dolist *operationPairs* #'(lambda (pair)
-;  (format t "here")
-;  (format t "curr pair ~S ~S" (car pair) (car (cdr pair)))))
+(defvar *operationPairs* (mapcar #'extractParts *reversedLines*))
+(format t "operation pairs: ~S" *operationPairs*)
 
 (dolist *operationPairs* #'(lambda (pair)
-  (let ((direction (if (string= (car pair) "R") :cw :acw)))
-    (format t "curr pair direction: ~S" direction))))
+  (let ((direction (if (string= (car pair) "R") :cw :acw))
+        (steps (parse-integer (car (cdr pair)))))
+    (format t "curr pair direction: ~S" direction)
+    (format t "curr pair steps: ~S" steps)
+    (setq *pos* (rotate *pos* direction steps))
+    (format t "new pos after rotate ~S" *pos*))))
+
+*zeroes*

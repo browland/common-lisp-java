@@ -47,5 +47,6 @@ public class FunctionDefinitions {
         env.setFunction(Symbols.internSymbol("read-line"), new FunctionValue(new ReadLine()));
         env.setFunction(Symbols.internSymbol("gensym"), new FunctionValue(new Gensym()));
         env.setFunction(Symbols.internSymbol("mod"), new FunctionValue(new Mod()));
+        env.setFunction(Symbols.internSymbol("parse-integer"), new FunctionValue(new ParseInteger()));
     }
 }

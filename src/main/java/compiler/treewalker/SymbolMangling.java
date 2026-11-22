@@ -31,6 +31,6 @@ public class SymbolMangling {
 
     // Stub for finding hashed value of a symbol requiring mangling
     public static void main(String[] args) {
-        System.out.println(mangle("string="));
+        System.out.println(mangle("parse-integer"));
     }
 }

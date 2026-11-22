@@ -273,9 +273,21 @@ public class AsmGenerator {
 """);
     }
 
+    public void generateCheckForNil() {
+        context.write("""
+  bl _is_nil
+""");
+    }
+
     public void generateJumpInstructionForNonZeroReturnValue(String jumpLabel) {
         context.write("""
   cbnz x0, %s
+""".formatted(jumpLabel));
+    }
+
+    public void generateJumpInstructionForZeroReturnValue(String jumpLabel) {
+        context.write("""
+  cbz x0, %s
 """.formatted(jumpLabel));
     }
 

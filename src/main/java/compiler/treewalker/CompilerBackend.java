@@ -96,6 +96,7 @@ public class CompilerBackend {
         functionsMap.put("funcall", new Function("funcall", true));
         functionsMap.put("subseq", new Function("subseq", true));
         functionsMap.put("string=", new Function("string=", false));
+        functionsMap.put("parse-integer", new Function("parse-integer", false));
 
         specialForms.put("if", new IfSpecialForm());
         specialForms.put("defun", new DefunSpecialForm());
@@ -317,8 +318,16 @@ public class CompilerBackend {
         asmGenerator.generateCheckForT();
     }
 
+    public void resultWasNil() {
+        asmGenerator.generateCheckForNil();
+    }
+
     public void jumpToLabelIfResultNonZero(String label) {
         asmGenerator.generateJumpInstructionForNonZeroReturnValue(label);
+    }
+
+    public void jumpToLabelIfResultZero(String label) {
+        asmGenerator.generateJumpInstructionForZeroReturnValue(label);
     }
 
     public void generateLabel(String label) {

@@ -65,6 +65,7 @@ class CompilerSpec extends Specification {
         "(subseq \"hello world\" 2)"                         || "\"llo world\""
         "(string= \"hello\" \"hello\")"                      || "t"
         "(string= \"hello\" \"hello1\")"                     || "nil"
+        "(parse-integer \"2\")"                              || "2"
     }
 
     def "conditionals tests"() {
@@ -80,7 +81,9 @@ class CompilerSpec extends Specification {
         "(if nil 1 2)"                                       || "2"
         "(+ 1 (if t 1 2))"                                   || "2"
         "(if t 'true)"                                       || "true"
+        "(if 1 'true)"                                       || "true"
         "(if nil 'neverseethis)"                             || "nil"
+        "(if '(1) 'true 'false)"                             || "true"
     }
 
     def "cons and list tests"() {
@@ -107,6 +110,8 @@ class CompilerSpec extends Specification {
         "(assoc :foo '((:foo 1) (:bar 2)))"                  || "(:foo . (1 . nil))"
         "(assoc :bar '((:foo 1) (:bar 2)))"                  || "(:bar . (2 . nil))"
         "(assoc :baz '((:foo 1) (:bar 2)))"                  || "nil"
+        "'()"                                                || "(nil . nil)"
+        "(cons 1 '())"                                       || "(1 . nil)"
     }
 
     def "lambda tests"() {
@@ -118,12 +123,14 @@ class CompilerSpec extends Specification {
 
         where:
         program                                              || expectedResult     || checkContains
+        "((lambda () 1))"                                    || "1"                || false
         "(lambda (x) (+ x 1))"                               || "(lambda (x) ())"  || true
         "((lambda (x) (+ x 1)) 1)"                           || "2"                || false
         "((lambda (x) (setq x 2) (+ x 1)) 1)"                || "3"                || false
         "((lambda (x y) (+ x y)) 1 2)"                       || "3"                || false
         "(let ((x 1)) ((lambda (y) (+ x y)) 2))"             || "3"                || false
         "(let ((x 1) (y 2)) ((lambda () (+ x y))))"          || "3"                || false
+        "(let ((x 1)) ((lambda () (+ 1 1) (+ 1 x))))"        || "2"                || false
         "(defvar *x* 1) ((lambda (y) (+ y *x*)) 2)"          || "3"                || false
         "((lambda (x) (if x 'true 'false)) t)"               || "true"             || false
         "(defmacro foo () 1) ((lambda () (+ (foo) 1)))"      || "2"                || false

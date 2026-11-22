@@ -1,5 +1,6 @@
 package compiler.specialform;
 
+import compiler.Namespace;
 import compiler.treewalker.*;
 import syntaxtree.Atom;
 import syntaxtree.Node;
@@ -32,6 +33,22 @@ public class QuoteSpecialForm implements SpecialForm {
         }
         else if (quotedNode instanceof RList quotedRlist) {
             int lenList = quotedRlist.size();
+            if (lenList == 0) {
+                // Special case for empty list
+                backend.reserveStackForVariables(1);
+                backend.handleSymbolOperand("nil", Namespace.VARIABLE);
+                backend.storeResultToStack(0);
+                backend.moveStackPointerToRegister(0, 0);
+                backend.writeLongToRegister(1, 1);
+
+                // 5. call list() C function
+                backend.callFunction("_list");
+
+                // 6. clean up stack
+                backend.freeStackForVariables(1);
+
+                return;
+            }
 
             // variadic args based on no. of nodes in this quoted list - use similar code to TreeWalker:223
             // 1. Reserve space on stack for all quoted list elements

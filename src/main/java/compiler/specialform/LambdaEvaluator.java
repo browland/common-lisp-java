@@ -52,12 +52,12 @@ public class LambdaEvaluator {
             return bindingAtom.value();
         }).toList();
 
-        RList lambdaBody = RList.expectRList(lambdaForm.nodes().get(2));
+        List<Node> lambdaBodyNodes = lambdaForm.nodes().subList(2, lambdaForm.size());
         Set<String> declaredFunctionNames = backend.getDeclaredFunctionNames();
         Set<String> declaredVariableNames = backend.getDeclaredVariableNames();
         Set<String> declaredSpecialForms = backend.getSpecialFormNames();
         Set<String> declaredMacroNames = backend.getMacroNames();
-        List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, declaredSpecialForms, declaredMacroNames, declaredVariableNames, lambdaBody, backend);
+        List<String> capturedVariables = escapeAnalyser.findFreeVariables(bindingNames, declaredFunctionNames, declaredSpecialForms, declaredMacroNames, declaredVariableNames, lambdaBodyNodes, backend);
 
         backend.createClosure(lambdaAsmName, capturedVariables, bindingNames);
 

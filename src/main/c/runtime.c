@@ -56,6 +56,7 @@ uintptr_t assoc(uintptr_t taggedKey, uintptr_t taggedCons);
 uintptr_t funcall(uintptr_t* args, long numArgs);
 uintptr_t subseq(uintptr_t* args, long numArgs);
 uintptr_t stringequal(uintptr_t taggedStr1, uintptr_t taggedStr2);
+uintptr_t parseInteger(uintptr_t taggedStr);
 
 // Function objects
 struct Function add_fxn = {
@@ -153,6 +154,11 @@ struct Function stringequal_fxn = {
     (uintptr_t)&stringequal
 };
 
+struct Function parseInteger_fxn = {
+    "parse-integer",
+    (uintptr_t)&parseInteger
+};
+
 // Populate symbol table with symbol values
 struct SymbolEntry t_sym = {"t", (uintptr_t)&t_sym, (uintptr_t)NULL};
 struct SymbolEntry nil_sym = {"nil", (uintptr_t)&nil_sym, (uintptr_t)NULL};
@@ -178,6 +184,7 @@ struct SymbolEntry assoc_sym = {"assoc", (uintptr_t)NULL, (uintptr_t)&assoc_fxn 
 struct SymbolEntry funcall_sym = {"funcall", (uintptr_t)NULL, (uintptr_t)&funcall_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry subseq_sym = {"subseq", (uintptr_t)NULL, (uintptr_t)&subseq_fxn + TYPE_TAG_FUNCTION};
 struct SymbolEntry CL_737472696E673D_sym = {"string=", (uintptr_t)NULL, (uintptr_t)&stringequal_fxn + TYPE_TAG_FUNCTION};
+struct SymbolEntry CL_70617273652D696E7465676572_sym = {"parse-integer", (uintptr_t)NULL, (uintptr_t)&parseInteger_fxn + TYPE_TAG_FUNCTION};
 
 void tag_symbol_val(struct SymbolEntry *symbolEntry) {
     // Check for alignment issues before tagging our static values
@@ -468,6 +475,14 @@ long is_t(uintptr_t taggedVal) {
     return -1;
 }
 
+long is_nil(uintptr_t taggedVal) {
+    void *untagged_val = (void*)(taggedVal & 0xFFFFFFFFFFFFFFF8);
+    if (untagged_val == &nil_sym) {
+        return 0;
+    }
+    return -1;
+}
+
 uintptr_t untag_ptr(uintptr_t taggedPtr) {
      return taggedPtr & 0xFFFFFFFFFFFFFFF8;
 }
@@ -524,6 +539,21 @@ char *get_closure_debugString(uintptr_t taggedClosurePtr) {
 }
 
 uintptr_t cons(uintptr_t car, uintptr_t cdr) {
+    // Handle case where cdr is empty list
+    RUNTIME_TYPE cdrType = determineType(cdr);
+    if (cdrType == TYPE_CONS) {
+        void* untaggedCdrPtr = (void*)untag_ptr(cdr);
+        struct ConsCell *cdrCons = (struct ConsCell*)untaggedCdrPtr;
+        if (cdrCons->car == nil_sym.variableSlot && cdrCons->cdr == nil_sym.variableSlot) {
+            struct ConsCell singleValCons = {car, nil_sym.variableSlot};
+            void *singleValConsHeapPtr = malloc(sizeof(struct ConsCell));
+            memcpy(singleValConsHeapPtr, &singleValCons, sizeof(struct ConsCell));
+            uintptr_t taggedSingleValueConsHeapPtr = (uintptr_t)singleValConsHeapPtr;
+            taggedSingleValueConsHeapPtr = taggedSingleValueConsHeapPtr | TYPE_TAG_CONS;
+            return taggedSingleValueConsHeapPtr;
+        }
+    }
+
     struct ConsCell cons = {car, cdr};
     void *heapPtr = malloc(sizeof(struct ConsCell));
     memcpy(heapPtr, &cons, sizeof(struct ConsCell));
@@ -731,49 +761,45 @@ uintptr_t readLine(uintptr_t taggedStreamObj, uintptr_t terminateResult) {
     return lineTaggedPtr;
 }
 
-char *rewriteFormattedString(char* formatString, uintptr_t *formatArgs, size_t lenPlaceholders) {
-    char *result;
-    char *tempInput = malloc(strlen(formatString)+1);  // Include null char terminator
-    if (!tempInput) {
+char *rewriteFormattedString(char *formatString, uintptr_t *formatArgs, size_t lenPlaceholders) {
+    char *current = malloc(strlen(formatString) + 1);
+    if (!current) {
         printf("format: could not allocate\n");
         exit(-1);
     }
+    memcpy(current, formatString, strlen(formatString) + 1);
 
-    memcpy(tempInput, formatString, strlen(formatString));
-
-    for (int placeholderIx = 0; placeholderIx<lenPlaceholders; placeholderIx++) {
-        char *placeholderPos = strstr(tempInput, "~S");
+    for (size_t i = 0; i < lenPlaceholders; i++) {
+        char *placeholderPos = strstr(current, "~S");
         if (!placeholderPos) {
             printf("Missing placeholder in: %s (expected %zu placeholders)\n", formatString, lenPlaceholders);
             exit(-1);
         }
 
-        char *currentReplacement = printValue(formatArgs[placeholderIx], false);
+        char *replacement = printValue(formatArgs[i], false);
 
-        size_t lenPrefix = placeholderPos - tempInput;
-        size_t lenReplacement = strlen(currentReplacement);
-        size_t lenRemainingFormatString = strlen(tempInput)-lenPrefix-2;  // Every placeholder is 2 chars long
-        size_t totalLength = lenPrefix + lenReplacement + lenRemainingFormatString;
+        size_t lenPrefix = (size_t)(placeholderPos - current);
+        size_t lenReplacement = strlen(replacement);
+        size_t lenSuffix = strlen(placeholderPos + 2);
+        size_t totalLength = lenPrefix + lenReplacement + lenSuffix;
 
-        result = malloc(totalLength + 1);  // plus 1 for null terminator
-        if (!result) {
+        char *next = malloc(totalLength + 1);
+        if (!next) {
             printf("format: could not allocate string\n");
             exit(-1);
         }
 
-        memcpy(result, tempInput, lenPrefix);
-        memcpy(result + lenPrefix, currentReplacement, lenReplacement);
-        memcpy(result + lenPrefix + lenReplacement, tempInput + lenPrefix + 2, lenRemainingFormatString);
-        result[totalLength] = '\0';
+        memcpy(next, current, lenPrefix);
+        memcpy(next + lenPrefix, replacement, lenReplacement);
+        memcpy(next + lenPrefix + lenReplacement, placeholderPos + 2, lenSuffix);
+        next[totalLength] = '\0';
 
-        memcpy(tempInput, result, strlen(result));
-        free(tempInput);
-        free(currentReplacement);
-
-        tempInput = result;
+        free(current);
+        free(replacement);
+        current = next;
     }
 
-    return result;
+    return current;
 }
 
 uintptr_t format(uintptr_t *args, long numArgs) {
@@ -915,6 +941,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [fn] "r" (r9), "r" (r10), "r" (a0)
                 : "x1", "x2", "x3", "x4", "x5", "x6", "x7",
                   "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -929,6 +956,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (c1)
                 : "x2", "x3", "x4", "x5", "x6", "x7",
                   "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -944,6 +972,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (c2)
                 : "x3", "x4", "x5", "x6", "x7",
                   "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -960,6 +989,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (c3)
                 : "x4", "x5", "x6", "x7",
                   "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -977,6 +1007,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (c4)
                 : "x5", "x6", "x7",
                   "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -995,6 +1026,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (b4), "r" (c5)
                 : "x6", "x7",
                   "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -1014,6 +1046,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (b4), "r" (b5), "r" (c6)
                 : "x7",
                   "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                  "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -1033,6 +1066,7 @@ static uintptr_t call_closure_variadic(uintptr_t *args, long numArgs, void *rawF
                 : [res] "=r" (result)
                 : [fn] "r" (r9), "r" (r10), "r" (b0), "r" (b1), "r" (b2), "r" (b3), "r" (b4), "r" (b5), "r" (b6), "r" (c7)
                 : "x8", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+                "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28",
                   "memory", "cc"
             );
             break;
@@ -1116,4 +1150,14 @@ uintptr_t stringequal(uintptr_t taggedStr1, uintptr_t taggedStr2) {
     else {
         return nil_sym.variableSlot;
     }
+}
+
+uintptr_t parseInteger(uintptr_t taggedStr) {
+    typecheck_string(taggedStr);
+    char *rawInputStr = (char*)(taggedStr & 0xFFFFFFFFFFFFFFF8);
+
+    int val = strtol(rawInputStr, NULL, 10);
+
+    uintptr_t res = ((uintptr_t)val << 3) | TYPE_TAG_FIXNUM;
+    return res;
 }

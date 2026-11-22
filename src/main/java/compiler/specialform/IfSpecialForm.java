@@ -21,37 +21,27 @@ public class IfSpecialForm implements SpecialForm {
 
         treeWalker.walkTree(conditionNode);
 
-        backend.reserveStackForVariables(2);  // 2 variables to get 16 byte alignment
-        backend.recordStackAllocation(16);
-        backend.storeResultToStack(0);
-
         // we now have the result of evaluating the condition in x0.  It should be either t or nil.  Generate asm to
-        // type-check and then generate code for each branch, each with a label and jump to the right one.
-        backend.typeCheckResultIsSymbol();
+        // generate code for each branch, each with a label and jump to the right one.
 
-        // return result (t which is our condition) back off stack again
-        backend.loadVariableFromStackIntoRegister(0, 0);
-
-        // check for t, will set x0 to 0 if result was true
-        backend.resultWasT();
+        // check for nil, will set x0 to 0 if result was nil
+        backend.resultWasNil();
 
         long thisBranchCounter = BRANCH_COUNTER++;
 
         String nilLabel = "if_nil" + thisBranchCounter;
         String exitLabel = "if_exit" + thisBranchCounter;
+        String falseLabel = "if_false_" + thisBranchCounter;
+
         if (falseNode == null) {
-            backend.jumpToLabelIfResultNonZero(nilLabel);
+            backend.jumpToLabelIfResultZero(nilLabel);
+        }
+        else {
+            backend.jumpToLabelIfResultZero(falseLabel);
         }
 
-        // generate code to inspect result and depending on whether it's t or not then evaluate the appropriate form
+        // generate code to jump to true if nil check was false
         String trueLabel = "if_true" + thisBranchCounter;
-
-        // Jump to false if required; we fall through to code for true branch
-        String falseLabel = null;
-        if (falseNode != null) {
-            falseLabel = "if_false_" + thisBranchCounter;
-            backend.jumpToLabelIfResultNonZero(falseLabel);
-        }
 
         // generate code for the two branches, each with a label; true first.  We also need an exit label.
         backend.generateLabel(trueLabel);
@@ -72,8 +62,5 @@ public class IfSpecialForm implements SpecialForm {
         }
 
         backend.generateLabel(exitLabel);
-
-        backend.freeStackForVariables(2);
-        backend.recordStackAllocation(-16);
     }
 }
