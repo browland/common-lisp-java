@@ -156,6 +156,10 @@ Current Issues:
 5. Need to understand inline asm better in funcall (and see issue below re. variadic function limits)
 6. Deal with deprecated sprintf
 7. We have a bug with variadic functions when args length > 7, since we use registers and case statements for each arg length
+8. Can we handle hyphens in symbols?
+9. Fix dolist to work like CL e.g. (dolist (x *lines* *reversedLines*) (setq *reversedLines* (cons x *reversedLines*)))
+10. How do we handle floating point values as tagged vals (how can we re-purpose 3 bits of the IEEE-754 layout?)
+11. Implement floor and divide
 
 Possible future ideas:
 1. Look into TBI (built-in pointer tagging for ARM).  Lose portability but interesting to look into?
